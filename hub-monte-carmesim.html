@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hub do Mestre · Monte Carmesim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blood:#8B1A1A;--crimson:#C0392B;--dark:#0a0a0a;--panel:#141414;
+    --card:#1c1c1c;--border:#2a2a2a;--smoke:#3a3a3a;--ash:#666;
+    --bone:#d4ccbb;--accent:#B8860B;--green:#2d6a2d;--teal:#006666;
+    --purple:#4A235A;--online:#4caf50;--offline:#555;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--dark);color:var(--bone);font-family:'Barlow Condensed',sans-serif;min-height:100vh;}
+  .hub-header{background:linear-gradient(135deg,#0d0000,#1a0505,#0d0000);border-bottom:2px solid var(--blood);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(139,26,26,.4);}
+  .hub-title h1{font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;letter-spacing:5px;color:#fff;text-shadow:0 0 20px var(--blood);}
+  .hub-title p{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--ash);letter-spacing:3px;margin-top:2px;}
+  .hub-status{display:flex;align-items:center;gap:12px;}
+  .online-count{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--online);letter-spacing:1px;}
+  .session-btn{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:6px 14px;border-radius:3px;cursor:pointer;border:none;transition:all .2s;}
+  .session-btn.primary{background:var(--blood);color:#fff;}
+  .session-btn.primary:hover{background:var(--crimson);}
+  .session-btn.secondary{background:var(--border);color:var(--bone);}
+  .session-btn.secondary:hover{background:var(--smoke);}
+  .hub-body{display:grid;grid-template-columns:1fr 300px;height:calc(100vh - 58px);}
+  .hub-main{overflow-y:auto;padding:20px;}
+  .hub-sidebar{background:var(--panel);border-left:1px solid var(--border);overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;}
+  .sec{font-family:'Oswald',sans-serif;font-size:9px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--blood);border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:10px;}
+  .players-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:20px;}
+  .player-card{background:var(--card);border:1px solid var(--border);border-radius:6px;overflow:hidden;transition:border-color .2s;}
+  .player-card:hover{border-color:var(--smoke);}
+  .player-card.online-card{border-top:3px solid var(--online);}
+  .player-card.offline-card{border-top:3px solid var(--offline);opacity:.7;}
+  .card-header{padding:10px 14px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+  .card-name{font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#fff;}
+  .card-meta{font-size:9px;color:var(--ash);letter-spacing:1px;text-transform:uppercase;margin-top:1px;}
+  .online-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .online-dot.on{background:var(--online);box-shadow:0 0 6px var(--online);}
+  .online-dot.off{background:var(--offline);}
+  .card-pools{padding:10px 14px;display:flex;flex-direction:column;gap:5px;}
+  .pool-row{display:flex;align-items:center;gap:8px;}
+  .pool-lbl{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--ash);width:32px;flex-shrink:0;}
+  .pool-bar-wrap{flex:1;height:10px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;}
+  .pool-bar{height:100%;border-radius:2px;transition:width .4s;}
+  .pool-bar.pv{background:linear-gradient(to right,#8B1A1A,#e53935);}
+  .pool-bar.pe{background:linear-gradient(to right,#006060,#00bcd4);}
+  .pool-bar.san{background:linear-gradient(to right,#3a1a5a,#9c27b0);}
+  .pool-nums{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--bone);width:48px;text-align:right;flex-shrink:0;}
+  .fear-mini{padding:6px 14px 8px;border-top:1px solid var(--border);}
+  .fear-mini-bar{height:6px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;margin-top:3px;}
+  .fear-mini-fill{height:100%;border-radius:2px;transition:width .4s,background .4s;}
+  .card-actions{padding:8px 14px 10px;border-top:1px solid var(--border);display:flex;gap:5px;flex-wrap:wrap;}
+  .act-btn{font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:4px 8px;border-radius:2px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--bone);transition:all .15s;}
+  .act-btn:hover{background:var(--border);}
+  .act-btn.red{border-color:var(--blood);color:#ff6b6b;}
+  .act-btn.red:hover{background:rgba(139,26,26,.3);}
+  .act-btn.green{border-color:var(--green);color:#81c784;}
+  .act-btn.green:hover{background:rgba(45,106,45,.3);}
+  .act-btn.purple{border-color:var(--purple);color:#ce93d8;}
+  .act-btn.purple:hover{background:rgba(74,35,90,.3);}
+  .act-btn.blue{border-color:#1a3a6a;color:#90caf9;}
+  .act-btn.blue:hover{background:rgba(26,58,106,.3);}
+  .init-row{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:3px;padding:6px 10px;margin-bottom:5px;}
+  .init-row.active-turn{border-color:var(--accent);background:rgba(184,134,11,.1);}
+  .init-num{font-family:'Share Tech Mono',monospace;font-size:18px;font-weight:700;color:var(--accent);width:32px;text-align:center;}
+  .init-name{font-family:'Oswald',sans-serif;font-size:14px;font-weight:600;color:#fff;flex:1;}
+  .init-hp{font-family:'Share Tech Mono',monospace;font-size:10px;color:#ff6b6b;}
+  .round-display{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent);text-align:center;margin-bottom:8px;letter-spacing:2px;}
+  .sf select,.sf input,.sf textarea{background:var(--card);border:1px solid var(--border);border-radius:3px;color:var(--bone);font-family:'Barlow Condensed',sans-serif;font-size:12px;padding:5px 8px;outline:none;width:100%;margin-bottom:5px;}
+  .sf select:focus,.sf input:focus{border-color:var(--blood);}
+  .type-row{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:5px;}
+  .type-chip{font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:2px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--ash);transition:all .15s;}
+  .type-chip.sel-danger{background:rgba(139,26,26,.4);border-color:var(--crimson);color:#ff6b6b;}
+  .type-chip.sel-warning{background:rgba(122,88,0,.4);border-color:#cc9900;color:#ffd54f;}
+  .type-chip.sel-heal{background:rgba(45,106,45,.4);border-color:#4caf50;color:#81c784;}
+  .type-chip.sel-info{background:rgba(26,58,106,.4);border-color:#2196f3;color:#90caf9;}
+  .hub-die-btn{font-family:'Oswald',sans-serif;font-size:13px;font-weight:700;padding:7px 4px;border:2px solid var(--border);border-radius:4px;background:var(--card);color:var(--bone);cursor:pointer;text-align:center;transition:all .15s;}
+  .hub-die-btn:hover{border-color:var(--accent);background:rgba(184,134,11,.1);}
+  .hub-die-btn.sel{border-color:var(--accent);background:var(--accent);color:#fff;}
+  .hub-roll-display{font-family:'Oswald',sans-serif;font-size:52px;font-weight:700;text-align:center;padding:8px 0 2px;transition:all .3s;display:none;}
+  .hub-roll-display.secret{color:var(--ash);font-size:34px;letter-spacing:4px;}
+  .hub-roll-display.visible{color:var(--accent);text-shadow:0 0 20px rgba(184,134,11,.4);}
+  .hub-dice-section{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:12px;margin-bottom:14px;}
+  .hub-roll-log{display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto;margin-top:8px;}
+  .hub-roll-entry{background:rgba(255,255,255,.03);border:1px solid var(--border);border-left:3px solid var(--blood);border-radius:3px;padding:5px 8px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--bone);}
+  .hub-roll-player{color:var(--accent);font-weight:700;}
+  .hub-roll-total{color:var(--crimson);font-size:14px;font-weight:700;}
+  .log-list{display:flex;flex-direction:column;gap:3px;max-height:160px;overflow-y:auto;}
+  .log-entry{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--ash);padding:3px 6px;border-left:2px solid var(--border);line-height:1.4;}
+  .log-entry.dmg{border-color:var(--crimson);color:#ff8a80;}
+  .log-entry.heal{border-color:var(--green);color:#a5d6a7;}
+  .log-entry.mental{border-color:var(--purple);color:#ce93d8;}
+  .log-entry.alert{border-color:var(--accent);color:#ffe082;}
+  .notes-box{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:8px;min-height:100px;font-family:'Barlow Condensed',sans-serif;font-size:12px;color:var(--bone);outline:none;line-height:1.5;resize:none;width:100%;}
+  .notes-box:focus{border-color:var(--blood);}
+  .clima-banner{background:linear-gradient(135deg,#0a0a18,#0d0d20);border:1px solid #1a2a4a;border-left:3px solid #1a6a8a;border-radius:4px;padding:8px 14px;margin-bottom:14px;display:none;align-items:center;gap:12px;}
+  .clima-icon{font-size:22px;}
+  .clima-title{font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;color:#90caf9;letter-spacing:1px;}
+  .clima-sub{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--ash);letter-spacing:1px;margin-top:2px;}
+  .clima-temp{font-family:'Share Tech Mono',monospace;font-size:18px;font-weight:700;color:#90caf9;margin-left:auto;}
+  .qv-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:400;}
+  .qv-overlay.open{display:block;}
+  .qv-panel{position:fixed;top:0;right:0;bottom:0;width:400px;max-width:95vw;background:var(--panel);border-left:2px solid var(--blood);overflow-y:auto;z-index:401;transform:translateX(100%);transition:transform .3s;padding:20px;}
+  .qv-overlay.open .qv-panel{transform:translateX(0);}
+  .qv-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:10px;}
+  .qv-name{font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;letter-spacing:3px;color:#fff;text-transform:uppercase;}
+  .qv-close{font-size:20px;color:var(--ash);cursor:pointer;background:none;border:none;transition:color .2s;}
+  .qv-close:hover{color:var(--crimson);}
+  .qv-sec{font-family:'Oswald',sans-serif;font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--blood);border-bottom:1px solid var(--border);padding-bottom:3px;margin:12px 0 8px;}
+  .qv-stat-row{display:flex;gap:6px;margin-bottom:6px;}
+  .qv-stat{flex:1;background:var(--card);border:1px solid var(--border);border-radius:3px;padding:6px 8px;text-align:center;}
+  .qv-stat-lbl{font-size:7px;color:var(--ash);letter-spacing:1px;text-transform:uppercase;}
+  .qv-stat-val{font-family:'Share Tech Mono',monospace;font-size:16px;font-weight:700;color:#fff;margin-top:2px;}
+  .qv-bar-wrap{height:6px;background:rgba(255,255,255,.05);border-radius:2px;margin-top:3px;overflow:hidden;}
+  .qv-bar{height:100%;border-radius:2px;}
+  .qv-tag{font-size:9px;padding:2px 6px;border-radius:2px;font-family:'Barlow Condensed',sans-serif;font-weight:600;display:inline-block;margin:2px;}
+  .qv-tag.d{background:rgba(139,26,26,.3);color:#ff8a80;border:1px solid rgba(192,57,43,.4);}
+  .qv-tag.s{background:rgba(192,57,43,.2);color:#ff6b6b;border:1px solid rgba(192,57,43,.4);}
+  ::-webkit-scrollbar{width:4px;}
+  ::-webkit-scrollbar-track{background:var(--dark);}
+  ::-webkit-scrollbar-thumb{background:var(--smoke);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<div class="hub-header">
+  <div class="hub-title">
+    <h1>☠ Monte Carmesim</h1>
+    <p>PAINEL DO MESTRE · ORDEM PARANORMAL RPG</p>
+  </div>
+  <div class="hub-status">
+    <div class="online-count">● <span id="online-count">0</span> online</div>
+    <button class="session-btn secondary" onclick="toggleCombat()">⚔ Modo Combate</button>
+    <button class="session-btn primary"   onclick="addPlayerPrompt()">+ Jogador</button>
+  </div>
+</div>
+
+<div class="hub-body">
+  <div class="hub-main">
+    <div id="clima-banner" class="clima-banner">
+      <div class="clima-icon" id="clima-icon">🌙</div>
+      <div><div class="clima-title" id="clima-titulo">—</div><div class="clima-sub" id="clima-desc">—</div></div>
+      <div class="clima-temp" id="clima-temp-display">—</div>
+    </div>
+    <div class="hub-dice-section">
+      <div class="sec" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span>🎲 Rolagens dos Jogadores</span>
+        <button class="act-btn" onclick="clearRollLog()" style="font-size:8px;">Limpar</button>
+      </div>
+      <div class="hub-roll-log" id="hub-roll-log">
+        <div style="font-size:9px;color:var(--ash);text-align:center;padding:8px;font-family:'Share Tech Mono',monospace;">Aguardando rolagens...</div>
+      </div>
+    </div>
+    <div class="sec">👤 Agentes</div>
+    <div class="players-grid" id="players-grid">
+      <div style="color:var(--ash);font-size:12px;font-family:'Share Tech Mono',monospace;padding:20px;">Aguardando jogadores... clique em + Jogador para adicionar.</div>
+    </div>
+    <div id="combat-section" style="display:none;">
+      <div class="sec" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>⚔ Tracker de Combate</span>
+        <div style="display:flex;gap:6px;">
+          <button class="act-btn" onclick="prevTurn()">◀ Anterior</button>
+          <button class="act-btn green" onclick="nextTurn()">Próximo ▶</button>
+          <button class="act-btn red"   onclick="resetCombat()">✕ Encerrar</button>
+        </div>
+      </div>
+      <div class="round-display">RODADA <span id="round-num">1</span></div>
+      <div id="init-list"></div>
+    </div>
+    <div style="margin-top:20px;">
+      <div class="sec" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>📋 Log da Sessão</span>
+        <button class="act-btn" onclick="clearLog()" style="font-size:8px;">Limpar</button>
+      </div>
+      <div class="log-list" id="log-list"><div class="log-entry">— Sessão iniciada —</div></div>
+    </div>
+  </div>
+
+  <div class="hub-sidebar">
+
+    <!-- DADOS DO MESTRE -->
+    <div>
+      <div class="sec">🎲 Dados do Mestre</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:6px;">
+        <button class="hub-die-btn" onclick="hubSelDie(4,this)">d4</button>
+        <button class="hub-die-btn" onclick="hubSelDie(6,this)">d6</button>
+        <button class="hub-die-btn" onclick="hubSelDie(8,this)">d8</button>
+        <button class="hub-die-btn" onclick="hubSelDie(10,this)">d10</button>
+        <button class="hub-die-btn" onclick="hubSelDie(12,this)">d12</button>
+        <button class="hub-die-btn sel" onclick="hubSelDie(20,this)">d20</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px;">
+        <button class="hub-die-btn" onclick="hubSelDie(100,this)">d100</button>
+        <div style="display:flex;align-items:center;gap:4px;justify-content:center;">
+          <button onclick="hubChgQty(-1)" style="width:22px;height:22px;border:1px solid var(--border);border-radius:2px;background:transparent;color:var(--bone);cursor:pointer;font-size:14px;line-height:1;padding:0;">−</button>
+          <span id="hub-qty" style="font-family:'Oswald',sans-serif;font-size:18px;font-weight:700;color:var(--accent);min-width:22px;text-align:center;">1</span>
+          <button onclick="hubChgQty(1)" style="width:22px;height:22px;border:1px solid var(--border);border-radius:2px;background:transparent;color:var(--bone);cursor:pointer;font-size:14px;line-height:1;padding:0;">+</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+        <span style="font-size:10px;color:var(--ash);white-space:nowrap;">Bônus/Mod:</span>
+        <input type="number" id="hub-bonus" value="0" style="width:50px;background:var(--card);border:1px solid var(--border);border-radius:3px;color:var(--bone);font-family:'Share Tech Mono',monospace;font-size:12px;padding:3px 6px;text-align:center;outline:none;">
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;color:var(--ash);margin-bottom:8px;">
+        <input type="checkbox" id="hub-secret" checked style="cursor:pointer;accent-color:var(--blood);">
+        <span>🔒 Rolagem secreta</span>
+      </label>
+      <button onclick="hubRoll()" style="width:100%;font-family:'Oswald',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;padding:8px;background:var(--accent);color:#fff;border:none;border-radius:4px;cursor:pointer;">🎲 ROLAR</button>
+      <div id="hub-roll-display" class="hub-roll-display"></div>
+      <div id="hub-roll-detail" style="text-align:center;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--ash);"></div>
+    </div>
+
+    <!-- ENVIAR ALERTA -->
+    <div>
+      <div class="sec">📡 Enviar Alerta</div>
+      <div class="sf">
+        <select id="alert-target"><option value="all">→ Todos os jogadores</option></select>
+        <div class="type-row">
+          <button class="type-chip sel-danger"  onclick="selType('danger',this)">⚔ Dano</button>
+          <button class="type-chip"              onclick="selType('heal',this)">💚 Cura</button>
+          <button class="type-chip"              onclick="selType('warning',this)">⚠ Aviso</button>
+          <button class="type-chip"              onclick="selType('info',this)">📢 Info</button>
+        </div>
+        <input type="text" id="alert-msg" placeholder="Mensagem..." onkeydown="if(event.key==='Enter')sendAlert()">
+        <button class="session-btn primary" onclick="sendAlert()" style="width:100%;font-size:10px;padding:6px;">📡 ENVIAR</button>
+      </div>
+    </div>
+
+    <!-- DANO / CURA -->
+    <div>
+      <div class="sec">⚡ Aplicar Dano / Cura</div>
+      <div class="sf">
+        <select id="dmg-target"><option value="all">→ Todos os jogadores</option></select>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <div><div style="font-size:8px;color:var(--ash);margin-bottom:2px;">TIPO</div>
+            <select id="dmg-type"><option value="pv">PV (Vida)</option><option value="pe">PE (Esforço)</option><option value="san">SAN (Sanidade)</option></select></div>
+          <div><div style="font-size:8px;color:var(--ash);margin-bottom:2px;">VALOR</div><input type="number" id="dmg-value" value="5" min="1"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:2px;">
+          <button class="act-btn red"   onclick="applyDmgHeal(-1)" style="width:100%;text-align:center;padding:6px;">− Dano</button>
+          <button class="act-btn green" onclick="applyDmgHeal(1)"  style="width:100%;text-align:center;padding:6px;">+ Cura</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEDO -->
+    <div>
+      <div class="sec">☠ Controle de Medo</div>
+      <div class="sf">
+        <select id="fear-target"><option value="all">→ Todos os jogadores</option></select>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;align-items:end;">
+          <div><div style="font-size:8px;color:var(--ash);margin-bottom:2px;">VALOR</div>
+            <input type="number" id="fear-value" value="1" min="1" max="20" style="font-size:16px;text-align:center;font-family:'Share Tech Mono',monospace;"></div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <button class="act-btn red"   onclick="applyFear(1)"  style="width:100%;text-align:center;padding:5px;">☠ + Medo</button>
+            <button class="act-btn green" onclick="applyFear(-1)" style="width:100%;text-align:center;padding:5px;">✦ − Medo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONDIÇÃO -->
+    <div>
+      <div class="sec">🔴 Aplicar Condição</div>
+      <div class="sf">
+        <select id="status-target"><option value="all">→ Todos os jogadores</option></select>
+        <select id="status-type">
+          <option>😴 Cansado</option><option>💤 Exausto</option><option>🩸 Sangrando</option>
+          <option>😰 Em Pânico</option><option>🍗 Faminto</option><option>💧 Desidratado</option>
+          <option>❄️ Hipotermia</option><option>🥵 Golpe de Calor</option>
+          <option>💀 Morrendo</option><option>🔥 Em Chamas</option><option>🧠 Insano</option>
+        </select>
+        <button class="session-btn primary" onclick="applyStatus()" style="width:100%;font-size:10px;padding:6px;">Aplicar</button>
+      </div>
+    </div>
+
+    <!-- CLIMA -->
+    <div>
+      <div class="sec">🌍 Clima & Ambiente</div>
+      <div class="sf">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <div><div style="font-size:8px;color:var(--ash);margin-bottom:2px;">ÍCONE</div>
+            <select id="clima-icon-sel">
+              <option value="🌙">🌙 Noite</option><option value="☀️">☀️ Dia</option>
+              <option value="🌧️">🌧️ Chuva</option><option value="⛈️">⛈️ Tempestade</option>
+              <option value="❄️">❄️ Neve</option><option value="🌫️">🌫️ Névoa</option>
+              <option value="🔥">🔥 Calor extremo</option><option value="💀">💀 Território morto</option>
+              <option value="🩸">🩸 Chuva de sangue</option><option value="👁️">👁️ O Outro Lado</option>
+            </select></div>
+          <div><div style="font-size:8px;color:var(--ash);margin-bottom:2px;">°C</div>
+            <input type="number" id="clima-temp" placeholder="—"></div>
+        </div>
+        <input type="text" id="clima-titulo-inp" placeholder="Título...">
+        <input type="text" id="clima-desc-inp"   placeholder="Descrição...">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:2px;">
+          <button class="session-btn primary"   onclick="applyClima()" style="font-size:10px;padding:6px;">🌍 Aplicar</button>
+          <button class="session-btn secondary" onclick="clearClima()" style="font-size:10px;padding:6px;">✕ Limpar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTAS -->
+    <div style="flex:1;">
+      <div class="sec">📝 Notas da Sessão</div>
+      <textarea class="notes-box" id="session-notes" placeholder="Anotações privadas..." rows="6"></textarea>
+    </div>
+
+  </div>
+</div>
+
+<!-- QUICKVIEW -->
+<div class="qv-overlay" id="qv-overlay" onclick="if(event.target===this)closeQV()">
+  <div class="qv-panel">
+    <div class="qv-header">
+      <div class="qv-name" id="qv-name">—</div>
+      <button class="qv-close" onclick="closeQV()">✕</button>
+    </div>
+    <div id="qv-content"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const db = getDatabase(initializeApp({
+  apiKey:"AIzaSyCSQXdyLvqC4zT2BkSwUKk-uostVn2BmA8",
+  authDomain:"rpg-ficha-monte-carmesim.firebaseapp.com",
+  databaseURL:"https://rpg-ficha-monte-carmesim-default-rtdb.firebaseio.com",
+  projectId:"rpg-ficha-monte-carmesim",
+  storageBucket:"rpg-ficha-monte-carmesim.firebasestorage.app",
+  messagingSenderId:"909026041375",
+  appId:"1:909026041375:web:df06386967dd9181a23f2a"
+}));
+
+window._pd = {};
+
+onValue(ref(db,'players'), snap => {
+  window._pd = snap.val()||{};
+  renderCards(window._pd);
+  updateSels(window._pd);
+  document.getElementById('online-count').textContent =
+    Object.values(window._pd).filter(p=>p.online===true).length;
+  if(window._combatActive) renderInitList(window._pd);
+});
+
+onValue(ref(db,'rolls'), snap => {
+  const d=snap.val(); const log=document.getElementById('hub-roll-log'); if(!log) return;
+  if(!d||!Object.keys(d).length){log.innerHTML='<div style="font-size:9px;color:var(--ash);text-align:center;padding:8px;font-family:Share Tech Mono,monospace;">Aguardando rolagens...</div>';return;}
+  const entries=Object.entries(d).map(([p,r])=>({player:p,...r})).sort((a,b)=>(b.ts||0)-(a.ts||0));
+  log.innerHTML='';
+  entries.forEach(({player,label,rolls,total,ts})=>{
+    const time=ts?new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
+    const e=document.createElement('div'); e.className='hub-roll-entry';
+    const pct=total/(parseInt((label||'').match(/d(\d+)/)?.[1]||20));
+    const col=pct>=0.9?'#4caf50':pct<=0.1?'#e53935':'';
+    e.innerHTML='<span class="hub-roll-player">'+player+'</span> <span style="color:var(--ash);">'+time+'</span> <span class="hub-roll-total"'+(col?' style="color:'+col+'"':'')+'>= '+total+'</span>'+(rolls&&rolls.length>1?' <span style="color:var(--ash);font-size:8px;">['+rolls.join(', ')+']</span>':'');
+    log.appendChild(e);
+  });
+});
+
+onValue(ref(db,'clima'), snap=>{
+  const d=snap.val(); const b=document.getElementById('clima-banner');
+  if(!d||!d.active){b.style.display='none';return;}
+  b.style.display='flex';
+  document.getElementById('clima-icon').textContent=d.icon||'🌙';
+  document.getElementById('clima-titulo').textContent=d.titulo||'—';
+  document.getElementById('clima-desc').textContent=d.desc||'';
+  document.getElementById('clima-temp-display').textContent=d.temp||'—';
+});
+
+function renderCards(data){
+  const grid=document.getElementById('players-grid');
+  if(!Object.keys(data).length){grid.innerHTML='<div style="color:var(--ash);font-size:12px;font-family:Share Tech Mono,monospace;padding:20px;">Aguardando jogadores...</div>';return;}
+  grid.innerHTML='';
+  Object.entries(data).forEach(([name,player])=>grid.appendChild(mkCard(name,player)));
+}
+
+function mkCard(name,player){
+  const st=player.stats||{},online=player.online===true;
+  const pv=st.pv_atual??'—',pvM=st.pv_max??'—';
+  const pe=st.pe_atual??'—',peM=st.pe_max??'—';
+  const san=st.san_atual??'—',sanM=st.san_max??'—';
+  const fear=st.fear??0;
+  const pct=(a,b)=>b>0?Math.min(100,Math.round(a/b*100)):0;
+  const fp=Math.round(fear/20*100);
+  const fc=fear<=4?'#4caf50':fear<=8?'#cddc39':fear<=12?'#ff9800':fear<=16?'#f44336':'#b71c1c';
+  const cls=st.classe?st.classe.charAt(0).toUpperCase()+st.classe.slice(1):'—';
+  const nL=['5%','10%','15%','20%','25%','30%','35%','40%','45%','50%','55%','60%','65%','70%','75%','80%','85%','90%','95%','99%'];
+  const nex=st.nex?(nL[parseInt(st.nex)-1]||'—'):'—';
+  const d=document.createElement('div');
+  d.className='player-card '+(online?'online-card':'offline-card');
+  d.id='card-'+name;
+  d.innerHTML=`<div class="card-header"><div><div class="card-name">${name}</div><div class="card-meta">${cls} · ${nex}</div></div><div class="online-dot ${online?'on':'off'}"></div></div>
+<div class="card-pools">
+<div class="pool-row"><div class="pool-lbl">PV</div><div class="pool-bar-wrap"><div class="pool-bar pv" style="width:${pct(pv,pvM)}%"></div></div><div class="pool-nums">${pv}/${pvM}</div></div>
+<div class="pool-row"><div class="pool-lbl">PE</div><div class="pool-bar-wrap"><div class="pool-bar pe" style="width:${pct(pe,peM)}%"></div></div><div class="pool-nums">${pe}/${peM}</div></div>
+<div class="pool-row"><div class="pool-lbl">SAN</div><div class="pool-bar-wrap"><div class="pool-bar san" style="width:${pct(san,sanM)}%"></div></div><div class="pool-nums">${san}/${sanM}</div></div>
+</div>
+<div class="fear-mini">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+<span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--ash);">☠ Medo</span>
+<div style="display:flex;align-items:center;gap:4px;">
+<button onclick="setFearDirect('${name}',Math.max(0,(parseInt(window._pd?.['${name}']?.stats?.fear||0)-1)))" style="width:18px;height:18px;border:1px solid var(--border);border-radius:2px;background:transparent;color:var(--ash);cursor:pointer;font-size:12px;line-height:1;padding:0;">−</button>
+<span style="font-family:'Share Tech Mono',monospace;font-size:12px;font-weight:700;color:${fc};">${fear}/20</span>
+<button onclick="setFearDirect('${name}',Math.min(20,(parseInt(window._pd?.['${name}']?.stats?.fear||0)+1)))" style="width:18px;height:18px;border:1px solid var(--border);border-radius:2px;background:transparent;color:var(--ash);cursor:pointer;font-size:12px;line-height:1;padding:0;">+</button>
+</div></div>
+<div class="fear-mini-bar"><div class="fear-mini-fill" style="width:${fp}%;background:${fc};"></div></div></div>
+<div class="card-actions">
+<button class="act-btn red"    onclick="quickDmg('${name}','pv',-1)">− PV</button>
+<button class="act-btn green"  onclick="quickDmg('${name}','pv',1)">+ PV</button>
+<button class="act-btn purple" onclick="quickDmg('${name}','san',-1)">− SAN</button>
+<button class="act-btn blue"   onclick="openQV('${name}')">👁 Ver</button>
+<button class="act-btn"        onclick="pingPlayer('${name}')">📡</button>
+<button class="act-btn" style="color:var(--ash);" onclick="removePlayer('${name}')">✕</button>
+</div>`;
+  return d;
+}
+
+function updateSels(data){
+  const names=Object.keys(data);
+  ['alert-target','dmg-target','status-target','fear-target'].forEach(id=>{
+    const sel=document.getElementById(id); if(!sel) return;
+    const cur=sel.value;
+    sel.innerHTML='<option value="all">→ Todos os jogadores</option>';
+    names.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
+    if(cur) sel.value=cur;
+  });
+}
+
+window.addPlayerPrompt=()=>{
+  const name=prompt('Nome do jogador (igual ao ?player=Nome):');
+  if(!name?.trim()) return;
+  set(ref(db,'players/'+name.trim()+'/online'),false);
+  addLog('Jogador "'+name.trim()+'" adicionado.','alert');
+};
+window.removePlayer=(name)=>{if(!confirm('Remover '+name+'?'))return;set(ref(db,'players/'+name),null);addLog(name+' removido.','alert');};
+window.quickDmg=(name,stat,sign)=>{
+  const val=parseInt(prompt('Valor de '+(sign>0?'cura':'dano')+' em '+stat.toUpperCase()+' para '+name+':'))||0;
+  if(!val) return;
+  const cur=parseInt(window._pd?.[name]?.stats?.[stat+'_atual']||0);
+  const nv=Math.max(0,cur+sign*val);
+  update(ref(db,'players/'+name+'/stats'),{[stat+'_atual']:nv});
+  addLog(name+': '+(sign>0?'+':'-')+val+' '+stat.toUpperCase()+' ('+cur+' → '+nv+')',sign>0?'heal':'dmg');
+};
+window.pingPlayer=(name)=>{const msg=prompt('Mensagem para '+name+':');if(!msg)return;set(ref(db,'players/'+name+'/alert'),{msg,type:'info',ts:Date.now()});addLog('Alerta → '+name,'alert');};
+window.sendAlert=()=>{
+  const target=document.getElementById('alert-target').value;
+  const msg=document.getElementById('alert-msg').value.trim();
+  const type=window._alertType||'danger';
+  if(!msg) return;
+  const targets=target==='all'?Object.keys(window._pd||{}):[target];
+  targets.forEach(n=>set(ref(db,'players/'+n+'/alert'),{msg,type,ts:Date.now()}));
+  addLog('Alerta → '+(target==='all'?'Todos':target)+': "'+msg+'"','alert');
+  document.getElementById('alert-msg').value='';
+};
+window.applyDmgHeal=(sign)=>{
+  const target=document.getElementById('dmg-target').value;
+  const stat=document.getElementById('dmg-type').value;
+  const val=parseInt(document.getElementById('dmg-value').value)||0;
+  if(!val) return;
+  const targets=target==='all'?Object.keys(window._pd||{}):[target];
+  targets.forEach(n=>{
+    const cur=parseInt(window._pd?.[n]?.stats?.[stat+'_atual']||0);
+    const nv=Math.max(0,cur+sign*val);
+    update(ref(db,'players/'+n+'/stats'),{[stat+'_atual']:nv});
+    set(ref(db,'players/'+n+'/alert'),{msg:(sign>0?'+'+val+' de cura':val+' de dano')+' em '+stat.toUpperCase()+'!',type:sign>0?'heal':stat==='san'?'mental':'danger',ts:Date.now()});
+  });
+  addLog((target==='all'?'Todos':target)+': '+(sign>0?'+':'-')+val+' '+stat.toUpperCase(),sign>0?'heal':'dmg');
+};
+window.applyStatus=()=>{
+  const target=document.getElementById('status-target').value;
+  const status=document.getElementById('status-type').value;
+  const targets=target==='all'?Object.keys(window._pd||{}):[target];
+  targets.forEach(n=>set(ref(db,'players/'+n+'/alert'),{msg:'Condição: '+status+'!',type:'warning',ts:Date.now()}));
+  addLog('Condição "'+status+'" → '+(target==='all'?'Todos':target),'alert');
+};
+window.applyFear=(delta)=>{
+  const target=document.getElementById('fear-target').value;
+  const val=parseInt(document.getElementById('fear-value').value)||1;
+  const targets=target==='all'?Object.keys(window._pd||{}):[target];
+  targets.forEach(n=>{
+    const cur=parseInt(window._pd?.[n]?.stats?.fear||0);
+    const nv=Math.max(0,Math.min(20,cur+delta*val));
+    update(ref(db,'players/'+n+'/stats'),{fear:nv});
+    set(ref(db,'players/'+n+'/alert'),{msg:'Medo '+(delta>0?'aumentou':'diminuiu')+' para '+nv+'/20',type:delta>0?'danger':'info',ts:Date.now()});
+    addLog('Medo '+(delta>0?'+':'-')+val+' → '+n+' ('+nv+'/20)',delta>0?'dmg':'heal');
+  });
+};
+window.setFearDirect=(name,val)=>{const nv=Math.max(0,Math.min(20,parseInt(val)||0));update(ref(db,'players/'+name+'/stats'),{fear:nv});addLog('Medo '+name+' → '+nv+'/20','alert');};
+window.applyClima=()=>{
+  const d={icon:document.getElementById('clima-icon-sel').value,temp:document.getElementById('clima-temp').value?document.getElementById('clima-temp').value+'°C':'—',titulo:document.getElementById('clima-titulo-inp').value||'Ambiente',desc:document.getElementById('clima-desc-inp').value||'',active:true,ts:Date.now()};
+  set(ref(db,'clima'),d); addLog('🌍 Clima: "'+d.titulo+'"','alert');
+};
+window.clearClima=()=>{set(ref(db,'clima'),{active:false});};
+
+let hubDieType=20,hubDieQty=1;
+window.hubSelDie=(faces,btn)=>{hubDieType=faces;document.querySelectorAll('.hub-die-btn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');};
+window.hubChgQty=(d)=>{hubDieQty=Math.max(1,Math.min(20,hubDieQty+d));document.getElementById('hub-qty').textContent=hubDieQty;};
+window.hubRoll=()=>{
+  const bonus=parseInt(document.getElementById('hub-bonus').value)||0;
+  const secret=document.getElementById('hub-secret').checked;
+  const rolls=Array.from({length:hubDieQty},()=>Math.floor(Math.random()*hubDieType)+1);
+  const total=rolls.reduce((a,b)=>a+b,0)+bonus;
+  const label=hubDieQty+'d'+hubDieType+(bonus!==0?(bonus>0?'+'+bonus:bonus):'');
+  const resEl=document.getElementById('hub-roll-display');
+  const detEl=document.getElementById('hub-roll-detail');
+  resEl.style.display='block';
+  resEl.className='hub-roll-display '+(secret?'secret':'visible');
+  resEl.textContent=secret?'🔒 '+total:String(total);
+  detEl.textContent=label+(rolls.length>1?' ['+rolls.join(', ')+']':'')+(secret?' · secreto':'');
+  resEl.style.transform='scale(.5)';resEl.style.opacity='0';
+  setTimeout(()=>{resEl.style.transform='scale(1)';resEl.style.opacity='1';resEl.style.transition='all .25s';},10);
+  addLog('🎲 Mestre: '+label+(secret?' (secreto)':' = '+total),'alert');
+  if(!secret) set(ref(db,'rolls/MESTRE'),{label,rolls,total,bonus,ts:Date.now(),player:'🎲 Mestre'});
+};
+window.clearRollLog=()=>{set(ref(db,'rolls'),null);};
+
+window.openQV=(name)=>{
+  const p=(window._pd||{})[name]; if(!p) return;
+  document.getElementById('qv-name').textContent=name;
+  document.getElementById('qv-overlay').classList.add('open');
+  const st=p.stats||{},fi=p.ficha||{};
+  const dv=fi.dv||{},status=fi.status||{},inputs=fi.inputs||{};
+  const pct=(a,b)=>b>0?Math.min(100,Math.round(a/b*100)):0;
+  const pv=st.pv_atual??'—',pvM=st.pv_max??'—';
+  const pe=st.pe_atual??'—',peM=st.pe_max??'—';
+  const san=st.san_atual??'—',sanM=st.san_max??'—';
+  const fear=st.fear??0;
+  const fc=fear<=4?'#4caf50':fear<=8?'#cddc39':fear<=12?'#ff9800':fear<=16?'#f44336':'#b71c1c';
+  const dvA=Object.entries(dv).filter(([,v])=>v).map(([k])=>k);
+  const stA=Object.entries(status).filter(([,v])=>v).map(([k])=>k);
+  let nome='—'; Object.entries(inputs).forEach(([k,v])=>{if(k==='id_nome'&&v)nome=v;});
+  document.getElementById('qv-content').innerHTML=`
+<div class="qv-sec">Identificação</div>
+<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--ash);line-height:1.8;">
+  <div>Nome: <span style="color:var(--bone);">${nome}</span></div>
+  <div>Online: <span style="color:${p.online?'#4caf50':'#666'};">${p.online?'● Sim':'○ Offline'}</span></div>
+</div>
+<div class="qv-sec">Pontos Vitais</div>
+<div class="qv-stat-row">
+  <div class="qv-stat"><div class="qv-stat-lbl">PV</div><div class="qv-stat-val" style="color:#ff6b6b;">${pv}<span style="font-size:10px;color:var(--ash);">/${pvM}</span></div><div class="qv-bar-wrap"><div class="qv-bar" style="width:${pct(pv,pvM)}%;background:linear-gradient(to right,#8B1A1A,#e53935);"></div></div></div>
+  <div class="qv-stat"><div class="qv-stat-lbl">PE</div><div class="qv-stat-val" style="color:#4dd0e1;">${pe}<span style="font-size:10px;color:var(--ash);">/${peM}</span></div><div class="qv-bar-wrap"><div class="qv-bar" style="width:${pct(pe,peM)}%;background:linear-gradient(to right,#006060,#00bcd4);"></div></div></div>
+  <div class="qv-stat"><div class="qv-stat-lbl">SAN</div><div class="qv-stat-val" style="color:#ce93d8;">${san}<span style="font-size:10px;color:var(--ash);">/${sanM}</span></div><div class="qv-bar-wrap"><div class="qv-bar" style="width:${pct(san,sanM)}%;background:linear-gradient(to right,#3a1a5a,#9c27b0);"></div></div></div>
+</div>
+<div class="qv-sec">☠ Medo — ${fear}/20</div>
+<div class="qv-bar-wrap" style="height:12px;"><div class="qv-bar" style="width:${Math.round(fear/20*100)}%;background:${fc};"></div></div>
+${stA.length?'<div class="qv-sec">🔴 Condições</div><div>'+stA.map(s=>'<span class="qv-tag s">'+s+'</span>').join('')+'</div>':''}
+${dvA.length?'<div class="qv-sec">⚠ Defeitos/Virtudes</div><div>'+dvA.map(d=>'<span class="qv-tag d">'+d+'</span>').join('')+'</div>':''}
+<div class="qv-sec">⚡ Ações Rápidas</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+  <button class="act-btn red"    onclick="quickDmg('${name}','pv',-1)" style="width:100%;">− PV</button>
+  <button class="act-btn green"  onclick="quickDmg('${name}','pv',1)"  style="width:100%;">+ PV</button>
+  <button class="act-btn purple" onclick="quickDmg('${name}','san',-1)"style="width:100%;">− SAN</button>
+  <button class="act-btn"        onclick="pingPlayer('${name}')"        style="width:100%;">📡 Alerta</button>
+</div>`;
+};
+window.closeQV=()=>document.getElementById('qv-overlay').classList.remove('open');
+
+window._combatActive=false;window._turn=0;window._round=1;window._order=[];
+window.toggleCombat=()=>{
+  window._combatActive=!window._combatActive;
+  document.getElementById('combat-section').style.display=window._combatActive?'block':'none';
+  if(window._combatActive){window._round=1;window._turn=0;window._order=Object.keys(window._pd||{}).map(n=>({name:n,roll:0}));document.getElementById('round-num').textContent=1;renderInitList(window._pd||{});addLog('⚔ Combate iniciado.','alert');}
+  else addLog('⚔ Combate encerrado.','alert');
+};
+function renderInitList(data){
+  const list=document.getElementById('init-list'); if(!list) return; list.innerHTML='';
+  window._order.forEach((e,i)=>{
+    const st=(data[e.name]?.stats)||{};
+    const row=document.createElement('div'); row.className='init-row'+(i===window._turn?' active-turn':'');
+    row.innerHTML='<div class="init-num">'+(e.roll||'—')+'</div><div class="init-name">'+e.name+'</div><div class="init-hp">❤ '+(st.pv_atual??'—')+'/'+(st.pv_max??'—')+'</div><input type="number" value="'+(e.roll||'')+'" placeholder="Roll" onchange="setInitRoll(\''+e.name+'\',this.value)" style="width:44px;background:var(--dark);border:1px solid var(--border);color:var(--accent);font-family:Share Tech Mono,monospace;font-size:11px;padding:2px 4px;border-radius:2px;outline:none;">';
+    list.appendChild(row);
+  });
+}
+window.nextTurn=()=>{const l=window._order.length;if(!l)return;window._turn=(window._turn+1)%l;if(window._turn===0){window._round++;document.getElementById('round-num').textContent=window._round;}renderInitList(window._pd||{});};
+window.prevTurn=()=>{const l=window._order.length;if(!l)return;window._turn=(window._turn-1+l)%l;renderInitList(window._pd||{});};
+window.resetCombat=()=>{window._combatActive=false;window._round=1;window._turn=0;document.getElementById('combat-section').style.display='none';addLog('⚔ Combate resetado.','alert');};
+window.setInitRoll=(name,val)=>{const e=window._order.find(x=>x.name===name);if(e)e.roll=parseInt(val)||0;window._order.sort((a,b)=>b.roll-a.roll);renderInitList(window._pd||{});};
+
+window._alertType='danger';
+window.selType=(type,btn)=>{window._alertType=type;document.querySelectorAll('.type-chip').forEach(c=>c.className='type-chip');btn.className='type-chip sel-'+type;};
+
+window.addLog=(msg,type='')=>{
+  const list=document.getElementById('log-list');
+  const time=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const el=document.createElement('div');el.className='log-entry '+type;el.textContent='['+time+'] '+msg;
+  list.insertBefore(el,list.firstChild);
+  while(list.children.length>50) list.removeChild(list.lastChild);
+};
+window.clearLog=()=>{document.getElementById('log-list').innerHTML='<div class="log-entry">— Log limpo —</div>';};
+</script>
+</body>
+</html>
