@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hub do Mestre · Monte Carmesim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blood:#8B1A1A;--crimson:#C0392B;--dark:#0a0a0a;--panel:#141414;
+    --card:#1c1c1c;--border:#2a2a2a;--smoke:#3a3a3a;--ash:#666;
+    --bone:#d4ccbb;--accent:#B8860B;--green:#2d6a2d;--teal:#006666;
+    --purple:#4A235A;--online:#4caf50;--offline:#555;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--dark);color:var(--bone);font-family:'Barlow Condensed',sans-serif;min-height:100vh;}
+  .hub-header{background:linear-gradient(135deg,#0d0000,#1a0505,#0d0000);border-bottom:2px solid var(--blood);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(139,26,26,.4);}
+  .hub-title h1{font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;letter-spacing:5px;color:#fff;text-shadow:0 0 20px var(--blood);}
+  .hub-title p{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--ash);letter-spacing:3px;margin-top:2px;}
+  .hub-status{display:flex;align-items:center;gap:12px;}
+  .online-count{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--online);letter-spacing:1px;}
+  .session-btn{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:6px 14px;border-radius:3px;cursor:pointer;border:none;transition:all .2s;}
+  .session-btn.primary{background:var(--blood);color:#fff;}
+  .session-btn.primary:hover{background:var(--crimson);}
+  .session-btn.secondary{background:var(--border);color:var(--bone);}
+  .session-btn.secondary:hover{background:var(--smoke);}
+  .hub-body{display:grid;grid-template-columns:1fr 300px;height:calc(100vh - 58px);}
+  .hub-main{overflow-y:auto;padding:20px;}
+  .hub-sidebar{background:var(--panel);border-left:1px solid var(--border);overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;}
+  .sec{font-family:'Oswald',sans-serif;font-size:9px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--blood);border-bottom:1px solid var(--border);padding-bottom:4px;margin-bottom:10px;}
+  .players-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:20px;}
+  .player-card{background:var(--card);border:1px solid var(--border);border-radius:6px;overflow:hidden;transition:border-color .2s;}
+  .player-card:hover{border-color:var(--smoke);}
+  .player-card.online-card{border-top:3px solid var(--online);}
+  .player-card.offline-card{border-top:3px solid var(--offline);opacity:.7;}
+  .card-header{padding:10px 14px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+  .card-name{font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#fff;}
+  .card-meta{font-size:9px;color:var(--ash);letter-spacing:1px;text-transform:uppercase;margin-top:1px;}
+  .online-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .online-dot.on{background:var(--online);box-shadow:0 0 6px var(--online);}
+  .online-dot.off{background:var(--offline);}
+  .card-pools{padding:10px 14px;display:flex;flex-direction:column;gap:5px;}
+  .pool-row{display:flex;align-items:center;gap:8px;}
+  .pool-lbl{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--ash);width:32px;flex-shrink:0;}
+  .pool-bar-wrap{flex:1;height:10px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;}
+  .pool-bar{height:100%;border-radius:2px;transition:width .4s;}
+  .pool-bar.pv{background:linear-gradient(to right,#8B1A1A,#e53935);}
+  .pool-bar.pe{background:linear-gradient(to right,#006060,#00bcd4);}
+  .pool-bar.san{background:linear-gradient(to right,#3a1a5a,#9c27b0);}
+  .pool-nums{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--bone);width:48px;text-align:right;flex-shrink:0;}
+  .fear-mini{padding:6px 14px 8px;border-top:1px solid var(--border);}
+  .fear-mini-bar{height:6px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;margin-top:3px;}
+  .fear-mini-fill{height:100%;border-radius:2px;transition:width .4s,background .4s;}
+  .card-actions{padding:8px 14px 10px;border-top:1px solid var(--border);display:flex;gap:5px;flex-wrap:wrap;}
+  .act-btn{font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:4px 8px;border-radius:2px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--bone);transition:all .15s;}
+  .act-btn:hover{background:var(--border);}
+  .act-btn.red{border-color:var(--blood);color:#ff6b6b;}
+  .act-btn.red:hover{background:rgba(139,26,26,.3);}
+  .act-btn.green{border-color:var(--green);color:#81c784;}
+  .act-btn.green:hover{background:rgba(45,106,45,.3);}
+  .act-btn.purple{border-color:var(--purple);color:#ce93d8;}
+  .act-btn.purple:hover{background:rgba(74,35,90,.3);}
+  .act-btn.blue{border-color:#1a3a6a;color:#90caf9;}
+  .act-btn.blue:hover{background:rgba(26,58,106,.3);}
+  .init-row{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:3px;padding:6px 10px;margin-bottom:5px;}
+  .init-row.active-turn{border-color:var(--accent);background:rgba(184,134,11,.1);}
+  .init-num{font-family:'Share Tech Mono',monospace;font-size:18px;font-weight:700;color:var(--accent);width:32px;text-align:center;}
+  .init-name{font-family:'Oswald',sans-serif;font-size:14px;font-weight:600;color:#fff;flex:1;}
+  .init-hp{font-family:'Share Tech Mono',monospace;font-size:10px;color:#ff6b6b;}
+  .round-display{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--accent);text-align:center;margin-bottom:8px;letter-spacing:2px;}
+  .sf select,.sf input,.sf textarea{background:var(--card);border:1px solid var(--border);border-radius:3px;color:var(--bone);font-family:'Barlow Condensed',sans-serif;font-size:12px;padding:5px 8px;outline:none;width:100%;margin-bottom:5px;}
+  .sf select:focus,.sf input:focus{border-color:var(--blood);}
+  .type-row{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:5px;}
+  .type-chip{font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:1px;padding:3px 8px;border-radius:2px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--ash);transition:all .15s;}
+  .type-chip.sel-danger{background:rgba(139,26,26,.4);border-color:var(--crimson);color:#ff6b6b;}
+  .type-chip.sel-warning{background:rgba(122,88,0,.4);border-color:#cc9900;color:#ffd54f;}
+  .type-chip.sel-heal{background:rgba(45,106,45,.4);border-color:#4caf50;color:#81c784;}
+  .type-chip.sel-info{background:rgba(26,58,106,.4);border-color:#2196f3;color:#90caf9;}
+  .hub-die-btn{font-family:'Oswald',sans-serif;font-size:13px;font-weight:700;padding:7px 4px;border:2px solid var(--border);border-radius:4px;background:var(--card);color:var(--bone);cursor:pointer;text-align:center;transition:all .15s;}
+  .hub-die-btn:hover{border-color:var(--accent);background:rgba(184,134,11,.1);}
+  .hub-die-btn.sel{border-color:var(--accent);background:var(--accent);color:#fff;}
+  .hub-roll-display{font-family:'Oswald',sans-serif;font-size:52px;font-weight:700;text-align:center;padding:8px 0 2px;transition:all .3s;display:none;}
+  .hub-roll-display.secret{color:var(--ash);font-size:34px;letter-spacing:4px;}
+  .hub-roll-display.visible{color:var(--accent);text-shadow:0 0 20px rgba(184,134,11,.4);}
+  .hub-dice-section{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:12px;margin-bottom:14px;}
+  .hub-roll-log{display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto;margin-top:8px;}
+  .hub-roll-entry{background:rgba(255,255,255,.03);border:1px solid var(--border);border-left:3px solid var(--blood);border-radius:3px;padding:5px 8px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--bone);}
+  .hub-roll-player{color:var(--accent);font-weight:700;}
+  .hub-roll-total{color:var(--crimson);font-size:14px;font-weight:700;}
+  .log-list{display:flex;flex-direction:column;gap:3px;max-height:160px;overflow-y:auto;}
+  .log-entry{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--ash);padding:3px 6px;border-left:2px solid var(--border);line-height:1.4;}
+  .log-entry.dmg{border-color:var(--crimson);color:#ff8a80;}
+  .log-entry.heal{border-color:var(--green);color:#a5d6a7;}
+  .log-entry.mental{border-color:var(--purple);color:#ce93d8;}
+  .log-entry.alert{border-color:var(--accent);color:#ffe082;}
+  .notes-box{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:8px;min-height:100px;font-family:'Barlow Condensed',sans-serif;font-size:12px;color:var(--bone);outline:none;line-height:1.5;resize:none;width:100%;}
+  .notes-box:focus{border-color:var(--blood);}
+  .clima-banner{background:linear-gradient(135deg,#0a0a18,#0d0d20);border:1px solid #1a2a4a;border-left:3px solid #1a6a8a;border-radius:4px;padding:8px 14px;margin-bottom:14px;display:none;align-items:center;gap:12px;}
+  .clima-icon{font-size:22px;}
+  .clima-title{font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;color:#90caf9;letter-spacing:1px;}
+  .clima-sub{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--ash);letter-spacing:1px;margin-top:2px;}
+  .clima-temp{font-family:'Share Tech Mono',monospace;font-size:18px;font-weight:700;color:#90caf9;margin-left:auto;}
+  .qv-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:400;}
+  .qv-overlay.open{display:block;}
+  .qv-panel{position:fixed;top:0;right:0;bottom:0;width:400px;max-width:95vw;background:var(--panel);border-left:2px solid var(--blood);overflow-y:auto;z-index:401;transform:translateX(100%);transition:transform .3s;padding:20px;}
+  .qv-overlay.open .qv-panel{transform:translateX(0);}
+  .qv-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:10px;}
+  .qv-name{font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;letter-spacing:3px;color:#fff;text-transform:uppercase;}
+  .qv-close{font-size:20px;color:var(--ash);cursor:pointer;background:none;border:none;transition:color .2s;}
+  .qv-close:hover{color:var(--crimson);}
+  .qv-sec{font-family:'Oswald',sans-serif;font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--blood);border-bottom:1px solid var(--border);padding-bottom:3px;margin:12px 0 8px;}
+  .qv-stat-row{display:flex;gap:6px;margin-bottom:6px;}
+  .qv-stat{flex:1;background:var(--card);border:1px solid var(--border);border-radius:3px;padding:6px 8px;text-align:center;}
+  .qv-stat-lbl{font-size:7px;color:var(--ash);letter-spacing:1px;text-transform:uppercase;}
+  .qv-stat-val{font-family:'Share Tech Mono',monospace;font-size:16px;font-weight:700;color:#fff;margin-top:2px;}
+  .qv-bar-wrap{height:6px;background:rgba(255,255,255,.05);border-radius:2px;margin-top:3px;overflow:hidden;}
+  .qv-bar{height:100%;border-radius:2px;}
+  .qv-tag{font-size:9px;padding:2px 6px;border-radius:2px;font-family:'Barlow Condensed',sans-serif;font-weight:600;display:inline-block;margin:2px;}
+  .qv-tag.d{background:rgba(139,26,26,.3);color:#ff8a80;border:1px solid rgba(192,57,43,.4);}
+  .qv-tag.s{background:rgba(192,57,43,.2);color:#ff6b6b;border:1px solid rgba(192,57,43,.4);}
+  ::-webkit-scrollbar{width:4px;}
+  ::-webkit-scrollbar-track{background:var(--dark);}
+  ::-webkit-scrollbar-thumb{background:var(--smoke);border-radius:2px;}
+
+  /* ── NPC SYSTEM ── */
+  .npc-tabs{display:flex;gap:4px;margin-bottom:12px;}
+  .npc-tab{font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:5px 12px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--ash);transition:all .15s;}
+  .npc-tab.active{background:var(--blood);border-color:var(--blood);color:#fff;}
+  .npc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:16px;}
+
+  /* NPC card base */
+  .npc-card{background:var(--card);border:1px solid var(--border);border-radius:6px;overflow:hidden;transition:border-color .2s;}
+  .npc-card:hover{border-color:var(--smoke);}
+  .npc-card.ally{border-top:3px solid #1a6a8a;}
+  .npc-card.enemy{border-top:3px solid var(--blood);}
+  .npc-card.monster{border-top:3px solid #5a1a7a;}
+  .npc-card.neutral{border-top:3px solid var(--accent);}
+
+  .npc-header{padding:8px 12px 6px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+  .npc-name{font-family:'Oswald',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#fff;}
+  .npc-meta{font-size:8px;color:var(--ash);letter-spacing:1px;text-transform:uppercase;margin-top:1px;}
+  .npc-type-badge{font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:1px;text-transform:uppercase;padding:2px 6px;border-radius:2px;flex-shrink:0;}
+  .npc-type-badge.ally{background:rgba(26,106,138,.3);color:#90caf9;border:1px solid rgba(26,106,138,.5);}
+  .npc-type-badge.enemy{background:rgba(139,26,26,.3);color:#ff8a80;border:1px solid rgba(139,26,26,.5);}
+  .npc-type-badge.monster{background:rgba(90,26,122,.3);color:#ce93d8;border:1px solid rgba(90,26,122,.5);}
+  .npc-type-badge.neutral{background:rgba(184,134,11,.2);color:#ffe082;border:1px solid rgba(184,134,11,.4);}
+
+  /* Agente NPC pools */
+  .npc-pools{padding:8px 12px;display:flex;flex-direction:column;gap:4px;}
+
+  /* Monstro VD bar */
+  .npc-vd-wrap{padding:8px 12px;}
+  .npc-vd-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+  .npc-vd-lbl{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--ash);width:28px;flex-shrink:0;}
+  .npc-vd-nums{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--bone);width:56px;text-align:right;flex-shrink:0;}
+  .npc-vd-bar-wrap{flex:1;height:8px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;}
+  .npc-vd-bar{height:100%;border-radius:2px;background:linear-gradient(to right,#5a1a7a,#ab47bc);transition:width .4s;}
+  .npc-pp{font-family:'Share Tech Mono',monospace;font-size:8px;color:#ce93d8;padding:0 12px 4px;}
+  .npc-attrs{display:flex;gap:4px;padding:0 12px 6px;flex-wrap:wrap;}
+  .npc-attr{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--ash);background:rgba(255,255,255,.03);padding:2px 5px;border-radius:2px;border:1px solid var(--border);}
+  .npc-attr span{color:var(--bone);}
+
+  .npc-actions{padding:6px 12px 8px;border-top:1px solid var(--border);display:flex;gap:4px;flex-wrap:wrap;}
+
+  /* Modal de criação de NPC */
+  .npc-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:500;align-items:center;justify-content:center;}
+  .npc-modal-overlay.open{display:flex;}
+  .npc-modal{background:var(--panel);border:2px solid var(--blood);border-radius:6px;width:560px;max-width:95vw;max-height:90vh;overflow-y:auto;padding:20px;}
+  .npc-modal-title{font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;letter-spacing:3px;color:#fff;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;}
+  .npc-modal-close{font-size:18px;color:var(--ash);cursor:pointer;background:none;border:none;}
+  .npc-modal-close:hover{color:var(--crimson);}
+  .npc-field-row{display:grid;gap:8px;margin-bottom:8px;}
+  .npc-field-row.cols2{grid-template-columns:1fr 1fr;}
+  .npc-field-row.cols3{grid-template-columns:1fr 1fr 1fr;}
+  .npc-field-row.cols5{grid-template-columns:repeat(5,1fr);}
+  .npc-field label{font-family:'Oswald',sans-serif;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--ash);display:block;margin-bottom:3px;}
+  .npc-field input,.npc-field select,.npc-field textarea{background:var(--card);border:1px solid var(--border);border-radius:3px;color:var(--bone);font-family:'Barlow Condensed',sans-serif;font-size:12px;padding:5px 8px;outline:none;width:100%;}
+  .npc-field input:focus,.npc-field select:focus,.npc-field textarea:focus{border-color:var(--blood);}
+  .npc-field textarea{resize:vertical;min-height:60px;}
+  .npc-divider{height:1px;background:var(--border);margin:12px 0;}
+  .npc-section-lbl{font-family:'Oswald',sans-serif;font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--blood);margin-bottom:8px;}
+  .npc-calc-preview{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:8px 10px;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--bone);line-height:1.8;margin-bottom:8px;}
+  .npc-modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;}
+  .npc-type-sel{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+  .npc-type-btn{font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:5px 10px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--ash);transition:all .15s;}
+  .npc-type-btn.sel-ally{background:rgba(26,106,138,.4);border-color:#1a6a8a;color:#90caf9;}
+  .npc-type-btn.sel-enemy{background:rgba(139,26,26,.4);border-color:var(--crimson);color:#ff8a80;}
+  .npc-type-btn.sel-monster{background:rgba(90,26,122,.4);border-color:#7b2fbe;color:#ce93d8;}
+  .npc-type-btn.sel-neutral{background:rgba(184,134,11,.3);border-color:var(--accent);color:#ffe082;}
+  .npc-mode-toggle{display:flex;gap:4px;margin-bottom:10px;}
+  .npc-mode-btn{flex:1;font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:6px;border-radius:3px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--ash);transition:all .15s;text-align:center;}
+  .npc-mode-btn.active{background:var(--blood);border-color:var(--blood);color:#fff;}
+
+  /* ── PERÍCIAS NPC ── */
+  .pericias-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-top:4px;}
+  .per-chk{display:flex;align-items:center;gap:5px;padding:3px 5px;border-radius:3px;cursor:pointer;border:1px solid transparent;transition:all .15s;user-select:none;}
+  .per-chk:hover{background:rgba(255,255,255,.05);border-color:var(--border);}
+  .per-chk.checked{background:rgba(139,26,26,.2);border-color:rgba(139,26,26,.5);}
+  .per-chk input{display:none;}
+  .per-dot{width:8px;height:8px;border-radius:50%;border:1px solid var(--ash);flex-shrink:0;transition:all .15s;}
+  .per-chk.checked .per-dot{background:var(--crimson);border-color:var(--crimson);}
+  .per-lbl{font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--ash);transition:color .15s;}
+  .per-chk.checked .per-lbl{color:var(--bone);}
+  .per-atr{font-family:'Share Tech Mono',monospace;font-size:7px;color:var(--smoke);margin-left:auto;}
+  .per-chk.checked .per-atr{color:var(--ash);}
+  /* Tags de perícia no card */
+  .pericias-tags{padding:4px 12px 6px;display:flex;flex-wrap:wrap;gap:3px;border-top:1px solid var(--border);}
+  .per-tag{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;padding:1px 6px;border-radius:2px;background:rgba(139,26,26,.2);color:#ff8a80;border:1px solid rgba(139,26,26,.35);}
+</style>
+</head>
+<body>
+
+<div class="hub-header">
+  <div class="hub-title">
+    <h1>☠ Monte Carmesim</h1>
+    <p>PAINEL DO MESTRE · ORDEM PARANORMAL RPG</p>
+  </div>
+  <div class="hub-status">
+    <div class="online-count">● <span id="online-count">0</span> online</div>
+    <button class="session-btn secondary" onclick="toggleCombat()">⚔ Modo Combate</button>
+    <button class="session-btn primary"   onclick="addPlayerPrompt()">+ Jogador</button>
+  </div>
+</div>
+
+<div class="hub-body">
+  <div class="hub-main">
+    <div id="clima-banner" class="clima-banner">
+      <div class="clima-icon" id="clima-icon">🌙</div>
+      <div><div class="clima-title" id="clima-titulo">—</div><div class="clima-sub" id="clima-desc">—</div></div>
+      <div class="clima-temp" id="clima-temp-display">—</div>
+    </div>
+    <div class="hub-dice-section">
+      <div class="sec" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span>🎲 Rolagens dos Jogadores</span>
+        <button class="act-btn" onclick="clearRollLog()" style="font-size:8px;">Limpar</button>
+      </div>
+      <div class="hub-roll-log" id="hub-roll-log">
+        <div style="font-size:9px;color:var(--ash);text-align:center;padding:8px;font-family:'Share Tech Mono',monospace;">Aguardando rolagens...</div>
+      </div>
+    </div>
+    <div class="sec">👤 Agentes</div>
+    <div class="players-grid" id="players-grid">
+      <div style="color:var(--ash);font-size:12px;font-family:'Share Tech Mono',monospace;padding:20px;">Aguardando jogadores... clique em + Jogador para adicionar.</div>
+    </div>
+    <!-- NPCs -->
+    <div style="margin-bottom:20px;">
+      <div class="sec" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>🧩 NPCs</span>
+        <div style="display:flex;gap:6px;">
+          <button class="act-btn blue" onclick="openNpcModal('agente')" style="font-size:8px;">+ Agente</button>
+          <button class="act-btn purple" onclick="openNpcModal('monstro')" style="font-size:8px;">+ Ameaça</button>
+        </div>
+      </div>
+      <div class="npc-tabs">
+        <button class="npc-tab active" onclick="filterNpcs('all',this)">Todos</button>
+        <button class="npc-tab" onclick="filterNpcs('ally',this)">🤝 Aliados</button>
+        <button class="npc-tab" onclick="filterNpcs('enemy',this)">⚔ Inimigos</button>
+        <button class="npc-tab" onclick="filterNpcs('monster',this)">👹 Ameaças</button>
+        <button class="npc-tab" onclick="filterNpcs('neutral',this)">◈ Neutros</button>
+      </div>
+      <div class="npc-grid" id="npc-grid">
+        <div style="color:var(--ash);font-size:11px;font-family:'Share Tech Mono',monospace;padding:16px;grid-column:1/-1;">
+          Nenhum NPC criado. Use os botões acima para adicionar.
+        </div>
+      </div>
+    </div>
+
+    <div id="combat-section" style="display:none;">
+      <div class="sec" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>⚔ Tracker de Combate</span>
+        <div style="display:flex;gap:6px;">
+          <button class="act-btn" onclick="prevTurn()">◀ Anterior</button>
+          <button class="act-btn green" onclick="nextTurn()">Próximo ▶</button>
+          <button class="act-btn red"   onclick="resetCombat()">✕ Encerrar</button>
+        </div>
+      </div>
+      <div class="round-display">RODADA <span id="round-num">1</span></div>
+      <div id="init-list"></div>
+    </div>
+    <div style="margin-top:20px;">
+      <div class="sec" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>📋 Log da Sessão</span>
+        <button class="act-btn" onclick="clearLog()" style="font-size:8px;">Limpar</button>
+      </div>
+      <div class="log-list" id="log-list"><div class="log-entry">— Sessão iniciada —</div></div>
+    </div>
+  </div>
+
+  <div class="hub-sidebar">
+
+    <!-- DADOS DO MESTRE -->
+    <div>
+      <div class="sec">🎲 Dados do Mestre</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:6px;">
+        <button class="hub-die-btn" onclick="hubSelDie(4,this)">d4</button>
+        <button class="hub-die-btn" onclick="hubSelDie(6,this)">d6</button>
+        <button class="hub-die-btn" onclick="hubSelDie(8,this)">d8</button>
+        <button class="hub-die-btn" onclick="hubSelDie(10,this)">d10</button>
+        <button class="hub-die-btn" onclick="hubSelDie(12,this)">d12</button>
+        <button class="hub-die-btn sel" onclick="hubSelDie(20,this)">d20</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:8px;">
+        <button class="hub-die-btn" onclick="hubSelDie(100,this)">d100</button>
+        <div style="display:flex;align-items:center;gap:4px;justify-content:center;">
+          <button onclick="hubChgQty(-1)" style="width:22px;height:22px;border:1px solid var(--border);border-radius:2px;background:transparent;color:var(--bone);cursor:pointer;font-size:14px;line-height:1;padding:0;">−</button>
+          <span id="hub-qty" style="font-family:'Oswald',sans-serif;font-size:18px;font-weight:700;color:var(--accent);min-width:22px;text-align:center;">1</span>
+          <button onclick="hubChgQty(1)" style="width:22px;height:22px;border:1px solid var(--border);border-radius:2px;background:transparent;color:var(--bone);cursor:pointer;font-size:14px;line-height:1;padding:0;">+</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+        <span style="font-size:10px;color:var(--ash);white-space:nowrap;">Bônus/Mod:</span>
+        <input type="number" id="hub-bonus" value="0" style="width:50px;background:var(--card);border:1px solid var(--border);border-radius:3px;color:var(--bone);font-family:'Share Tech Mono',monospace;font-size:12px;padding:3px 6px;text-align:center;outline:none;">
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;color:var(--ash);margin-bottom:8px;">
+        <input type="checkbox" id="hub-secret" checked style="cursor:pointer;accent-color:var(--blood);">
+        <span>🔒 Rolagem secreta</span>
+      </label>
+      <button onclick="hubRoll()" style="width:100%;font-family:'Oswald',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;padding:8px;background:var(--accent);color:#fff;border:none;border-radius:4px;cursor:pointer;">🎲 ROLAR</button>
+      <div id="hub-roll-display" class="hub-roll-display"></div>
+      <div id="hub-roll-detail" style="text-align:center;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--ash);"></div>
+    </div>
+
+    <!-- ENVIAR ALERTA -->
+    <div>
+      <div class="sec">📡 Enviar Alerta</div>
+      <div class="sf">
+        <select id="alert-target"><option value="all">→ Todos os jogadores</option></select>
+        <div class="type-row">
+          <button class="type-chip sel-danger"  onclick="selType('danger',this)">⚔ Dano</button>
+          <button class="type-chip"              onclick="selType('heal',this)">💚 Cura</button>
+          <button class="type-chip"              onclick="selType('warning',this)">⚠ Aviso</button>
+          <button class="type-chip"              onclick="selType('info',this)">📢 Info</button>
+        </div>
+        <input type="text" id="alert-msg" placeholder="Mensagem..." onkeydown="if(event.key==='Enter')sendAlert()">
+        <button class="session-btn primary" onclick="sendAlert()" style="width:100%;font-size:10px;padding:6px;">📡 ENVIAR</button>
+      </div>
+    </div>
+
+    <!-- DANO / CURA -->
+    <div>
+      <div class="sec">⚡ Aplicar Dano / Cura</div>
+      <div class="sf">
+        <select id="dmg-target"><option value="all">→ Todos os jogadores</option></select>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <div><div style="font-size:8px;color:var(--ash);margin-bottom:2px;">TIPO</div>
+            <select id="dmg-type"><option value="pv">PV (Vida)</option><option value="pe">PE (Esforço)</option><option value="san">SAN (Sanidade)</option></select></div>
+          <div><div style="font-size:8px;color:var(--ash);margin-bottom:2px;">VALOR</div><input type="number" id="dmg-value" value="5" min="1"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:2px;">
+          <button class="act-btn red"   onclick="applyDmgHeal(-1)" style="width:100%;text-align:center;padding:6px;">− Dano</button>
+          <button class="act-btn green" onclick="applyDmgHeal(1)"  style="width:100%;text-align:center;padding:6px;">+ Cura</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MEDO -->
+    <div>
+      <div class="sec">☠ Controle de Medo</div>
+      <div class="sf">
+        <select id="fear-target"><option value="all">→ Todos os jogadores</option></select>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;align-items:end;">
+          <div><div style="font-size:8px;color:var(--ash);margin-bottom:2px;">VALOR</div>
+            <input type="number" id="fear-value" value="1" min="1" max="20" style="font-size:16px;text-align:center;font-family:'Share Tech Mono',monospace;"></div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <button class="act-btn red"   onclick="applyFear(1)"  style="width:100%;text-align:center;padding:5px;">☠ + Medo</button>
+            <button class="act-btn green" onclick="applyFear(-1)" style="width:100%;text-align:center;padding:5px;">✦ − Medo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONDIÇÃO -->
+    <div>
+      <div class="sec">🔴 Aplicar Condição</div>
+      <div class="sf">
+        <select id="status-target"><option value="all">→ Todos os jogadores</option></select>
+        <select id="status-type">
+          <option>😴 Cansado</option><option>💤 Exausto</option><option>🩸 Sangrando</option>
+          <option>😰 Em Pânico</option><option>🍗 Faminto</option><option>💧 Desidratado</option>
+          <option>❄️ Hipotermia</option><option>🥵 Golpe de Calor</option>
+          <option>💀 Morrendo</option><option>🔥 Em Chamas</option><option>🧠 Insano</option>
+        </select>
+        <button class="session-btn primary" onclick="applyStatus()" style="width:100%;font-size:10px;padding:6px;">Aplicar</button>
+      </div>
+    </div>
+
+    <!-- CLIMA -->
+    <div>
+      <div class="sec">🌍 Clima & Ambiente</div>
+      <div class="sf">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <div><div style="font-size:8px;color:var(--ash);margin-bottom:2px;">ÍCONE</div>
+            <select id="clima-icon-sel">
+              <option value="🌙">🌙 Noite</option><option value="☀️">☀️ Dia</option>
+              <option value="🌧️">🌧️ Chuva</option><option value="⛈️">⛈️ Tempestade</option>
+              <option value="❄️">❄️ Neve</option><option value="🌫️">🌫️ Névoa</option>
+              <option value="🔥">🔥 Calor extremo</option><option value="💀">💀 Território morto</option>
+              <option value="🩸">🩸 Chuva de sangue</option><option value="👁️">👁️ O Outro Lado</option>
+            </select></div>
+          <div><div style="font-size:8px;color:var(--ash);margin-bottom:2px;">°C</div>
+            <input type="number" id="clima-temp" placeholder="—"></div>
+        </div>
+        <input type="text" id="clima-titulo-inp" placeholder="Título...">
+        <input type="text" id="clima-desc-inp"   placeholder="Descrição...">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:2px;">
+          <button class="session-btn primary"   onclick="applyClima()" style="font-size:10px;padding:6px;">🌍 Aplicar</button>
+          <button class="session-btn secondary" onclick="clearClima()" style="font-size:10px;padding:6px;">✕ Limpar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTAS -->
+    <div style="flex:1;">
+      <div class="sec">📝 Notas da Sessão</div>
+      <textarea class="notes-box" id="session-notes" placeholder="Anotações privadas..." rows="6"></textarea>
+    </div>
+
+  </div>
+</div>
+
+<!-- QUICKVIEW -->
+<div class="qv-overlay" id="qv-overlay" onclick="if(event.target===this)closeQV()">
+  <div class="qv-panel">
+    <div class="qv-header">
+      <div class="qv-name" id="qv-name">—</div>
+      <button class="qv-close" onclick="closeQV()">✕</button>
+    </div>
+    <div id="qv-content"></div>
+  </div>
+</div>
+
+<!-- NPC MODAL -->
+<div class="npc-modal-overlay" id="npc-modal-overlay" onclick="if(event.target===this)closeNpcModal()">
+  <div class="npc-modal" id="npc-modal">
+    <div class="npc-modal-title">
+      <span id="npc-modal-title-text">Novo NPC</span>
+      <button class="npc-modal-close" onclick="closeNpcModal()">✕</button>
+    </div>
+
+    <!-- Modo: Agente ou Monstro -->
+    <div class="npc-mode-toggle">
+      <button class="npc-mode-btn active" id="mode-agente" onclick="setNpcMode('agente')">👤 Agente / Pessoa</button>
+      <button class="npc-mode-btn" id="mode-monstro" onclick="setNpcMode('monstro')">👹 Ameaça / Monstro</button>
+    </div>
+
+    <!-- Tipo -->
+    <div class="npc-section-lbl">Relação com o grupo</div>
+    <div class="npc-type-sel">
+      <button class="npc-type-btn sel-ally"   onclick="setNpcType('ally',this)">🤝 Aliado</button>
+      <button class="npc-type-btn"             onclick="setNpcType('enemy',this)">⚔ Inimigo</button>
+      <button class="npc-type-btn"             onclick="setNpcType('neutral',this)">◈ Neutro</button>
+      <button class="npc-type-btn"             onclick="setNpcType('monster',this)">👹 Ameaça</button>
+    </div>
+
+    <!-- Nome e info básica -->
+    <div class="npc-field-row cols2">
+      <div class="npc-field"><label>Nome</label><input type="text" id="npc-nome" placeholder="Nome do NPC..."></div>
+      <div class="npc-field"><label>Descrição curta</label><input type="text" id="npc-desc" placeholder="Ex: Médica da Ordem, Bandido..."></div>
+    </div>
+
+    <!-- SEÇÃO AGENTE -->
+    <div id="npc-section-agente">
+      <div class="npc-divider"></div>
+      <div class="npc-section-lbl">⚙ Classe & NEX (cálculo automático)</div>
+      <div class="npc-field-row cols2">
+        <div class="npc-field"><label>Classe</label>
+          <select id="npc-classe" onchange="npcRecalc()">
+            <option value="">— Selecione —</option>
+            <option value="combatente">Combatente</option>
+            <option value="especialista">Especialista</option>
+            <option value="ocultista">Ocultista</option>
+            <option value="sobrevivente">Sobrevivente</option>
+          </select>
+        </div>
+        <div class="npc-field"><label>NEX / Estágio</label>
+          <select id="npc-nex" onchange="npcRecalc()">
+            <option value="1">5%</option><option value="2">10%</option><option value="3">15%</option>
+            <option value="4">20%</option><option value="5">25%</option><option value="6">30%</option>
+            <option value="7">35%</option><option value="8">40%</option><option value="9">45%</option>
+            <option value="10">50%</option><option value="11">55%</option><option value="12">60%</option>
+            <option value="13">65%</option><option value="14">70%</option><option value="15">75%</option>
+            <option value="16">80%</option><option value="17">85%</option><option value="18">90%</option>
+            <option value="19">95%</option><option value="20">99%</option>
+          </select>
+        </div>
+      </div>
+      <div class="npc-section-lbl">Atributos</div>
+      <div class="npc-field-row cols5">
+        <div class="npc-field"><label>FOR</label><input type="number" id="npc-for" value="2" min="1" max="5" onchange="npcRecalc()"></div>
+        <div class="npc-field"><label>AGI</label><input type="number" id="npc-agi" value="2" min="1" max="5" onchange="npcRecalc()"></div>
+        <div class="npc-field"><label>INT</label><input type="number" id="npc-int" value="2" min="1" max="5" onchange="npcRecalc()"></div>
+        <div class="npc-field"><label>PRE</label><input type="number" id="npc-pre" value="2" min="1" max="5" onchange="npcRecalc()"></div>
+        <div class="npc-field"><label>VIG</label><input type="number" id="npc-vig" value="2" min="1" max="5" onchange="npcRecalc()"></div>
+      </div>
+      <div class="npc-calc-preview" id="npc-calc-preview">Selecione uma classe para ver os cálculos.</div>
+      <div class="npc-field-row cols3">
+        <div class="npc-field"><label>PV máx (calculado)</label><input type="number" id="npc-pv-max" placeholder="—"></div>
+        <div class="npc-field"><label>PE máx (calculado)</label><input type="number" id="npc-pe-max" placeholder="—"></div>
+        <div class="npc-field"><label>SAN máx (calculada)</label><input type="number" id="npc-san-max" placeholder="—"></div>
+      </div>
+      <div class="npc-divider"></div>
+      <div class="npc-section-lbl">📋 Perícias Treinadas <span style="font-weight:400;color:var(--ash);font-size:8px;">(marque as que o NPC possui)</span></div>
+      <div class="pericias-grid" id="npc-pericias-grid"></div>
+    </div>
+
+    <!-- SEÇÃO MONSTRO -->
+    <div id="npc-section-monstro" style="display:none;">
+      <div class="npc-divider"></div>
+      <div class="npc-section-lbl">⚡ Stats da Ameaça</div>
+      <div class="npc-field-row cols3">
+        <div class="npc-field"><label>VD (Valor de Desafio)</label><input type="number" id="npc-vd" value="40" min="1"></div>
+        <div class="npc-field"><label>PV (Pontos de Vida)</label><input type="number" id="npc-m-pv" value="80" min="1"></div>
+        <div class="npc-field"><label>Defesa</label><input type="number" id="npc-defesa" value="14" min="1"></div>
+      </div>
+      <div class="npc-field-row cols5">
+        <div class="npc-field"><label>AGI</label><input type="number" id="npc-m-agi" value="2" min="0" max="9"></div>
+        <div class="npc-field"><label>FOR</label><input type="number" id="npc-m-for" value="2" min="0" max="9"></div>
+        <div class="npc-field"><label>INT</label><input type="number" id="npc-m-int" value="2" min="0" max="9"></div>
+        <div class="npc-field"><label>PRE</label><input type="number" id="npc-m-pre" value="2" min="0" max="9"></div>
+        <div class="npc-field"><label>VIG</label><input type="number" id="npc-m-vig" value="2" min="0" max="9"></div>
+      </div>
+      <div class="npc-field-row cols3">
+        <div class="npc-field"><label>Fortitude</label><input type="text" id="npc-fort" placeholder="ex: 2d20+5"></div>
+        <div class="npc-field"><label>Reflexos</label><input type="text" id="npc-ref" placeholder="ex: 3d20+10"></div>
+        <div class="npc-field"><label>Vontade</label><input type="text" id="npc-von" placeholder="ex: 2d20+5"></div>
+      </div>
+      <div class="npc-field-row cols2">
+        <div class="npc-field"><label>Presença Perturbadora (DT)</label><input type="number" id="npc-pp-dt" placeholder="ex: 20"></div>
+        <div class="npc-field"><label>Dano mental (PP)</label><input type="text" id="npc-pp-dano" placeholder="ex: 4d6"></div>
+      </div>
+      <div class="npc-field-row cols2">
+        <div class="npc-field"><label>NEX de imunidade à PP</label><input type="text" id="npc-pp-nex" placeholder="ex: 30% ou —"></div>
+        <div class="npc-field"><label>Deslocamento</label><input type="text" id="npc-desl" placeholder="ex: 9m"></div>
+      </div>
+      <div class="npc-field-row">
+        <div class="npc-field"><label>Resistências / Imunidades / Vulnerabilidades</label>
+          <input type="text" id="npc-resist" placeholder="ex: Balístico 5, Imune a condições mentais..."></div>
+      </div>
+    </div>
+
+    <!-- CAMPOS COMUNS -->
+    <div class="npc-divider"></div>
+    <div class="npc-field-row">
+      <div class="npc-field"><label>Habilidades & Ações (resumo)</label>
+        <textarea id="npc-acoes" placeholder="Ex: PADRÃO ◆ AGREDIR — Faca corpo a corpo, Teste 2d20+5, Dano 1d6+3 corte&#10;LIVRE ◆ FURTIVO — +2d6 dano contra alvos desprevenidos"></textarea>
+      </div>
+    </div>
+    <div class="npc-field-row cols2">
+      <div class="npc-field"><label>Persistir entre sessões?</label>
+        <select id="npc-persist">
+          <option value="1">✓ Sim — salvar no Firebase</option>
+          <option value="0">✗ Não — apenas esta sessão</option>
+        </select>
+      </div>
+      <div class="npc-field"><label>Enigma de Medo (opcional)</label>
+        <input type="text" id="npc-enigma" placeholder="Condição para remover imunidade..."></div>
+    </div>
+
+    <div class="npc-modal-btns">
+      <button class="session-btn secondary" onclick="closeNpcModal()">Cancelar</button>
+      <button class="session-btn primary" onclick="saveNpc()" id="npc-save-btn">✓ Criar NPC</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const db = getDatabase(initializeApp({
+  apiKey:"AIzaSyCSQXdyLvqC4zT2BkSwUKk-uostVn2BmA8",
+  authDomain:"rpg-ficha-monte-carmesim.firebaseapp.com",
+  databaseURL:"https://rpg-ficha-monte-carmesim-default-rtdb.firebaseio.com",
+  projectId:"rpg-ficha-monte-carmesim",
+  storageBucket:"rpg-ficha-monte-carmesim.firebasestorage.app",
+  messagingSenderId:"909026041375",
+  appId:"1:909026041375:web:df06386967dd9181a23f2a"
+}));
+
+window._pd = {};
+
+onValue(ref(db,'players'), snap => {
+  window._pd = snap.val()||{};
+  renderCards(window._pd);
+  updateSels(window._pd);
+  document.getElementById('online-count').textContent =
+    Object.values(window._pd).filter(p=>p.online===true).length;
+  if(window._combatActive) renderInitList(window._pd);
+});
+
+onValue(ref(db,'rolls'), snap => {
+  const d=snap.val(); const log=document.getElementById('hub-roll-log'); if(!log) return;
+  if(!d||!Object.keys(d).length){log.innerHTML='<div style="font-size:9px;color:var(--ash);text-align:center;padding:8px;font-family:Share Tech Mono,monospace;">Aguardando rolagens...</div>';return;}
+  const entries=Object.entries(d).map(([p,r])=>({player:p,...r})).sort((a,b)=>(b.ts||0)-(a.ts||0));
+  log.innerHTML='';
+  entries.forEach(({player,label,rolls,total,ts})=>{
+    const time=ts?new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
+    const e=document.createElement('div'); e.className='hub-roll-entry';
+    const pct=total/(parseInt((label||'').match(/d(\d+)/)?.[1]||20));
+    const col=pct>=0.9?'#4caf50':pct<=0.1?'#e53935':'';
+    e.innerHTML='<span class="hub-roll-player">'+player+'</span> <span style="color:var(--ash);">'+time+'</span> <span class="hub-roll-total"'+(col?' style="color:'+col+'"':'')+'>= '+total+'</span>'+(rolls&&rolls.length>1?' <span style="color:var(--ash);font-size:8px;">['+rolls.join(', ')+']</span>':'');
+    log.appendChild(e);
+  });
+});
+
+onValue(ref(db,'clima'), snap=>{
+  const d=snap.val(); const b=document.getElementById('clima-banner');
+  if(!d||!d.active){b.style.display='none';return;}
+  b.style.display='flex';
+  document.getElementById('clima-icon').textContent=d.icon||'🌙';
+  document.getElementById('clima-titulo').textContent=d.titulo||'—';
+  document.getElementById('clima-desc').textContent=d.desc||'';
+  document.getElementById('clima-temp-display').textContent=d.temp||'—';
+});
+
+function renderCards(data){
+  const grid=document.getElementById('players-grid');
+  if(!Object.keys(data).length){grid.innerHTML='<div style="color:var(--ash);font-size:12px;font-family:Share Tech Mono,monospace;padding:20px;">Aguardando jogadores...</div>';return;}
+  grid.innerHTML='';
+  Object.entries(data).forEach(([name,player])=>grid.appendChild(mkCard(name,player)));
+}
+
+function mkCard(name,player){
+  const st=player.stats||{},online=player.online===true;
+  const pv=st.pv_atual??'—',pvM=st.pv_max??'—';
+  const pe=st.pe_atual??'—',peM=st.pe_max??'—';
+  const san=st.san_atual??'—',sanM=st.san_max??'—';
+  const fear=st.fear??0;
+  const pct=(a,b)=>b>0?Math.min(100,Math.round(a/b*100)):0;
+  const fp=Math.round(fear/20*100);
+  const fc=fear<=4?'#4caf50':fear<=8?'#cddc39':fear<=12?'#ff9800':fear<=16?'#f44336':'#b71c1c';
+  const cls=st.classe?st.classe.charAt(0).toUpperCase()+st.classe.slice(1):'—';
+  const nL=['5%','10%','15%','20%','25%','30%','35%','40%','45%','50%','55%','60%','65%','70%','75%','80%','85%','90%','95%','99%'];
+  const nex=st.isSobrevivente
+    ? (st.estagio ? 'Estágio '+st.estagio : '—')
+    : (st.nex?(nL[parseInt(st.nex)-1]||'—'):'—');
+  const agentName = player.ficha?.inputs?.id_nome?.trim() || name;
+  const d=document.createElement('div');
+  d.className='player-card '+(online?'online-card':'offline-card');
+  d.id='card-'+name;
+  d.innerHTML=`<div class="card-header"><div><div class="card-name">${agentName}</div><div class="card-meta">${cls} · ${nex} · <span style="color:var(--ash);opacity:.6;">${name}</span></div></div><div class="online-dot ${online?'on':'off'}"></div></div>
+<div class="card-pools">
+<div class="pool-row"><div class="pool-lbl">PV</div><div class="pool-bar-wrap"><div class="pool-bar pv" style="width:${pct(pv,pvM)}%"></div></div><div class="pool-nums">${pv}/${pvM}</div></div>
+<div class="pool-row"><div class="pool-lbl">PE</div><div class="pool-bar-wrap"><div class="pool-bar pe" style="width:${pct(pe,peM)}%"></div></div><div class="pool-nums">${pe}/${peM}</div></div>
+<div class="pool-row"><div class="pool-lbl">SAN</div><div class="pool-bar-wrap"><div class="pool-bar san" style="width:${pct(san,sanM)}%"></div></div><div class="pool-nums">${san}/${sanM}</div></div>
+</div>
+<div class="fear-mini">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+<span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--ash);">☠ Medo</span>
+<div style="display:flex;align-items:center;gap:4px;">
+<button onclick="setFearDirect('${name}',Math.max(0,(parseInt(window._pd?.['${name}']?.stats?.fear||0)-1)))" style="width:18px;height:18px;border:1px solid var(--border);border-radius:2px;background:transparent;color:var(--ash);cursor:pointer;font-size:12px;line-height:1;padding:0;">−</button>
+<span style="font-family:'Share Tech Mono',monospace;font-size:12px;font-weight:700;color:${fc};">${fear}/20</span>
+<button onclick="setFearDirect('${name}',Math.min(20,(parseInt(window._pd?.['${name}']?.stats?.fear||0)+1)))" style="width:18px;height:18px;border:1px solid var(--border);border-radius:2px;background:transparent;color:var(--ash);cursor:pointer;font-size:12px;line-height:1;padding:0;">+</button>
+</div></div>
+<div class="fear-mini-bar"><div class="fear-mini-fill" style="width:${fp}%;background:${fc};"></div></div></div>
+<div class="card-actions">
+<button class="act-btn red"    onclick="quickDmg('${name}','pv',-1)">− PV</button>
+<button class="act-btn green"  onclick="quickDmg('${name}','pv',1)">+ PV</button>
+<button class="act-btn purple" onclick="quickDmg('${name}','san',-1)">− SAN</button>
+<button class="act-btn blue"   onclick="openQV('${name}')">👁 Ver</button>
+<button class="act-btn"        onclick="pingPlayer('${name}')">📡</button>
+<button class="act-btn" style="color:var(--ash);" onclick="removePlayer('${name}')">✕</button>
+</div>`;
+  return d;
+}
+
+function updateSels(data){
+  const names=Object.keys(data);
+  ['alert-target','dmg-target','status-target','fear-target'].forEach(id=>{
+    const sel=document.getElementById(id); if(!sel) return;
+    const cur=sel.value;
+    sel.innerHTML='<option value="all">→ Todos os jogadores</option>';
+    names.forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
+    if(cur) sel.value=cur;
+  });
+}
+
+window.addPlayerPrompt=()=>{
+  const name=prompt('Nome do jogador (igual ao ?player=Nome):');
+  if(!name?.trim()) return;
+  set(ref(db,'players/'+name.trim()+'/online'),false);
+  addLog('Jogador "'+name.trim()+'" adicionado.','alert');
+};
+window.removePlayer=(name)=>{if(!confirm('Remover '+name+'?'))return;set(ref(db,'players/'+name),null);addLog(name+' removido.','alert');};
+window.quickDmg=(name,stat,sign)=>{
+  const val=parseInt(prompt('Valor de '+(sign>0?'cura':'dano')+' em '+stat.toUpperCase()+' para '+name+':'))||0;
+  if(!val) return;
+  const cur=parseInt(window._pd?.[name]?.stats?.[stat+'_atual']||0);
+  const nv=Math.max(0,cur+sign*val);
+  update(ref(db,'players/'+name+'/stats'),{[stat+'_atual']:nv});
+  addLog(name+': '+(sign>0?'+':'-')+val+' '+stat.toUpperCase()+' ('+cur+' → '+nv+')',sign>0?'heal':'dmg');
+};
+window.pingPlayer=(name)=>{const msg=prompt('Mensagem para '+name+':');if(!msg)return;set(ref(db,'players/'+name+'/alert'),{msg,type:'info',ts:Date.now()});addLog('Alerta → '+name,'alert');};
+window.sendAlert=()=>{
+  const target=document.getElementById('alert-target').value;
+  const msg=document.getElementById('alert-msg').value.trim();
+  const type=window._alertType||'danger';
+  if(!msg) return;
+  const targets=target==='all'?Object.keys(window._pd||{}):[target];
+  targets.forEach(n=>set(ref(db,'players/'+n+'/alert'),{msg,type,ts:Date.now()}));
+  addLog('Alerta → '+(target==='all'?'Todos':target)+': "'+msg+'"','alert');
+  document.getElementById('alert-msg').value='';
+};
+window.applyDmgHeal=(sign)=>{
+  const target=document.getElementById('dmg-target').value;
+  const stat=document.getElementById('dmg-type').value;
+  const val=parseInt(document.getElementById('dmg-value').value)||0;
+  if(!val) return;
+  const targets=target==='all'?Object.keys(window._pd||{}):[target];
+  targets.forEach(n=>{
+    const cur=parseInt(window._pd?.[n]?.stats?.[stat+'_atual']||0);
+    const nv=Math.max(0,cur+sign*val);
+    update(ref(db,'players/'+n+'/stats'),{[stat+'_atual']:nv});
+    set(ref(db,'players/'+n+'/alert'),{msg:(sign>0?'+'+val+' de cura':val+' de dano')+' em '+stat.toUpperCase()+'!',type:sign>0?'heal':stat==='san'?'mental':'danger',ts:Date.now()});
+  });
+  addLog((target==='all'?'Todos':target)+': '+(sign>0?'+':'-')+val+' '+stat.toUpperCase(),sign>0?'heal':'dmg');
+};
+window.applyStatus=()=>{
+  const target=document.getElementById('status-target').value;
+  const status=document.getElementById('status-type').value;
+  const targets=target==='all'?Object.keys(window._pd||{}):[target];
+  targets.forEach(n=>set(ref(db,'players/'+n+'/alert'),{msg:'Condição: '+status+'!',type:'warning',ts:Date.now()}));
+  addLog('Condição "'+status+'" → '+(target==='all'?'Todos':target),'alert');
+};
+window.applyFear=(delta)=>{
+  const target=document.getElementById('fear-target').value;
+  const val=parseInt(document.getElementById('fear-value').value)||1;
+  const targets=target==='all'?Object.keys(window._pd||{}):[target];
+  targets.forEach(n=>{
+    const cur=parseInt(window._pd?.[n]?.stats?.fear||0);
+    const nv=Math.max(0,Math.min(20,cur+delta*val));
+    update(ref(db,'players/'+n+'/stats'),{fear:nv});
+    set(ref(db,'players/'+n+'/alert'),{msg:'Medo '+(delta>0?'aumentou':'diminuiu')+' para '+nv+'/20',type:delta>0?'danger':'info',ts:Date.now()});
+    addLog('Medo '+(delta>0?'+':'-')+val+' → '+n+' ('+nv+'/20)',delta>0?'dmg':'heal');
+  });
+};
+window.setFearDirect=(name,val)=>{const nv=Math.max(0,Math.min(20,parseInt(val)||0));update(ref(db,'players/'+name+'/stats'),{fear:nv});addLog('Medo '+name+' → '+nv+'/20','alert');};
+window.applyClima=()=>{
+  const d={icon:document.getElementById('clima-icon-sel').value,temp:document.getElementById('clima-temp').value?document.getElementById('clima-temp').value+'°C':'—',titulo:document.getElementById('clima-titulo-inp').value||'Ambiente',desc:document.getElementById('clima-desc-inp').value||'',active:true,ts:Date.now()};
+  set(ref(db,'clima'),d); addLog('🌍 Clima: "'+d.titulo+'"','alert');
+};
+window.clearClima=()=>{set(ref(db,'clima'),{active:false});};
+
+let hubDieType=20,hubDieQty=1;
+window.hubSelDie=(faces,btn)=>{hubDieType=faces;document.querySelectorAll('.hub-die-btn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');};
+window.hubChgQty=(d)=>{hubDieQty=Math.max(1,Math.min(20,hubDieQty+d));document.getElementById('hub-qty').textContent=hubDieQty;};
+window.hubRoll=()=>{
+  const bonus=parseInt(document.getElementById('hub-bonus').value)||0;
+  const secret=document.getElementById('hub-secret').checked;
+  const rolls=Array.from({length:hubDieQty},()=>Math.floor(Math.random()*hubDieType)+1);
+  const total=rolls.reduce((a,b)=>a+b,0)+bonus;
+  const label=hubDieQty+'d'+hubDieType+(bonus!==0?(bonus>0?'+'+bonus:bonus):'');
+  const resEl=document.getElementById('hub-roll-display');
+  const detEl=document.getElementById('hub-roll-detail');
+  resEl.style.display='block';
+  resEl.className='hub-roll-display '+(secret?'secret':'visible');
+  resEl.textContent=secret?'🔒 '+total:String(total);
+  detEl.textContent=label+(rolls.length>1?' ['+rolls.join(', ')+']':'')+(secret?' · secreto':'');
+  resEl.style.transform='scale(.5)';resEl.style.opacity='0';
+  setTimeout(()=>{resEl.style.transform='scale(1)';resEl.style.opacity='1';resEl.style.transition='all .25s';},10);
+  addLog('🎲 Mestre: '+label+(secret?' (secreto)':' = '+total),'alert');
+  if(!secret) set(ref(db,'rolls/MESTRE'),{label,rolls,total,bonus,ts:Date.now(),player:'🎲 Mestre'});
+};
+window.clearRollLog=()=>{set(ref(db,'rolls'),null);};
+
+window.openQV=(name)=>{
+  const p=(window._pd||{})[name]; if(!p) return;
+  const st=p.stats||{},fi=p.ficha||{};
+  const dv=fi.dv||{},status=fi.status||{},inputs=fi.inputs||{};
+  const agentName = inputs.id_nome?.trim() || name;
+  document.getElementById('qv-name').textContent=agentName;
+  document.getElementById('qv-overlay').classList.add('open');
+  const pct=(a,b)=>b>0?Math.min(100,Math.round(a/b*100)):0;
+  const pv=st.pv_atual??'—',pvM=st.pv_max??'—';
+  const pe=st.pe_atual??'—',peM=st.pe_max??'—';
+  const san=st.san_atual??'—',sanM=st.san_max??'—';
+  const fear=st.fear??0;
+  const fc=fear<=4?'#4caf50':fear<=8?'#cddc39':fear<=12?'#ff9800':fear<=16?'#f44336':'#b71c1c';
+  const dvA=Object.entries(dv).filter(([,v])=>v).map(([k])=>k);
+  const stA=Object.entries(status).filter(([,v])=>v).map(([k])=>k);
+  document.getElementById('qv-content').innerHTML=`
+<div class="qv-sec">Identificação</div>
+<div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--ash);line-height:1.8;">
+  <div>Agente: <span style="color:var(--bone);">${agentName}</span></div>
+  <div>Player: <span style="color:var(--ash);">${name}</span></div>
+  <div>Online: <span style="color:${p.online?'#4caf50':'#666'};">${p.online?'● Sim':'○ Offline'}</span></div>
+</div>
+<div class="qv-sec">Pontos Vitais</div>
+<div class="qv-stat-row">
+  <div class="qv-stat"><div class="qv-stat-lbl">PV</div><div class="qv-stat-val" style="color:#ff6b6b;">${pv}<span style="font-size:10px;color:var(--ash);">/${pvM}</span></div><div class="qv-bar-wrap"><div class="qv-bar" style="width:${pct(pv,pvM)}%;background:linear-gradient(to right,#8B1A1A,#e53935);"></div></div></div>
+  <div class="qv-stat"><div class="qv-stat-lbl">PE</div><div class="qv-stat-val" style="color:#4dd0e1;">${pe}<span style="font-size:10px;color:var(--ash);">/${peM}</span></div><div class="qv-bar-wrap"><div class="qv-bar" style="width:${pct(pe,peM)}%;background:linear-gradient(to right,#006060,#00bcd4);"></div></div></div>
+  <div class="qv-stat"><div class="qv-stat-lbl">SAN</div><div class="qv-stat-val" style="color:#ce93d8;">${san}<span style="font-size:10px;color:var(--ash);">/${sanM}</span></div><div class="qv-bar-wrap"><div class="qv-bar" style="width:${pct(san,sanM)}%;background:linear-gradient(to right,#3a1a5a,#9c27b0);"></div></div></div>
+</div>
+<div class="qv-sec">☠ Medo — ${fear}/20</div>
+<div class="qv-bar-wrap" style="height:12px;"><div class="qv-bar" style="width:${Math.round(fear/20*100)}%;background:${fc};"></div></div>
+${stA.length?'<div class="qv-sec">🔴 Condições</div><div>'+stA.map(s=>'<span class="qv-tag s">'+s+'</span>').join('')+'</div>':''}
+${dvA.length?'<div class="qv-sec">⚠ Defeitos/Virtudes</div><div>'+dvA.map(d=>'<span class="qv-tag d">'+d+'</span>').join('')+'</div>':''}
+<div class="qv-sec">⚡ Ações Rápidas</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+  <button class="act-btn red"    onclick="quickDmg('${name}','pv',-1)" style="width:100%;">− PV</button>
+  <button class="act-btn green"  onclick="quickDmg('${name}','pv',1)"  style="width:100%;">+ PV</button>
+  <button class="act-btn purple" onclick="quickDmg('${name}','san',-1)"style="width:100%;">− SAN</button>
+  <button class="act-btn"        onclick="pingPlayer('${name}')"        style="width:100%;">📡 Alerta</button>
+</div>`;
+};
+window.closeQV=()=>document.getElementById('qv-overlay').classList.remove('open');
+
+window._combatActive=false;window._turn=0;window._round=1;window._order=[];
+window.toggleCombat=()=>{
+  window._combatActive=!window._combatActive;
+  document.getElementById('combat-section').style.display=window._combatActive?'block':'none';
+  if(window._combatActive){
+    window._round=1;window._turn=0;
+    // Players
+    const playerEntries = Object.entries(window._pd||{}).map(([n,p])=>({
+      id:n, name: p.ficha?.inputs?.id_nome?.trim()||n, isNpc:false, roll:0
+    }));
+    // NPCs
+    const npcEntries = Object.entries(window._npcs||{}).map(([id,npc])=>({
+      id, name: npc.nome||id, isNpc:true, roll:0
+    }));
+    window._order=[...playerEntries,...npcEntries];
+    document.getElementById('round-num').textContent=1;
+    renderInitList(window._pd||{});
+    addLog('⚔ Combate iniciado.','alert');
+  } else addLog('⚔ Combate encerrado.','alert');
+};
+function renderInitList(data){
+  const list=document.getElementById('init-list'); if(!list) return; list.innerHTML='';
+  window._order.forEach((e,i)=>{
+    const isActive = i===window._turn;
+    const row=document.createElement('div');
+    row.className='init-row'+(isActive?' active-turn':'');
+    let hpHtml='', nameColor='#fff', badge='';
+    if(e.isNpc){
+      const npc=window._npcs?.[e.id]||{};
+      const pv=npc.pv_atual??npc.pv_max??'—';
+      const pvM=npc.pv_max??'—';
+      const machucado = typeof pv==='number' && typeof pvM==='number' && pv<=pvM/2;
+      hpHtml=`<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:${machucado?'#f44336':'#ce93d8'};">◈ ${pv}/${pvM}${machucado?' ⚠':''}</span>`;
+      const typeColor={ally:'#90caf9',enemy:'#ff8a80',monster:'#ce93d8',neutral:'#ffe082'};
+      nameColor=typeColor[npc.tipo]||'#ce93d8';
+      badge=`<span style="font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:1px;color:${nameColor};opacity:.7;margin-left:4px;">NPC</span>`;
+    } else {
+      const st=(data[e.id]?.stats)||{};
+      hpHtml=`<span style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#ff6b6b;">❤ ${st.pv_atual??'—'}/${st.pv_max??'—'}</span>`;
+    }
+    row.innerHTML=`<div class="init-num">${e.roll||'—'}</div><div class="init-name" style="color:${nameColor};">${e.name}${badge}</div><div class="init-hp">${hpHtml}</div><input type="number" value="${e.roll||''}" placeholder="Init" onchange="setInitRoll('${e.id}',this.value)" style="width:44px;background:var(--dark);border:1px solid var(--border);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:11px;padding:2px 4px;border-radius:2px;outline:none;">`;
+    list.appendChild(row);
+  });
+}
+window.nextTurn=()=>{const l=window._order.length;if(!l)return;window._turn=(window._turn+1)%l;if(window._turn===0){window._round++;document.getElementById('round-num').textContent=window._round;}renderInitList(window._pd||{});};
+window.prevTurn=()=>{const l=window._order.length;if(!l)return;window._turn=(window._turn-1+l)%l;renderInitList(window._pd||{});};
+window.resetCombat=()=>{window._combatActive=false;window._round=1;window._turn=0;document.getElementById('combat-section').style.display='none';addLog('⚔ Combate resetado.','alert');};
+window.setInitRoll=(id,val)=>{const e=window._order.find(x=>x.id===id);if(e)e.roll=parseInt(val)||0;window._order.sort((a,b)=>b.roll-a.roll);renderInitList(window._pd||{});};
+
+window._alertType='danger';
+window.selType=(type,btn)=>{window._alertType=type;document.querySelectorAll('.type-chip').forEach(c=>c.className='type-chip');btn.className='type-chip sel-'+type;};
+
+window.addLog=(msg,type='')=>{
+  const list=document.getElementById('log-list');
+  const time=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const el=document.createElement('div');el.className='log-entry '+type;el.textContent='['+time+'] '+msg;
+  list.insertBefore(el,list.firstChild);
+  while(list.children.length>50) list.removeChild(list.lastChild);
+};
+window.clearLog=()=>{document.getElementById('log-list').innerHTML='<div class="log-entry">— Log limpo —</div>';};
+
+// ══════════════════════════════════════════════
+// NPC SYSTEM
+// ══════════════════════════════════════════════
+
+window._npcs = {};      // cache local
+window._npcFilter = 'all';
+window._npcEditId = null; // id em edição
+window._npcMode = 'agente';
+window._npcType = 'ally';
+
+// ── Firebase listener ──────────────────────────────────────────────────────
+onValue(ref(db,'npcs'), snap => {
+  window._npcs = snap.val() || {};
+  renderNpcs();
+  if (window._combatActive) rebuildCombatOrder();
+});
+
+// ── Render grid ────────────────────────────────────────────────────────────
+function renderNpcs() {
+  const grid = document.getElementById('npc-grid');
+  const f = window._npcFilter;
+  const all = Object.entries(window._npcs);
+  const filtered = f === 'all' ? all : all.filter(([,n]) => n.tipo === f);
+  if (!filtered.length) {
+    grid.innerHTML = '<div style="color:var(--ash);font-size:11px;font-family:\'Share Tech Mono\',monospace;padding:16px;grid-column:1/-1;">Nenhum NPC'+(f!=='all'?' nesta categoria':'')+'. Use os botões acima para adicionar.</div>';
+    return;
+  }
+  grid.innerHTML = '';
+  filtered.forEach(([id, npc]) => grid.appendChild(mkNpcCard(id, npc)));
+}
+
+function mkNpcCard(id, npc) {
+  const d = document.createElement('div');
+  d.className = 'npc-card ' + (npc.tipo||'neutral');
+  d.id = 'npc-card-' + id;
+
+  if (npc.modo === 'agente') {
+    const pv = npc.pv_atual ?? npc.pv_max ?? 0;
+    const pvM = npc.pv_max ?? 1;
+    const pe = npc.pe_atual ?? npc.pe_max ?? 0;
+    const peM = npc.pe_max ?? 1;
+    const san = npc.san_atual ?? npc.san_max ?? 0;
+    const sanM = npc.san_max ?? 1;
+    const pct = (a,b) => b>0?Math.min(100,Math.round(a/b*100)):0;
+    const nexLabel = ['5%','10%','15%','20%','25%','30%','35%','40%','45%','50%','55%','60%','65%','70%','75%','80%','85%','90%','95%','99%'][parseInt(npc.nex||1)-1] || '—';
+    const cls = npc.classe ? npc.classe.charAt(0).toUpperCase()+npc.classe.slice(1) : '—';
+    d.innerHTML = `
+      <div class="npc-header">
+        <div><div class="npc-name">${npc.nome||'NPC'}</div><div class="npc-meta">${cls} · ${nexLabel}${npc.desc?' · '+npc.desc:''}</div></div>
+        <span class="npc-type-badge ${npc.tipo}">${tipoLabel(npc.tipo)}</span>
+      </div>
+      <div class="npc-pools">
+        <div class="pool-row"><div class="pool-lbl">PV</div><div class="pool-bar-wrap"><div class="pool-bar pv" style="width:${pct(pv,pvM)}%"></div></div><div class="pool-nums">${pv}/${pvM}</div></div>
+        <div class="pool-row"><div class="pool-lbl">PE</div><div class="pool-bar-wrap"><div class="pool-bar pe" style="width:${pct(pe,peM)}%"></div></div><div class="pool-nums">${pe}/${peM}</div></div>
+        <div class="pool-row"><div class="pool-lbl">SAN</div><div class="pool-bar-wrap"><div class="pool-bar san" style="width:${pct(san,sanM)}%"></div></div><div class="pool-nums">${san}/${sanM}</div></div>
+      </div>
+      ${npc.acoes?`<div style="padding:0 12px 6px;font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--ash);white-space:pre-wrap;line-height:1.5;border-top:1px solid var(--border);padding-top:5px;">${npc.acoes}</div>`:''}
+      ${(npc.pericias&&Object.values(npc.pericias).some(v=>v))?`<div class="pericias-tags">${Object.entries(npc.pericias).filter(([,v])=>v).map(([k])=>`<span class="per-tag">${k}</span>`).join('')}</div>`:''}
+      <div class="npc-actions">
+        <button class="act-btn red"   onclick="npcDmg('${id}','pv',-1)">− PV</button>
+        <button class="act-btn green" onclick="npcDmg('${id}','pv',1)">+ PV</button>
+        <button class="act-btn purple" onclick="npcDmg('${id}','san',-1)">− SAN</button>
+        <button class="act-btn blue"  onclick="openNpcEdit('${id}')">✏</button>
+        <button class="act-btn" style="color:var(--ash);" onclick="deleteNpc('${id}')">✕</button>
+      </div>`;
+  } else {
+    // Monstro
+    const pv = npc.pv_atual ?? npc.pv_max ?? 0;
+    const pvM = npc.pv_max ?? 1;
+    const pct = (a,b) => b>0?Math.min(100,Math.round(a/b*100)):0;
+    const machucado = pv <= pvM/2;
+    const pvColor = machucado ? '#f44336' : '#ab47bc';
+    const attrs = ['AGI','FOR','INT','PRE','VIG'].map((a,i)=>{
+      const v = [npc.m_agi,npc.m_for,npc.m_int,npc.m_pre,npc.m_vig][i];
+      return v!==undefined?`<span class="npc-attr">${a} <span>${v}</span></span>`:'';
+    }).join('');
+    d.innerHTML = `
+      <div class="npc-header">
+        <div>
+          <div class="npc-name">${npc.nome||'Ameaça'}</div>
+          <div class="npc-meta">${npc.desc||''}${npc.defesa?' · DEF '+npc.defesa:''}</div>
+        </div>
+        <div style="text-align:right;">
+          <span class="npc-type-badge ${npc.tipo}">${tipoLabel(npc.tipo)}</span>
+          ${npc.vd?`<div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--accent);margin-top:2px;">VD ${npc.vd}</div>`:''}
+        </div>
+      </div>
+      <div class="npc-vd-wrap">
+        <div class="npc-vd-row">
+          <div class="npc-vd-lbl">PV</div>
+          <div class="pool-bar-wrap"><div class="npc-vd-bar" style="width:${pct(pv,pvM)}%;background:${machucado?'linear-gradient(to right,#8B1A1A,#f44336)':'linear-gradient(to right,#5a1a7a,#ab47bc)'};"></div></div>
+          <div class="npc-vd-nums" style="color:${pvColor};">${pv}/${pvM}${machucado?' ⚠':''}</div>
+        </div>
+      </div>
+      ${npc.pp_dt?`<div class="npc-pp">☠ Presença Perturbadora — DT ${npc.pp_dt} · ${npc.pp_dano||'?'} mental${npc.pp_nex?' · NEX '+npc.pp_nex+' imune':''}</div>`:''}
+      ${attrs?`<div class="npc-attrs">${attrs}</div>`:''}
+      ${npc.fort||npc.ref||npc.von?`<div style="padding:0 12px 4px;font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--ash);">${npc.fort?'Fort '+npc.fort:''}${npc.ref?' · Ref '+npc.ref:''}${npc.von?' · Von '+npc.von:''}</div>`:''}
+      ${npc.resist?`<div style="padding:0 12px 4px;font-family:'Barlow Condensed',sans-serif;font-size:9px;color:#ff9800;">${npc.resist}</div>`:''}
+      ${npc.enigma?`<div style="padding:0 12px 4px;font-family:'Barlow Condensed',sans-serif;font-size:9px;color:#ce93d8;">🔐 Enigma: ${npc.enigma}</div>`:''}
+      ${npc.acoes?`<div style="padding:4px 12px 6px;font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--ash);white-space:pre-wrap;line-height:1.5;border-top:1px solid var(--border);">${npc.acoes}</div>`:''}
+      <div class="npc-actions">
+        <button class="act-btn red"   onclick="npcDmg('${id}','pv',-1)">− PV</button>
+        <button class="act-btn green" onclick="npcDmg('${id}','pv',1)">+ PV</button>
+        <button class="act-btn blue"  onclick="openNpcEdit('${id}')">✏</button>
+        <button class="act-btn" style="color:var(--ash);" onclick="deleteNpc('${id}')">✕</button>
+      </div>`;
+  }
+  return d;
+}
+
+function tipoLabel(t) {
+  return {ally:'🤝 Aliado',enemy:'⚔ Inimigo',monster:'👹 Ameaça',neutral:'◈ Neutro'}[t]||t;
+}
+
+// ── Filtro ─────────────────────────────────────────────────────────────────
+window.filterNpcs = (f, btn) => {
+  window._npcFilter = f;
+  document.querySelectorAll('.npc-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderNpcs();
+};
+
+// ── Dano/Cura rápido em NPC ────────────────────────────────────────────────
+window.npcDmg = (id, stat, sign) => {
+  const val = parseInt(prompt('Valor de '+(sign>0?'cura':'dano')+' para '+((window._npcs[id]?.nome)||id)+':'))||0;
+  if (!val) return;
+  const npc = window._npcs[id]; if (!npc) return;
+  const key = stat+'_atual';
+  const cur = parseInt(npc[key] ?? npc[stat+'_max'] ?? 0);
+  const max = parseInt(npc[stat+'_max'] ?? cur);
+  const nv = Math.max(0, Math.min(max, cur + sign*val));
+  update(ref(db,'npcs/'+id), {[key]: nv});
+  addLog((npc.nome||id)+': '+(sign>0?'+':'-')+val+' '+stat.toUpperCase()+' ('+cur+' → '+nv+')', sign>0?'heal':'dmg');
+};
+
+// ── Delete ─────────────────────────────────────────────────────────────────
+window.deleteNpc = (id) => {
+  const npc = window._npcs[id];
+  if (!confirm('Remover NPC "'+(npc?.nome||id)+'"?')) return;
+  set(ref(db,'npcs/'+id), null);
+  addLog('NPC "'+(npc?.nome||id)+'" removido.','alert');
+};
+
+// ── Modal de criação/edição ────────────────────────────────────────────────
+window.openNpcModal = (mode='agente') => {
+  window._npcEditId = null;
+  window._npcMode = mode;
+  window._npcType = 'ally';
+  document.getElementById('npc-modal-title-text').textContent = 'Novo NPC';
+  document.getElementById('npc-save-btn').textContent = '✓ Criar NPC';
+  // Reset fields
+  ['npc-nome','npc-desc','npc-acoes','npc-enigma','npc-resist',
+   'npc-pp-dt','npc-pp-dano','npc-pp-nex','npc-desl',
+   'npc-fort','npc-ref','npc-von'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('npc-classe').value='';
+  document.getElementById('npc-nex').value='1';
+  ['npc-for','npc-agi','npc-int','npc-pre','npc-vig'].forEach(id=>{
+    document.getElementById(id).value='2';
+  });
+  document.getElementById('npc-vd').value='40';
+  document.getElementById('npc-m-pv').value='80';
+  document.getElementById('npc-defesa').value='14';
+  ['npc-m-agi','npc-m-for','npc-m-int','npc-m-pre','npc-m-vig'].forEach(id=>{
+    document.getElementById(id).value='2';
+  });
+  document.getElementById('npc-persist').value='1';
+  // Set type buttons
+  document.querySelectorAll('.npc-type-btn').forEach(b=>b.className='npc-type-btn');
+  document.querySelector('.npc-type-btn').className='npc-type-btn sel-ally';
+  setNpcMode(mode);
+  npcRecalc();
+  buildPericiasGrid({});
+  document.getElementById('npc-modal-overlay').classList.add('open');
+};
+
+window.openNpcEdit = (id) => {
+  const npc = window._npcs[id]; if (!npc) return;
+  window._npcEditId = id;
+  window._npcMode = npc.modo || 'agente';
+  window._npcType = npc.tipo || 'neutral';
+  document.getElementById('npc-modal-title-text').textContent = 'Editar NPC';
+  document.getElementById('npc-save-btn').textContent = '✓ Salvar';
+  // Preencher campos
+  document.getElementById('npc-nome').value = npc.nome||'';
+  document.getElementById('npc-desc').value = npc.desc||'';
+  document.getElementById('npc-acoes').value = npc.acoes||'';
+  document.getElementById('npc-enigma').value = npc.enigma||'';
+  document.getElementById('npc-persist').value = npc.persist!==false?'1':'0';
+  if (npc.modo==='agente') {
+    document.getElementById('npc-classe').value = npc.classe||'';
+    document.getElementById('npc-nex').value = npc.nex||'1';
+    document.getElementById('npc-for').value = npc.atr_for||2;
+    document.getElementById('npc-agi').value = npc.atr_agi||2;
+    document.getElementById('npc-int').value = npc.atr_int||2;
+    document.getElementById('npc-pre').value = npc.atr_pre||2;
+    document.getElementById('npc-vig').value = npc.atr_vig||2;
+    document.getElementById('npc-pv-max').value = npc.pv_max||'';
+    document.getElementById('npc-pe-max').value = npc.pe_max||'';
+    document.getElementById('npc-san-max').value = npc.san_max||'';
+  } else {
+    document.getElementById('npc-vd').value = npc.vd||'';
+    document.getElementById('npc-m-pv').value = npc.pv_max||'';
+    document.getElementById('npc-defesa').value = npc.defesa||'';
+    document.getElementById('npc-m-agi').value = npc.m_agi||2;
+    document.getElementById('npc-m-for').value = npc.m_for||2;
+    document.getElementById('npc-m-int').value = npc.m_int||2;
+    document.getElementById('npc-m-pre').value = npc.m_pre||2;
+    document.getElementById('npc-m-vig').value = npc.m_vig||2;
+    document.getElementById('npc-fort').value = npc.fort||'';
+    document.getElementById('npc-ref').value = npc.ref||'';
+    document.getElementById('npc-von').value = npc.von||'';
+    document.getElementById('npc-pp-dt').value = npc.pp_dt||'';
+    document.getElementById('npc-pp-dano').value = npc.pp_dano||'';
+    document.getElementById('npc-pp-nex').value = npc.pp_nex||'';
+    document.getElementById('npc-desl').value = npc.desl||'';
+    document.getElementById('npc-resist').value = npc.resist||'';
+  }
+  // Tipo
+  document.querySelectorAll('.npc-type-btn').forEach(b=>{
+    b.className='npc-type-btn';
+    if(b.textContent.toLowerCase().includes(tipoLabel(window._npcType).split(' ')[1]?.toLowerCase()||'')) b.className='npc-type-btn sel-'+window._npcType;
+  });
+  setNpcMode(window._npcMode);
+  npcRecalc();
+  buildPericiasGrid(npc.pericias||{});
+  document.getElementById('npc-modal-overlay').classList.add('open');
+};
+
+window.closeNpcModal = () => {
+  document.getElementById('npc-modal-overlay').classList.remove('open');
+  window._npcEditId = null;
+};
+
+window.setNpcMode = (mode) => {
+  window._npcMode = mode;
+  document.getElementById('mode-agente').className = 'npc-mode-btn'+(mode==='agente'?' active':'');
+  document.getElementById('mode-monstro').className = 'npc-mode-btn'+(mode==='monstro'?' active':'');
+  document.getElementById('npc-section-agente').style.display = mode==='agente'?'':'none';
+  document.getElementById('npc-section-monstro').style.display = mode==='monstro'?'':'none';
+  // Monstros são sempre tipo monster por padrão se ainda for ally
+  if (mode==='monstro' && window._npcType==='ally') setNpcType('monster', document.querySelectorAll('.npc-type-btn')[3]);
+};
+
+window.setNpcType = (type, btn) => {
+  window._npcType = type;
+  document.querySelectorAll('.npc-type-btn').forEach(b=>b.className='npc-type-btn');
+  btn.className='npc-type-btn sel-'+type;
+};
+
+
+// ── Lista completa de perícias ─────────────────────────────────────────────
+const PERICIAS_LIST = [
+  {n:'Acrobacia',    a:'AGI'}, {n:'Adestramento',  a:'PRE',t:true},
+  {n:'Artes',        a:'PRE',t:true}, {n:'Atletismo',     a:'FOR'},
+  {n:'Atualidades',  a:'INT'}, {n:'Ciências',      a:'INT',t:true},
+  {n:'Crime',        a:'AGI',t:true}, {n:'Diplomacia',    a:'PRE'},
+  {n:'Enganação',    a:'PRE'}, {n:'Fortitude',     a:'VIG'},
+  {n:'Furtividade',  a:'AGI'}, {n:'Iniciativa',    a:'AGI'},
+  {n:'Intimidação',  a:'PRE'}, {n:'Intuição',      a:'PRE'},
+  {n:'Investigação', a:'INT'}, {n:'Luta',          a:'FOR'},
+  {n:'Medicina',     a:'INT',t:true}, {n:'Ocultismo', a:'INT',t:true},
+  {n:'Percepção',    a:'PRE'}, {n:'Pilotagem',     a:'AGI',t:true},
+  {n:'Pontaria',     a:'AGI'}, {n:'Profissão',     a:'INT',t:true},
+  {n:'Reflexos',     a:'AGI'}, {n:'Religião',      a:'PRE',t:true},
+  {n:'Sobrevivência',a:'INT'}, {n:'Tática',        a:'INT',t:true},
+  {n:'Tecnologia',   a:'INT',t:true}, {n:'Vontade',  a:'PRE'},
+];
+
+function buildPericiasGrid(checked={}) {
+  const grid = document.getElementById('npc-pericias-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  PERICIAS_LIST.forEach(p => {
+    const isChecked = !!checked[p.n];
+    const el = document.createElement('label');
+    el.className = 'per-chk' + (isChecked?' checked':'');
+    el.innerHTML = `<div class="per-dot"></div><span class="per-lbl">${p.n}${p.t?'<span style="color:var(--blood);font-size:7px;margin-left:1px;">*</span>':''}</span><span class="per-atr">${p.a}</span>`;
+    el.addEventListener('click', e => { e.preventDefault(); el.classList.toggle('checked'); });
+    grid.appendChild(el);
+  });
+}
+
+function getPericiasFromGrid() {
+  const result = {};
+  const grid = document.getElementById('npc-pericias-grid');
+  if (!grid) return result;
+  grid.querySelectorAll('.per-chk').forEach((el, i) => {
+    if (el.classList.contains('checked')) result[PERICIAS_LIST[i].n] = true;
+  });
+  return result;
+}
+
+// ── Cálculo automático de agente ───────────────────────────────────────────
+const CLASSES_NPC = {
+  combatente:   {pvBase:20,pvNex:4,peBase:2,peNex:2,sanBase:12,sanNex:3},
+  especialista: {pvBase:16,pvNex:3,peBase:3,peNex:3,sanBase:16,sanNex:4},
+  ocultista:    {pvBase:12,pvNex:2,peBase:4,peNex:4,sanBase:20,sanNex:5},
+  sobrevivente: {pvBase:8, pvNex:2,peBase:2,peNex:1,sanBase:8, sanNex:2,estagio:true},
+};
+
+window.npcRecalc = () => {
+  const classe = document.getElementById('npc-classe')?.value;
+  const nex = parseInt(document.getElementById('npc-nex')?.value)||1;
+  const vig = parseInt(document.getElementById('npc-vig')?.value)||0;
+  const pre = parseInt(document.getElementById('npc-pre')?.value)||0;
+  const agi = parseInt(document.getElementById('npc-agi')?.value)||0;
+  const prev = document.getElementById('npc-calc-preview');
+  if (!classe || !CLASSES_NPC[classe]) {
+    if(prev) prev.textContent='Selecione uma classe para ver os cálculos.';
+    return;
+  }
+  const c = CLASSES_NPC[classe];
+  const nexExtra = nex - 1;
+  const pvFinal = c.estagio
+    ? (c.pvBase + vig + c.pvNex * nexExtra)
+    : (c.pvBase + vig + (c.pvNex + vig) * nexExtra);
+  const peFinal = c.estagio
+    ? (c.peBase + pre + c.peNex * nexExtra)
+    : (c.peBase + pre + (c.peNex + pre) * nexExtra);
+  const sanFinal = c.sanBase + c.sanNex * nexExtra;
+  const defBase = 10 + agi;
+  const nexLabel = ['5%','10%','15%','20%','25%','30%','35%','40%','45%','50%','55%','60%','65%','70%','75%','80%','85%','90%','95%','99%'][nex-1];
+  if(prev) prev.innerHTML = `<b style="color:var(--bone)">${classe.toUpperCase()} · ${nexLabel}</b>\nPV ${pvFinal} · PE ${peFinal} · SAN ${sanFinal} · DEF ${defBase}\nVIG(${vig}) · PRE(${pre}) · AGI(${agi})`;
+  const pvEl=document.getElementById('npc-pv-max');
+  const peEl=document.getElementById('npc-pe-max');
+  const sanEl=document.getElementById('npc-san-max');
+  if(pvEl) pvEl.value=pvFinal;
+  if(peEl) peEl.value=peFinal;
+  if(sanEl) sanEl.value=sanFinal;
+};
+
+// ── Salvar NPC ─────────────────────────────────────────────────────────────
+window.saveNpc = () => {
+  const nome = document.getElementById('npc-nome').value.trim();
+  if (!nome) { alert('Digite o nome do NPC.'); return; }
+  const persist = document.getElementById('npc-persist').value === '1';
+  const id = window._npcEditId || ('npc_'+Date.now());
+  const base = {
+    nome, tipo: window._npcType, modo: window._npcMode,
+    desc: document.getElementById('npc-desc').value.trim(),
+    acoes: document.getElementById('npc-acoes').value.trim(),
+    enigma: document.getElementById('npc-enigma').value.trim(),
+    pericias: window._npcMode==='agente' ? getPericiasFromGrid() : {},
+    persist, ts: Date.now(),
+  };
+  let npcData;
+  if (window._npcMode === 'agente') {
+    const pvMax = parseInt(document.getElementById('npc-pv-max').value)||0;
+    const peMax = parseInt(document.getElementById('npc-pe-max').value)||0;
+    const sanMax = parseInt(document.getElementById('npc-san-max').value)||0;
+    const existing = window._npcs[id] || {};
+    npcData = {
+      ...base,
+      classe: document.getElementById('npc-classe').value,
+      nex: document.getElementById('npc-nex').value,
+      atr_for: parseInt(document.getElementById('npc-for').value)||2,
+      atr_agi: parseInt(document.getElementById('npc-agi').value)||2,
+      atr_int: parseInt(document.getElementById('npc-int').value)||2,
+      atr_pre: parseInt(document.getElementById('npc-pre').value)||2,
+      atr_vig: parseInt(document.getElementById('npc-vig').value)||2,
+      pv_max: pvMax, pe_max: peMax, san_max: sanMax,
+      pv_atual: existing.pv_atual ?? pvMax,
+      pe_atual: existing.pe_atual ?? peMax,
+      san_atual: existing.san_atual ?? sanMax,
+    };
+  } else {
+    const pvMax = parseInt(document.getElementById('npc-m-pv').value)||0;
+    const existing = window._npcs[id] || {};
+    npcData = {
+      ...base,
+      vd: parseInt(document.getElementById('npc-vd').value)||0,
+      pv_max: pvMax,
+      pv_atual: existing.pv_atual ?? pvMax,
+      defesa: parseInt(document.getElementById('npc-defesa').value)||0,
+      m_agi: parseInt(document.getElementById('npc-m-agi').value)||2,
+      m_for: parseInt(document.getElementById('npc-m-for').value)||2,
+      m_int: parseInt(document.getElementById('npc-m-int').value)||2,
+      m_pre: parseInt(document.getElementById('npc-m-pre').value)||2,
+      m_vig: parseInt(document.getElementById('npc-m-vig').value)||2,
+      fort: document.getElementById('npc-fort').value.trim(),
+      ref:  document.getElementById('npc-ref').value.trim(),
+      von:  document.getElementById('npc-von').value.trim(),
+      pp_dt:   document.getElementById('npc-pp-dt').value.trim(),
+      pp_dano: document.getElementById('npc-pp-dano').value.trim(),
+      pp_nex:  document.getElementById('npc-pp-nex').value.trim(),
+      desl:    document.getElementById('npc-desl').value.trim(),
+      resist:  document.getElementById('npc-resist').value.trim(),
+    };
+  }
+  set(ref(db,'npcs/'+id), npcData);
+  addLog((window._npcEditId?'NPC editado':'NPC criado')+': "'+nome+'"','alert');
+  closeNpcModal();
+};
+
+// ── Integração com tracker de combate ─────────────────────────────────────
+function rebuildCombatOrder() {
+  // Preservar rolls existentes, adicionar novos NPCs
+  const existing = new Set(window._order.map(e=>e.id||e.name));
+  Object.entries(window._npcs).forEach(([id, npc]) => {
+    if (!existing.has(id)) {
+      window._order.push({id, name: npc.nome||id, isNpc: true, roll: 0});
+    }
+  });
+  renderInitList(window._pd||{});
+}
+
+</script>
+</body>
+</html>
