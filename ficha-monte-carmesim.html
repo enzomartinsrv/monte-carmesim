@@ -599,7 +599,37 @@
     .page { margin: 0; border: none; box-shadow: none; width: 100%; }
     .status-item, .dv-item { cursor: default; }
     @page { margin: 5mm; size: A4; }
+    #char-tab-bar { display: none !important; }
   }
+
+  /* ─── CHAR TAB BAR ─── */
+  #char-tab-bar {
+    position: fixed;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+    z-index: 9997;
+    display: flex;
+    gap: 2px;
+    background: #1a1a1a;
+    padding: 4px 4px 0 4px;
+    border-radius: 0 0 6px 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  #char-tab-bar .char-tab {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: #999;
+    background: #2a2a2a;
+    border: none;
+    padding: 6px 14px;
+    cursor: pointer;
+    border-radius: 4px 4px 0 0;
+    transition: background 0.15s, color 0.15s;
+  }
+  #char-tab-bar .char-tab:hover { background: #3a3a3a; color: #ccc; }
+  #char-tab-bar .char-tab.active { background: #ffffff; color: var(--blood); font-weight: 700; }
+  body { padding-top: 26px; }
 
   /* ─── INTERACTIVE ─── */
   input[type=text], input[type=number], textarea {
@@ -755,30 +785,6 @@
   }
   .nex-pip.active { background: var(--blood); border-color: var(--crimson); color: white; }
 
-  /* ── DICE PANELS ── */
-  .dice-panel { position:fixed; top:0; bottom:0; width:220px; background:#f8f2ea; border:1px solid #c8bfb0; z-index:200; display:flex; flex-direction:column; transition:transform .3s ease; overflow-y:auto; }
-  .dice-panel.left  { left:0;  border-right:2px solid var(--blood); transform:translateX(-100%); }
-  .dice-panel.right { right:0; border-left:2px solid var(--blood);  transform:translateX(100%);  }
-  .dice-panel.open  { transform:translateX(0); }
-  .dice-panel-header { font-family:'Oswald',sans-serif; font-size:10px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--blood); padding:10px 12px 6px; border-bottom:1px solid #c8bfb0; }
-  .dice-toggle-btn { position:fixed; top:50%; transform:translateY(-50%); z-index:201; background:var(--blood); color:#fff; border:none; cursor:pointer; padding:10px 6px; font-family:'Oswald',sans-serif; font-size:9px; letter-spacing:2px; writing-mode:vertical-rl; transition:background .2s; }
-  .dice-toggle-btn.left  { left:0;  border-radius:0 4px 4px 0; }
-  .dice-toggle-btn.right { right:0; border-radius:4px 0 0 4px; }
-  .dice-toggle-btn:hover { background:var(--crimson); }
-  .die-btn { font-family:'Oswald',sans-serif; font-size:14px; font-weight:700; padding:9px 4px; border:2px solid #c8bfb0; border-radius:4px; background:#fff; color:var(--bone); cursor:pointer; text-align:center; transition:all .15s; }
-  .die-btn:hover   { border-color:var(--blood); background:#fff5f5; transform:scale(1.05); }
-  .die-btn.selected{ border-color:var(--blood); background:var(--blood); color:#fff; }
-  .roll-btn { margin:6px 10px; font-family:'Oswald',sans-serif; font-size:12px; font-weight:700; letter-spacing:2px; padding:8px; background:var(--blood); color:#fff; border:none; border-radius:4px; cursor:pointer; width:calc(100% - 20px); }
-  .roll-btn:hover { background:var(--crimson); }
-  .roll-entry { background:#fff; border:1px solid #e0d8cc; border-left:3px solid var(--blood); border-radius:3px; padding:5px 8px; font-family:'Share Tech Mono',monospace; font-size:9px; color:#3a2a10; line-height:1.5; margin-bottom:4px; }
-  .roll-entry .roll-total  { font-size:18px; font-weight:700; color:var(--blood); display:block; }
-  .roll-entry .roll-detail { color:#888; font-size:8px; }
-  #dice-anim-overlay { display:none; position:fixed; inset:0; z-index:9000; pointer-events:none; align-items:center; justify-content:center; }
-  #dice-anim-overlay.show { display:flex; }
-  #dice-anim-box     { font-size:90px; animation:diceRoll .7s ease-out forwards; }
-  #dice-result-pop   { position:absolute; font-family:'Oswald',sans-serif; font-size:80px; font-weight:700; color:var(--blood); text-shadow:0 2px 20px rgba(0,0,0,.2); animation:resultPop .5s ease-out .45s both; opacity:0; }
-  @keyframes diceRoll  { 0%{transform:rotate(0) scale(.3);opacity:0} 50%{transform:rotate(720deg) scale(1.2);opacity:1} 85%{transform:rotate(700deg) scale(.95)} 100%{transform:rotate(710deg) scale(1);opacity:0} }
-  @keyframes resultPop { 0%{opacity:0;transform:scale(.5)} 60%{opacity:1;transform:scale(1.1)} 100%{opacity:1;transform:scale(1)} }
   #clima-ficha-banner { position:fixed; bottom:0; left:0; right:0; z-index:9998; padding:5px 16px; display:none; align-items:center; gap:10px; font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:1px; background:#0a0a18; border-top:1px solid #1a2a4a; color:#90caf9; }
 </style>
 <!-- Firebase -->
@@ -818,20 +824,52 @@
 
   window.PLAYER_NAME = playerName;
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    // Show player name
-    const nameEl = document.getElementById('player-name-display');
-    if (nameEl) nameEl.textContent = playerName.toUpperCase();
+  // ── Character slot (até 3 personagens por player) ──────────────────────
+  // Slot 1 usa os mesmos caminhos de sempre (players/<nome>/ficha, /stats,
+  // /avatar) para não perder nenhuma ficha já salva. Slots 2 e 3 usam
+  // caminhos irmãos (ficha2/stats2/avatar2, ficha3/stats3/avatar3).
+  window.CHAR_SLOT = [1,2,3].includes(parseInt(params.get('char'))) ? parseInt(params.get('char')) : 1;
+  const slotSuffix = () => (window.CHAR_SLOT === 1 ? '' : String(window.CHAR_SLOT));
+  const fichaPath  = () => `players/${playerName}/ficha${slotSuffix()}`;
+  const statsPath  = () => `players/${playerName}/stats${slotSuffix()}`;
+  const avatarPath = () => `players/${playerName}/avatar${slotSuffix()}`;
 
-    // ── Assign data-save keys FIRST so load can find them ──────────────────
-    document.querySelectorAll('input[type=text], input[type=number], textarea').forEach((el, i) => {
-      if (!el.dataset.save) el.dataset.save = `field_${i}`;
-      el.addEventListener('change', () => saveAll());
-      el.addEventListener('input',  () => schedSave());
+  // Unsubscribers dos listeners em tempo real que são por-personagem
+  // (precisam ser trocados quando o player muda de aba)
+  let unsubStats = null, unsubAvatar = null;
+
+  // ── Limpa todos os campos antes de carregar outro personagem ───────────
+  function resetFichaFields() {
+    document.querySelectorAll('input[data-save], textarea[data-save]').forEach(el => { el.value = ''; });
+    document.querySelectorAll('.pericias-table .trei-input').forEach(el => { el.value = ''; });
+    ['atr_for','atr_agi','atr_int','atr_pre','atr_vig'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = 1;
     });
+    const classeEl = document.getElementById('classeSelect'); if (classeEl) classeEl.value = '';
+    const nexEl = document.getElementById('nexSelect'); if (nexEl) nexEl.value = '1';
+    const estEl = document.getElementById('estagioSelect'); if (estEl) estEl.value = '1';
+    const origemEl = document.getElementById('origemSelect'); if (origemEl) origemEl.value = '';
+    document.querySelectorAll('[id^="transcender_"]').forEach(el => { el.checked = false; });
+    document.querySelectorAll('.dv-item').forEach(el => el.classList.remove('selected'));
+    document.querySelectorAll('.status-item').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nex-pip').forEach(el => el.classList.remove('active'));
+    window.currentFear = 0;
+    if (window.renderFear) window.renderFear();
+    ['pv_atual','pe_atual','san_atual'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { if (el.tagName === 'INPUT') el.value = ''; else el.textContent = '0'; }
+    });
+    const pd = document.getElementById('pd_atual'); if (pd) pd.textContent = '0';
+    const avImg = document.getElementById('avatar-preview');
+    const avPh  = document.getElementById('avatar-placeholder');
+    if (avImg) { avImg.src = ''; avImg.style.display = 'none'; }
+    if (avPh)  { avPh.style.display = 'flex'; }
+    if (window.onOrigemChange) window.onOrigemChange();
+  }
 
-    // ── Load saved data from Firebase ───────────────────────────────────────
-    const snap = await get(ref(db, `players/${playerName}/ficha`));
+  // ── Carrega a ficha do slot ativo a partir do Firebase ──────────────────
+  async function loadFicha() {
+    const snap = await get(ref(db, fichaPath()));
     if (snap.exists()) {
       const saved = snap.val();
 
@@ -892,11 +930,10 @@
         });
       }
 
-      // Restore perícias treinadas
+      // Restore perícias treinadas (bônus digitado)
       if (saved.pericias) {
-        document.querySelectorAll('.pericias-table .chk').forEach((chk, i) => {
-          if (saved.pericias[i]) chk.classList.add('filled');
-          else chk.classList.remove('filled');
+        document.querySelectorAll('.pericias-table .trei-input').forEach((inp, i) => {
+          inp.value = saved.pericias[i] !== undefined ? saved.pericias[i] : '';
         });
       }
 
@@ -956,21 +993,63 @@
         syncStats();
       }, 150);
     }
+  }
 
-    // ── Save on chk (perícia treinada) click ────────────────────────────────
-    document.querySelectorAll('.pericias-table .chk').forEach(el => {
-      el.addEventListener('click', () => setTimeout(saveAll, 50));
+  // ── Assina os listeners em tempo real que são por-personagem (stats + avatar) ──
+  function subscribeCharListeners() {
+    if (unsubStats)  unsubStats();
+    if (unsubAvatar) unsubAvatar();
+
+    unsubStats = onValue(ref(db, statsPath()), (snap) => {
+      const data = snap.val();
+      if (!data) return;
+      if (data.pv_atual !== undefined)  { const e=document.getElementById('pv_atual');  if(e) { if(e.tagName==='INPUT') e.value=data.pv_atual; else e.textContent=data.pv_atual; } }
+      if (data.pe_atual !== undefined)  { const e=document.getElementById('pe_atual');  if(e) { if(e.tagName==='INPUT') e.value=data.pe_atual; else e.textContent=data.pe_atual; } }
+      if (data.san_atual !== undefined) { const e=document.getElementById('san_atual'); if(e) { if(e.tagName==='INPUT') e.value=data.san_atual; else e.textContent=data.san_atual; } }
+      if (data.pd_atual !== undefined)  { const e=document.getElementById('pd_atual');  if(e) { e.textContent=data.pd_atual;  } }
+      if (data.fear !== undefined) { window.currentFear = data.fear; if (window.renderFear) window.renderFear(); }
+      setTimeout(saveAll, 200);
     });
 
-    // ── Save on dv-item click ────────────────────────────────────────────────
-    document.querySelectorAll('.dv-item').forEach(el => {
-      el.addEventListener('click', () => setTimeout(saveAll, 50));
+    unsubAvatar = onValue(ref(db, avatarPath()), snap => {
+      if (snap.exists() && snap.val()) applyAvatar(snap.val());
+    });
+  }
+
+  // ── Troca de personagem (abas) ───────────────────────────────────────────
+  window.switchChar = async function(slot) {
+    if (slot === window.CHAR_SLOT) return;
+    saveAll(); // flush do personagem atual antes de trocar
+    window.CHAR_SLOT = slot;
+    document.querySelectorAll('#char-tab-bar .char-tab').forEach((btn, i) => {
+      btn.classList.toggle('active', i === slot - 1);
+    });
+    resetFichaFields();
+    await loadFicha();
+    subscribeCharListeners();
+    recalcAll();
+    syncStats();
+  };
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    // Show player name
+    const nameEl = document.getElementById('player-name-display');
+    if (nameEl) nameEl.textContent = playerName.toUpperCase();
+
+    // ── Marca a aba correta (caso o link já venha com &char=2 ou &char=3) ──
+    document.querySelectorAll('#char-tab-bar .char-tab').forEach((btn, i) => {
+      btn.classList.toggle('active', i === window.CHAR_SLOT - 1);
     });
 
-    // ── Save on status click ─────────────────────────────────────────────────
-    document.querySelectorAll('.status-item').forEach(el => {
-      el.addEventListener('click', () => setTimeout(saveAll, 50));
+    // ── Assign data-save keys FIRST so load can find them ──────────────────
+    document.querySelectorAll('input[type=text], input[type=number], textarea').forEach((el, i) => {
+      if (!el.dataset.save) el.dataset.save = `field_${i}`;
+      el.addEventListener('change', () => saveAll());
+      el.addEventListener('input',  () => schedSave());
     });
+
+    await loadFicha();
+    subscribeCharListeners();
 
     // ── Pool atual edits ─────────────────────────────────────────────────────
     ['pv_atual','pe_atual','san_atual'].forEach(id => {
@@ -988,33 +1067,6 @@
     set(ref(db, `players/${playerName}/online`), true);
     window.addEventListener('beforeunload', () => {
       set(ref(db, `players/${playerName}/online`), false);
-    });
-
-    // ── Expose Firebase for dice roller ──────────────────────────────────
-    window._db  = db;
-    window._ref = ref;
-    window._set = set;
-
-    // ── Roll log listener (left panel) ───────────────────────────────────
-    onValue(ref(db, 'rolls'), snap => {
-      const d = snap.val();
-      const log = document.getElementById('roll-log');
-      if (!log) return;
-      if (!d || !Object.keys(d).length) {
-        log.innerHTML = '<div style="font-size:9px;color:#aaa;text-align:center;padding:10px;font-family:Share Tech Mono,monospace;">Nenhuma rolagem ainda...</div>';
-        return;
-      }
-      const entries = Object.entries(d).map(([p,r])=>({player:p,...r})).sort((a,b)=>(b.ts||0)-(a.ts||0));
-      log.innerHTML = '';
-      entries.forEach(({player,label,rolls,total,ts}) => {
-        const time = ts ? new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '';
-        const isMine = player === playerName;
-        const e = document.createElement('div');
-        e.className = 'roll-entry';
-        e.style.borderLeftColor = isMine ? '#8B1A1A' : '#7a5800';
-        e.innerHTML = '<span style="font-family:Oswald,sans-serif;font-size:10px;font-weight:700;color:'+(isMine?'#8B1A1A':'#7a5800')+';">'+player+'</span> <span style="font-size:7px;color:#888;">'+time+'</span><span class="roll-total">'+total+'</span><span class="roll-detail">'+label+(rolls&&rolls.length>1?' ['+rolls.join(', ')+']':'')+'</span>';
-        log.appendChild(e);
-      });
     });
 
     // ── Listen for master alerts ─────────────────────────────────────────────
@@ -1041,17 +1093,6 @@
       banner.innerHTML = `<span style="font-size:16px;">${data.icon||'🌙'}</span><span style="font-weight:700;">${data.titulo||''}</span><span style="color:#556;font-size:9px;">${data.desc||''}</span><span style="margin-left:auto;font-family:Share Tech Mono,monospace;font-size:13px;">${data.temp||''}</span>`;
     });
 
-    // ── Listen for master stat changes ───────────────────────────────────────
-    onValue(ref(db, `players/${playerName}/stats`), (snap) => {
-      const data = snap.val();
-      if (!data) return;
-      if (data.pv_atual !== undefined)  { const e=document.getElementById('pv_atual');  if(e) { if(e.tagName==='INPUT') e.value=data.pv_atual; else e.textContent=data.pv_atual; } }
-      if (data.pe_atual !== undefined)  { const e=document.getElementById('pe_atual');  if(e) { if(e.tagName==='INPUT') e.value=data.pe_atual; else e.textContent=data.pe_atual; } }
-      if (data.san_atual !== undefined) { const e=document.getElementById('san_atual'); if(e) { if(e.tagName==='INPUT') e.value=data.san_atual; else e.textContent=data.san_atual; } }
-      if (data.pd_atual !== undefined)  { const e=document.getElementById('pd_atual');  if(e) { e.textContent=data.pd_atual;  } }
-      if (data.fear !== undefined) { window.currentFear = data.fear; renderFear(); }
-      setTimeout(saveAll, 200);
-    });
   });
 
   // ── Save throttle ──────────────────────────────────────────────────────────
@@ -1090,10 +1131,10 @@
       if (nameEl) status[nameEl.textContent.trim()] = el.classList.contains('active');
     });
 
-    // Save perícias treinadas (chk filled class)
+    // Save perícias treinadas (bônus digitado, ex: +5, +10, +15)
     const pericias = {};
-    document.querySelectorAll('.pericias-table .chk').forEach((chk, i) => {
-      pericias[i] = chk.classList.contains('filled');
+    document.querySelectorAll('.pericias-table .trei-input').forEach((inp, i) => {
+      pericias[i] = inp.value;
     });
 
     const pools = {};
@@ -1122,7 +1163,7 @@
       lastSaved: Date.now(),
     };
 
-    update(ref(db, `players/${playerName}/ficha`), ficha);
+    update(ref(db, fichaPath()), ficha);
     syncStats();
 
     // Show tiny save indicator
@@ -1148,7 +1189,7 @@
       return parseInt(v) || 0;
     };
     const isSob = document.getElementById('classeSelect')?.value === 'sobrevivente';
-    update(ref(db, `players/${playerName}/stats`), {
+    update(ref(db, statsPath()), {
       pv_atual:  g('pv_atual'),
       pv_max:    parseInt(document.getElementById('pv_max')?.textContent) || 0,
       pe_atual:  g('pe_atual'),
@@ -1199,56 +1240,24 @@
     ph.style.display  = 'none';
   }
   window.saveAvatar = (base64) => {
-    set(ref(db, `players/${playerName}/avatar`), base64);
+    set(ref(db, avatarPath()), base64);
     applyAvatar(base64);
   };
-  // Carregar foto ao iniciar (listener em tempo real)
-  onValue(ref(db, `players/${playerName}/avatar`), snap => {
-    if (snap.exists() && snap.val()) applyAvatar(snap.val());
-  });
+  // O carregamento da foto ao iniciar (e a cada troca de personagem) é feito
+  // por subscribeCharListeners(), chamada no DOMContentLoaded e em switchChar().
 </script>
 </head>
 <body>
 
+<!-- ── CHAR TAB BAR (troca entre até 3 personagens do mesmo player) ── -->
+<div id="char-tab-bar">
+  <button class="char-tab active" id="char-tab-1" onclick="window.switchChar(1)">Personagem 1</button>
+  <button class="char-tab" id="char-tab-2" onclick="window.switchChar(2)">Personagem 2</button>
+  <button class="char-tab" id="char-tab-3" onclick="window.switchChar(3)">Personagem 3</button>
+</div>
+
 <!-- ════════════════════════════════════════════════════ PAGE 1 ═ -->
 <!-- LEFT PANEL -->
-<button class="dice-toggle-btn left" id="left-toggle-btn" onclick="togglePanel('left')">🎲 ROLAGENS</button>
-<div class="dice-panel left" id="left-panel">
-  <div class="dice-panel-header">📋 Rolagens da Sessão</div>
-  <div style="flex:1;overflow-y:auto;padding:8px;" id="roll-log">
-    <div style="font-size:9px;color:#aaa;text-align:center;padding:10px;font-family:'Share Tech Mono',monospace;">Nenhuma rolagem ainda...</div>
-  </div>
-</div>
-<!-- RIGHT PANEL -->
-<button class="dice-toggle-btn right" id="right-toggle-btn" onclick="togglePanel('right')">🎲 DADOS</button>
-<div class="dice-panel right" id="right-panel">
-  <div class="dice-panel-header">🎲 Rolar Dados</div>
-  <div style="padding:8px 10px 2px;font-size:9px;color:#6b5e50;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;">Quantidade</div>
-  <div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:6px 10px;">
-    <button onclick="changeQty(-1)" style="width:26px;height:26px;border:1px solid #c8bfb0;border-radius:3px;background:#fff;cursor:pointer;font-size:16px;font-weight:700;">−</button>
-    <div id="dice-qty" style="font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;color:#8B1A1A;min-width:32px;text-align:center;">1</div>
-    <button onclick="changeQty(1)" style="width:26px;height:26px;border:1px solid #c8bfb0;border-radius:3px;background:#fff;cursor:pointer;font-size:16px;font-weight:700;">+</button>
-  </div>
-  <div style="padding:4px 10px 2px;font-size:9px;color:#6b5e50;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;">Tipo de dado</div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px 10px;">
-    <button class="die-btn" onclick="selectDie(4,this)">d4</button>
-    <button class="die-btn" onclick="selectDie(6,this)">d6</button>
-    <button class="die-btn" onclick="selectDie(8,this)">d8</button>
-    <button class="die-btn" onclick="selectDie(10,this)">d10</button>
-    <button class="die-btn" onclick="selectDie(12,this)">d12</button>
-    <button class="die-btn selected" onclick="selectDie(20,this)">d20</button>
-    <button class="die-btn" onclick="selectDie(100,this)" style="grid-column:span 2;">d100</button>
-  </div>
-  <div style="display:flex;align-items:center;gap:6px;padding:4px 10px;font-size:10px;color:#6b5e50;font-family:'Barlow Condensed',sans-serif;">
-    <span>Bônus/Mod:</span>
-    <input type="number" id="dice-bonus" value="0" style="width:44px;border:1px solid #c8bfb0;border-radius:3px;background:#fff;color:#1a0a00;font-family:'Share Tech Mono',monospace;font-size:12px;padding:2px 4px;text-align:center;outline:none;">
-  </div>
-  <button class="roll-btn" onclick="rollDice()">🎲 ROLAR!</button>
-  <div style="padding:6px 10px;border-top:1px solid #e0d8cc;margin-top:4px;">
-    <div style="font-size:9px;color:#6b5e50;font-family:'Barlow Condensed',sans-serif;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Minhas rolagens</div>
-    <div id="my-roll-log" style="display:flex;flex-direction:column;gap:4px;max-height:220px;overflow-y:auto;"></div>
-  </div>
-</div>
 <!-- ── AVATAR UPLOAD ── -->
 <input type="file" id="avatar-file-input" accept="image/*" style="display:none">
 <div id="crop-modal">
@@ -1270,7 +1279,6 @@
   </div>
 </div>
 
-<div id="dice-anim-overlay"><div id="dice-anim-box">🎲</div><div id="dice-result-pop"></div></div>
 <div id="clima-ficha-banner"></div>
 
 <div class="page">
@@ -1531,6 +1539,11 @@ PATENTE ░░░░░░░░
         <div class="pool-max" id="pe_max" style="color:#006666;font-weight:700;font-size:13px;">—</div>
       </div>
       <div style="font-size:6px;color:var(--ash);margin-top:1mm;" id="pe_formula"></div>
+      <div style="display:flex;align-items:center;gap:1mm;margin-top:1.5mm;border-top:1px solid #e0d8cc;padding-top:1.5mm;">
+        <span style="font-size:6.5px;color:#006666;letter-spacing:0.5px;white-space:nowrap;">Bônus/Penalidade:</span>
+        <input type="number" id="pe_manual_bonus" data-save="pe_manual_bonus" value="0" onchange="recalcAll();saveAll();" style="width:40px;height:18px;border:none;border-bottom:2px solid #26a69a;background:#f4fffe;color:#006666;font-family:'Share Tech Mono',monospace;font-size:12px;font-weight:700;outline:none;text-align:center;border-radius:2px;" title="Bônus/Penalidade no PE máximo">
+        <span style="font-size:6px;color:var(--ash);">no PE máx.</span>
+      </div>
     </div>
     <div class="pool-box san">
       <div class="pool-label">◉ Sanidade</div>
@@ -1554,6 +1567,11 @@ PATENTE ░░░░░░░░
         <div class="pool-max" id="pd_max" style="color:#7a5800;font-weight:700;font-size:13px;">—</div>
       </div>
       <div style="font-size:6px;color:var(--ash);margin-top:1mm;" id="pd_formula"></div>
+      <div style="display:flex;align-items:center;gap:1mm;margin-top:1.5mm;border-top:1px solid #e0d8cc;padding-top:1.5mm;">
+        <span style="font-size:6.5px;color:#7a5800;letter-spacing:0.5px;white-space:nowrap;">Bônus/Penalidade:</span>
+        <input type="number" id="pd_manual_bonus" data-save="pd_manual_bonus" value="0" onchange="recalcAll();saveAll();" style="width:40px;height:18px;border:none;border-bottom:2px solid var(--accent);background:#fffdf4;color:#7a5800;font-family:'Share Tech Mono',monospace;font-size:12px;font-weight:700;outline:none;text-align:center;border-radius:2px;" title="Bônus/Penalidade no PD máximo">
+        <span style="font-size:6px;color:var(--ash);">no PD máx.</span>
+      </div>
     </div>
   </div>
 
@@ -1706,36 +1724,36 @@ PATENTE ░░░░░░░░
           <th style="width:11%;">Total</th>
         </tr>
         <!-- Skills list -->
-        <tr><td class="skill-name">Acrobacia</td><td class="skill-attr">AGI</td><td class="skill-trained"><span class="chk" onclick="this.classList.toggle('filled')" style="cursor:pointer"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Adestramento <span class="only-trained">T</span></td><td class="skill-attr">PRE</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Artes <span class="only-trained">T</span></td><td class="skill-attr">PRE</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Atletismo</td><td class="skill-attr">FOR</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Atualidades</td><td class="skill-attr">INT</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Ciências <span class="only-trained">T</span></td><td class="skill-attr">INT</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Crime <span class="only-trained">T</span></td><td class="skill-attr">AGI</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Diplomacia</td><td class="skill-attr">PRE</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Enganação</td><td class="skill-attr">PRE</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Fortitude</td><td class="skill-attr">VIG</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Furtividade</td><td class="skill-attr">AGI</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Iniciativa</td><td class="skill-attr">AGI</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Intimidação</td><td class="skill-attr">PRE</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Intuição</td><td class="skill-attr">PRE</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Investigação</td><td class="skill-attr">INT</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Luta</td><td class="skill-attr">FOR</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Medicina <span class="only-trained">T</span></td><td class="skill-attr">INT</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Ocultismo <span class="only-trained">T</span></td><td class="skill-attr">INT</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Percepção</td><td class="skill-attr">PRE</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Pilotagem <span class="only-trained">T</span></td><td class="skill-attr">AGI</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Pontaria</td><td class="skill-attr">AGI</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Profissão <span class="only-trained">T</span></td><td class="skill-attr">INT</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Reflexos</td><td class="skill-attr">AGI</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Religião <span class="only-trained">T</span></td><td class="skill-attr">PRE</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Sobrevivência</td><td class="skill-attr">INT</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Tática <span class="only-trained">T</span></td><td class="skill-attr">INT</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Tecnologia <span class="only-trained">T</span></td><td class="skill-attr">INT</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
-        <tr><td class="skill-name">Vontade</td><td class="skill-attr">PRE</td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Acrobacia</td><td class="skill-attr">AGI</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Adestramento <span class="only-trained">T</span></td><td class="skill-attr">PRE</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Artes <span class="only-trained">T</span></td><td class="skill-attr">PRE</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Atletismo</td><td class="skill-attr">FOR</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Atualidades</td><td class="skill-attr">INT</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Ciências <span class="only-trained">T</span></td><td class="skill-attr">INT</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Crime <span class="only-trained">T</span></td><td class="skill-attr">AGI</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Diplomacia</td><td class="skill-attr">PRE</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Enganação</td><td class="skill-attr">PRE</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Fortitude</td><td class="skill-attr">VIG</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Furtividade</td><td class="skill-attr">AGI</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Iniciativa</td><td class="skill-attr">AGI</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Intimidação</td><td class="skill-attr">PRE</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Intuição</td><td class="skill-attr">PRE</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Investigação</td><td class="skill-attr">INT</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Luta</td><td class="skill-attr">FOR</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Medicina <span class="only-trained">T</span></td><td class="skill-attr">INT</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Ocultismo <span class="only-trained">T</span></td><td class="skill-attr">INT</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Percepção</td><td class="skill-attr">PRE</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Pilotagem <span class="only-trained">T</span></td><td class="skill-attr">AGI</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Pontaria</td><td class="skill-attr">AGI</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Profissão <span class="only-trained">T</span></td><td class="skill-attr">INT</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Reflexos</td><td class="skill-attr">AGI</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Religião <span class="only-trained">T</span></td><td class="skill-attr">PRE</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Sobrevivência</td><td class="skill-attr">INT</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Tática <span class="only-trained">T</span></td><td class="skill-attr">INT</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Tecnologia <span class="only-trained">T</span></td><td class="skill-attr">INT</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name">Vontade</td><td class="skill-attr">PRE</td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
         <!-- Custom / extra -->
-        <tr><td class="skill-name" contenteditable="true" style="color:var(--ash);font-style:italic;">Perícia extra...</td><td class="skill-attr"><input type="text" class="input-tiny"></td><td class="skill-trained"><span class="chk"></span></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
+        <tr><td class="skill-name" contenteditable="true" style="color:var(--ash);font-style:italic;">Perícia extra...</td><td class="skill-attr"><input type="text" class="input-tiny"></td><td class="skill-trained"><input type="text" class="trei-input input-tiny" placeholder="+0"></td><td class="skill-val"><input type="text" class="input-tiny"></td><td class="skill-val"><input type="text" class="input-tiny"></td></tr>
       </table>
       <div style="margin-top:1mm;font-size:6.5px;color:var(--ash);"><span class="only-trained">T</span> = Somente Treinada</div>
     </div>
@@ -1744,7 +1762,7 @@ PATENTE ░░░░░░░░
     <div>
       <!-- ORIGEM -->
       <div class="sec-label">Origem</div>
-      <div class="origin-box" style="min-height:14mm;padding:2mm;"><textarea onchange="saveField(this)" data-field="origem" style="width:100%;min-height:12mm;border:none;background:transparent;color:#6b5e50;font-family:'Barlow Condensed',sans-serif;font-size:9px;outline:none;resize:none;" placeholder="Descreva sua origem aqui..."></textarea></div>
+      <div class="origin-box" style="min-height:14mm;padding:2mm;"><textarea data-save="origem_desc" style="width:100%;min-height:12mm;border:none;background:transparent;color:#6b5e50;font-family:'Barlow Condensed',sans-serif;font-size:9px;outline:none;resize:none;" placeholder="Descreva sua origem aqui..."></textarea></div>
 
       <!-- STATUS CONDITIONS -->
       <div class="sec-label" style="margin-top:2mm;">Condições de Status</div>
@@ -2360,22 +2378,22 @@ LIMITE CRÉD ░░░░
 
         <div style="background:#f8f2ea;border:1px solid #d0c8b8;border-left:2px solid #8B1A1A;border-radius:3px;padding:1.5mm 2mm;">
           <div style="font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:1.5px;color:#8B1A1A;text-transform:uppercase;margin-bottom:1mm;">🎭 Traço Principal</div>
-          <textarea data-field="traço" onchange="saveField(this)" style="width:100%;min-height:8mm;border:none;background:transparent;color:#3a2a10;font-family:'Barlow Condensed',sans-serif;font-size:8.5px;outline:none;resize:none;" placeholder="Como você age com os outros?"></textarea>
+          <textarea data-save="personalidade_traco" style="width:100%;min-height:8mm;border:none;background:transparent;color:#3a2a10;font-family:'Barlow Condensed',sans-serif;font-size:8.5px;outline:none;resize:none;" placeholder="Como você age com os outros?"></textarea>
         </div>
 
         <div style="background:#f8f2ea;border:1px solid #d0c8b8;border-left:2px solid #4A235A;border-radius:3px;padding:1.5mm 2mm;">
           <div style="font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:1.5px;color:#4A235A;text-transform:uppercase;margin-bottom:1mm;">💡 Motivação</div>
-          <textarea data-field="traço" onchange="saveField(this)" style="width:100%;min-height:8mm;border:none;background:transparent;color:#3a2a10;font-family:'Barlow Condensed',sans-serif;font-size:8.5px;outline:none;resize:none;"></textarea>
+          <textarea data-save="personalidade_motivacao" style="width:100%;min-height:8mm;border:none;background:transparent;color:#3a2a10;font-family:'Barlow Condensed',sans-serif;font-size:8.5px;outline:none;resize:none;"></textarea>
         </div>
 
         <div style="background:#f8f2ea;border:1px solid #d0c8b8;border-left:2px solid #7a5800;border-radius:3px;padding:1.5mm 2mm;">
           <div style="font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:1.5px;color:#7a5800;text-transform:uppercase;margin-bottom:1mm;">😨 Maior Medo</div>
-          <textarea data-field="motivacao" onchange="saveField(this)" style="width:100%;min-height:8mm;border:none;background:transparent;color:#3a2a10;font-family:'Barlow Condensed',sans-serif;font-size:8.5px;outline:none;resize:none;"></textarea>
+          <textarea data-save="personalidade_maior_medo" style="width:100%;min-height:8mm;border:none;background:transparent;color:#3a2a10;font-family:'Barlow Condensed',sans-serif;font-size:8.5px;outline:none;resize:none;"></textarea>
         </div>
 
         <div style="background:#f8f2ea;border:1px solid #d0c8b8;border-left:2px solid #1a3a1a;border-radius:3px;padding:1.5mm 2mm;">
           <div style="font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:1.5px;color:#2E7D32;text-transform:uppercase;margin-bottom:1mm;">🔒 Segredo</div>
-          <textarea data-field="medo" onchange="saveField(this)" style="width:100%;min-height:8mm;border:none;background:transparent;color:#3a2a10;font-family:'Barlow Condensed',sans-serif;font-size:8.5px;outline:none;resize:none;"></textarea>
+          <textarea data-save="personalidade_segredo" style="width:100%;min-height:8mm;border:none;background:transparent;color:#3a2a10;font-family:'Barlow Condensed',sans-serif;font-size:8.5px;outline:none;resize:none;"></textarea>
         </div>
 
       </div>
@@ -2525,34 +2543,45 @@ LIMITE CRÉD ░░░░
     </div>
     <div>
       <div class="sec-label">Anotações do Agente</div>
-      <div class="notes-area" style="min-height:55mm;padding:2mm;"><textarea data-field="notas" onchange="saveField(this)" style="width:100%;min-height:50mm;border:none;background:transparent;color:#6b5e50;font-family:'Barlow Condensed',sans-serif;font-size:9px;outline:none;resize:none;" placeholder="Anotações do agente..."></textarea></div>
+      <div class="notes-area" style="min-height:55mm;padding:2mm;"><textarea data-save="notas_agente" style="width:100%;min-height:50mm;border:none;background:transparent;color:#6b5e50;font-family:'Barlow Condensed',sans-serif;font-size:9px;outline:none;resize:none;" placeholder="Anotações do agente..."></textarea></div>
     </div>
   </div>
 
 </div>
 
 <script>
-  // ── Toggle checkboxes ──────────────────────────────────────────
-  document.querySelectorAll('.chk').forEach(el => {
-    el.addEventListener('click', () => {
-      el.classList.toggle('filled');
-    });
+  // ── Salvamento imediato para dv-item / status-item ──────────────
+  // Registrado aqui (síncrono, durante o parse) em vez de esperar o
+  // carregamento do Firebase terminar — evita perder cliques rápidos
+  // (era a causa da perícia "não salvar às vezes"; o mesmo padrão
+  // agora protege defeitos/virtudes e condições de status também).
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.dv-item') || e.target.closest('.status-item')) {
+      if (window.schedSave) window.schedSave();
+    }
   });
 
-  // ── Fear meter ─────────────────────────────────────────────────
-  let currentFear = 0;
+  // ── Fear meter (Medo) ────────────────────────────────────────────
+  // Usa window.currentFear (a MESMA variável lida por saveAll/syncStats)
+  // em vez de uma variável local — antes o medidor pintava na tela mas
+  // nunca era escrito no Firebase, porque essa função mexia numa
+  // variável "currentFear" diferente da que o salvamento lê.
+  window.currentFear = window.currentFear || 0;
   function setFear(level) {
-    currentFear = (currentFear === level) ? 0 : level;
+    window.currentFear = (window.currentFear === level) ? 0 : level;
     renderFear();
     if (window.syncStats) window.syncStats();
+    if (window.schedSave) window.schedSave();
   }
   function renderFear() {
-    document.getElementById('fearVal').textContent = currentFear;
+    const val = window.currentFear || 0;
+    document.getElementById('fearVal').textContent = val;
     document.querySelectorAll('.fear-pip').forEach(pip => {
       const i = parseInt(pip.getAttribute('data-i'));
-      pip.classList.toggle('filled', i <= currentFear);
+      pip.classList.toggle('filled', i <= val);
     });
   }
+  window.renderFear = renderFear;
   renderFear();
 
   // ── NEX pips sync with select ──────────────────────────────────
@@ -2706,10 +2735,11 @@ LIMITE CRÉD ░░░░
         : (c.pvBase + vig + (c.pvNex + vig) * nexExtra + pvOrigemBonus + pvManual)
     );
 
-    // PE: same logic + origemBonus
+    // PE: same logic + origemBonus + bônus manual (ex: progressão de Sobrevivente)
+    const peManual = parseInt(document.getElementById('pe_manual_bonus')?.value) || 0;
     const peFinal = c.estagio
-      ? (c.peBase + pre + c.peNex * extraSteps + peOrigemBonus)
-      : (c.peBase + pre + (c.peNex + pre) * nexExtra + peOrigemBonus);
+      ? (c.peBase + pre + c.peNex * extraSteps + peOrigemBonus + peManual)
+      : (c.peBase + pre + (c.peNex + pre) * nexExtra + peOrigemBonus + peManual);
 
     // SAN: base + per-nex gains, minus Transcender levels chosen
     // nexLevelValues maps index (0-19) to NEX%
@@ -2754,10 +2784,11 @@ LIMITE CRÉD ░░░░
       }
     });
 
-    // PD
+    // PD + bônus manual (ex: progressão de Sobrevivente)
+    const pdManual = parseInt(document.getElementById('pd_manual_bonus')?.value) || 0;
     const pdFinal = c.estagio
-      ? (c.pdBase + (c.pdPre ? pre : 0) + c.pdNex * extraSteps)
-      : (c.pdBase + (c.pdPre ? pre : 0) + (c.pdNex + (c.pdPre ? pre : 0)) * nexExtra);
+      ? (c.pdBase + (c.pdPre ? pre : 0) + c.pdNex * extraSteps + pdManual)
+      : (c.pdBase + (c.pdPre ? pre : 0) + (c.pdNex + (c.pdPre ? pre : 0)) * nexExtra + pdManual);
 
     // Defesa: 10 + AGI
     const defBase = 10 + agi;
@@ -2779,6 +2810,8 @@ LIMITE CRÉD ░░░░
 
     const pvOLabel  = pvOrigemBonus  > 0 ? ` +${pvOrigemBonus}orig.`  : '';
     const pvMLabel  = pvManual !== 0 ? ` ${pvManual > 0 ? '+' : ''}${pvManual}bônus` : '';
+    const peMLabel  = peManual !== 0 ? ` ${peManual > 0 ? '+' : ''}${peManual}bônus` : '';
+    const pdMLabel  = pdManual !== 0 ? ` ${pdManual > 0 ? '+' : ''}${pdManual}bônus` : '';
     const sanOLabel = sanOrigemBonus > 0 ? ` +${sanOrigemBonus}orig.` : '';
     const peOLabel  = peOrigemBonus  > 0 ? ` +${peOrigemBonus}orig.`  : '';
     const sanTLabel = transcenderPenalty > 0 ? ` −${transcenderPenalty}transcender` : '';
@@ -2788,14 +2821,14 @@ LIMITE CRÉD ░░░░
       const sanGain = c.sanNex * extraSteps;
       const peGain  = c.peNex  * extraSteps;
       document.getElementById('pv_formula').textContent  = `${c.pvBase}+VIG(${vig})+${pvGain} [Est.${nexLvl}]${pvOLabel}${pvMLabel}`;
-      document.getElementById('pe_formula').textContent  = `${c.peBase}+PRE(${pre})+${peGain} [Est.${nexLvl}]${peOLabel}`;
+      document.getElementById('pe_formula').textContent  = `${c.peBase}+PRE(${pre})+${peGain} [Est.${nexLvl}]${peOLabel}${peMLabel}`;
       document.getElementById('san_formula').textContent = `${c.sanBase}+${sanGain} [Est.${nexLvl}]${sanOLabel}${sanTLabel}${sanMLabel}`;
-      document.getElementById('pd_formula').textContent  = `${c.pdBase}+${c.pdNex}×${extraSteps}est.`;
+      document.getElementById('pd_formula').textContent  = `${c.pdBase}+${c.pdNex}×${extraSteps}est.${pdMLabel}`;
     } else {
       document.getElementById('pv_formula').textContent  = `${c.pvBase}+VIG+(${c.pvNex}+VIG)×${nexExtra}nex${pvOLabel}${pvMLabel}`;
-      document.getElementById('pe_formula').textContent  = `${c.peBase}+PRE + (${c.peNex}+PRE)×${nexExtra}nex${peOLabel}`;
+      document.getElementById('pe_formula').textContent  = `${c.peBase}+PRE + (${c.peNex}+PRE)×${nexExtra}nex${peOLabel}${peMLabel}`;
       document.getElementById('san_formula').textContent = `${c.sanBase}+${c.sanNex}×${nexExtra}nex${sanOLabel}${sanTLabel}${sanMLabel}`;
-      document.getElementById('pd_formula').textContent  = `${c.pdBase}+PRE + (${c.pdNex}+PRE)×${nexExtra}nex`;
+      document.getElementById('pd_formula').textContent  = `${c.pdBase}+PRE + (${c.pdNex}+PRE)×${nexExtra}nex${pdMLabel}`;
     }
 
     // Sync to hub and overlay after every recalc
@@ -2804,35 +2837,6 @@ LIMITE CRÉD ░░░░
   }
 
   recalcAll();
-
-  // ── Dice panels ───────────────────────────────────────────────────────────
-  let leftOpen=false, rightOpen=false;
-  window.togglePanel = function(side) {
-    if(side==='left'){leftOpen=!leftOpen;document.getElementById('left-panel').classList.toggle('open',leftOpen);document.getElementById('left-toggle-btn').style.left=leftOpen?'220px':'0';}
-    else{rightOpen=!rightOpen;document.getElementById('right-panel').classList.toggle('open',rightOpen);document.getElementById('right-toggle-btn').style.right=rightOpen?'220px':'0';}
-  };
-  let diceQty=1, diceType=20;
-  const diceEmoji={4:'🔷',6:'🎲',8:'🔶',10:'🔹',12:'🔸',20:'⬡',100:'💯'};
-  window.changeQty=function(d){diceQty=Math.max(1,Math.min(20,diceQty+d));document.getElementById('dice-qty').textContent=diceQty;};
-  window.selectDie=function(faces,btn){diceType=faces;document.querySelectorAll('.die-btn').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');};
-  window.rollDice=function(){
-    const bonus=parseInt(document.getElementById('dice-bonus').value)||0;
-    const rolls=Array.from({length:diceQty},()=>Math.floor(Math.random()*diceType)+1);
-    const total=rolls.reduce((a,b)=>a+b,0)+bonus;
-    const label=diceQty+'d'+diceType+(bonus!==0?(bonus>0?'+'+bonus:bonus):'');
-    const overlay=document.getElementById('dice-anim-overlay');
-    const box=document.getElementById('dice-anim-box');
-    const pop=document.getElementById('dice-result-pop');
-    box.textContent=diceEmoji[diceType]||'🎲';
-    pop.textContent=total;
-    const pct=total/(diceType*diceQty);
-    pop.style.color=pct>=0.9?'#2E7D32':pct<=0.1?'#8B1A1A':'#1a0a00';
-    overlay.classList.add('show');
-    setTimeout(()=>overlay.classList.remove('show'),1300);
-    const myLog=document.getElementById('my-roll-log');
-    if(myLog){const time=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});const e=document.createElement('div');e.className='roll-entry';e.innerHTML='<span class="roll-total">'+total+'</span><span class="roll-detail">'+label+(rolls.length>1?' ['+rolls.join(', ')+']':'')+ ' · '+time+'</span>';myLog.insertBefore(e,myLog.firstChild);while(myLog.children.length>20)myLog.removeChild(myLog.lastChild);}
-    try{if(window._set&&window._ref&&window._db){window._set(window._ref(window._db,'rolls/'+window.PLAYER_NAME),{label,rolls,total,bonus,ts:Date.now(),player:window.PLAYER_NAME});}}catch(e){}
-  };
 
   // ── Star rating for contacts ──
   function toggleStar(el) {

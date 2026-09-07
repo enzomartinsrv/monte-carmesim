@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monte Carmesim — Selecionar Ficha</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Barlow+Condensed:wght@300;400;600;700&family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --blood: #8B1A1A;
+    --crimson: #C0392B;
+    --bone: #f2ede6;
+    --ash: #6b5e50;
+    --dark: #0a0a0a;
+    --panel: #16120f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: radial-gradient(ellipse at top, #241a14 0%, #0a0a0a 70%);
+    color: var(--bone);
+    font-family: 'Barlow Condensed', sans-serif;
+    min-height: 100vh;
+    padding: 32px 16px 60px;
+  }
+  header { text-align: center; margin-bottom: 32px; }
+  header h1 {
+    font-family: 'Oswald', sans-serif;
+    font-size: 26px;
+    letter-spacing: 6px;
+    color: var(--crimson);
+    text-transform: uppercase;
+  }
+  header p {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--ash);
+    margin-top: 6px;
+  }
+  #players {
+    max-width: 780px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 18px;
+  }
+  .player-card {
+    background: var(--panel);
+    border: 1px solid #2a221a;
+    border-left: 3px solid var(--blood);
+    border-radius: 6px;
+    padding: 16px 18px;
+  }
+  .player-card h2 {
+    font-family: 'Oswald', sans-serif;
+    font-size: 15px;
+    letter-spacing: 2px;
+    color: var(--bone);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .player-card h2 .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--blood);
+  }
+  .char-list { display: flex; flex-direction: column; gap: 8px; }
+  .char-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #1f1710;
+    border: 1px solid #332619;
+    border-radius: 4px;
+    padding: 10px 12px;
+    text-decoration: none;
+    color: var(--bone);
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .char-link:hover { background: #2a1f14; border-color: var(--crimson); }
+  .char-link .char-name {
+    font-size: 13px;
+    letter-spacing: 0.5px;
+  }
+  .char-link .char-name.empty { color: var(--ash); font-style: italic; }
+  .char-link .char-slot {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    color: var(--ash);
+    letter-spacing: 1px;
+  }
+  .loading-note {
+    text-align: center;
+    color: var(--ash);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    margin-top: 30px;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>☠ Monte Carmesim</h1>
+  <p>Escolha seu agente para abrir a ficha</p>
+</header>
+
+<div id="players"></div>
+<div class="loading-note" id="loading-note">Carregando fichas salvas...</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCSQXdyLvqC4zT2BkSwUKk-uostVn2BmA8",
+    authDomain: "rpg-ficha-monte-carmesim.firebaseapp.com",
+    databaseURL: "https://rpg-ficha-monte-carmesim-default-rtdb.firebaseio.com",
+    projectId: "rpg-ficha-monte-carmesim",
+    storageBucket: "rpg-ficha-monte-carmesim.firebasestorage.app",
+    messagingSenderId: "909026041375",
+    appId: "1:909026041375:web:df06386967dd9181a23f2a"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // Precisa ser a MESMA lista (e mesma grafia) do array ALLOWED em
+  // ficha-monte-carmesim.html, ou o link vai bater em "Acesso Negado".
+  const PLAYERS = ['Lucas', 'Gabi', 'Joao', 'Karina', 'Ana'];
+  const SHEET_URL = 'ficha-monte-carmesim.html';
+
+  const container = document.getElementById('players');
+
+  function slotPath(player, slot) {
+    return `players/${player}/ficha${slot === 1 ? '' : slot}/inputs/id_nome`;
+  }
+
+  async function buildPlayerCard(player) {
+    const card = document.createElement('div');
+    card.className = 'player-card';
+
+    const h2 = document.createElement('h2');
+    h2.innerHTML = `<span class="dot"></span> ${player}`;
+    card.appendChild(h2);
+
+    const list = document.createElement('div');
+    list.className = 'char-list';
+    card.appendChild(list);
+
+    for (let slot = 1; slot <= 3; slot++) {
+      let nome = '';
+      try {
+        const snap = await get(ref(db, slotPath(player, slot)));
+        if (snap.exists()) nome = (snap.val() || '').trim();
+      } catch (e) {
+        // sem permissão de leitura ou sem conexão — segue com o rótulo padrão
+      }
+
+      const a = document.createElement('a');
+      a.className = 'char-link';
+      a.href = `${SHEET_URL}?player=${encodeURIComponent(player)}&char=${slot}`;
+      a.innerHTML = nome
+        ? `<span class="char-name">${nome}</span><span class="char-slot">FICHA ${slot}</span>`
+        : `<span class="char-name empty">Ficha ${slot}</span><span class="char-slot">VAZIA</span>`;
+      list.appendChild(a);
+    }
+
+    container.appendChild(card);
+  }
+
+  (async () => {
+    for (const player of PLAYERS) {
+      await buildPlayerCard(player);
+    }
+    document.getElementById('loading-note').style.display = 'none';
+  })();
+</script>
+
+</body>
+</html>
