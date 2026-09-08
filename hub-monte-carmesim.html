@@ -477,6 +477,7 @@ const db = getDatabase(initializeApp({
 }));
 
 window._pd = {};
+window._ovis = {};
 
 onValue(ref(db,'players'), snap => {
   window._pd = snap.val()||{};
@@ -485,6 +486,18 @@ onValue(ref(db,'players'), snap => {
   document.getElementById('online-count').textContent =
     Object.values(window._pd).filter(p=>p.online===true).length;
 });
+
+onValue(ref(db,'overlay/visible'), snap => {
+  window._ovis = snap.val()||{};
+  renderCards(window._pd);
+});
+
+window.toggleOverlayVis=(name,slot)=>{
+  const key=name+'_'+slot;
+  const nv=!window._ovis[key];
+  update(ref(db,'overlay/visible'),{[key]:nv});
+  addLog((nv?'👁 Mostrando ':'🚫 Ocultando ')+name+' (ficha '+slot+') no overlay','alert');
+};
 
 function renderCards(data){
   const grid=document.getElementById('players-grid');
@@ -529,6 +542,8 @@ function mkCard(name,player,slot){
   // Personagem 3 (Runas do Vazio) alterna entre duas formas de NEX — mostra qual está ativa
   const formaBadge = (slot===3 && fi.formaAtiva==='alta')
     ? `<span class="forma-badge">⇄ FORMA ALTA</span>` : '';
+  const visKey=name+'_'+slot;
+  const isVisible=!!window._ovis[visKey];
   const d=document.createElement('div');
   d.className='player-card '+(empty?'char-empty':(player.online?'online-card':'offline-card'));
   d.id=`card-${name}-${slot}`;
@@ -536,7 +551,8 @@ function mkCard(name,player,slot){
     d.innerHTML=`<div class="card-header"><div><div class="card-name" style="font-style:italic;color:var(--ash);">Ficha ${slot} vazia</div><div class="card-meta">${name}</div></div></div>`;
     return d;
   }
-  d.innerHTML=`<div class="card-header"><div><div class="card-name">${agentName}${formaBadge}</div><div class="card-meta">${cls} · NEX ${nex} · <span style="color:var(--ash);opacity:.6;">Ficha ${slot}</span></div></div></div>
+  d.innerHTML=`<div class="card-header"><div><div class="card-name">${agentName}${formaBadge}</div><div class="card-meta">${cls} · NEX ${nex} · <span style="color:var(--ash);opacity:.6;">Ficha ${slot}</span></div></div>
+<button class="act-btn" title="Mostrar/ocultar no overlay" style="margin-left:auto;flex-shrink:0;${isVisible?'border-color:var(--blood);color:var(--bone);background:rgba(31,16,173,.35);':'color:var(--ash);'}" onclick="toggleOverlayVis('${name}',${slot})">${isVisible?'👁':'🚫'}</button></div>
 <div class="card-pools">
 <div class="pool-row"><div class="pool-lbl">PV</div><div class="pool-bar-wrap"><div class="pool-bar pv" style="width:${pct(pv,pvM)}%"></div></div><div class="pool-nums">${pv}/${pvM}</div></div>
 <div class="pool-row"><div class="pool-lbl">PE</div><div class="pool-bar-wrap"><div class="pool-bar pe" style="width:${pct(pe,peM)}%"></div></div><div class="pool-nums">${pe}/${peM}</div></div>

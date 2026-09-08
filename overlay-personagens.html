@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Overlay · Personagens — Monte Carmesim</title>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  :root{
+    --blood:#1f10ad; --crimson:#3e20dc;
+    --bone:#ede8dc; --ink:#1a0a00; --ash:#6b5e50;
+  }
+  html, body {
+    background: transparent !important;
+    width: 1920px; height: 1080px;
+    overflow: hidden;
+    font-family: 'Barlow Condensed', sans-serif;
+  }
+
+  .stage {
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:flex-end;
+    padding: 40px 40px 36px;
+  }
+
+  .title-stamp{
+    position:absolute; top:28px; left:50%; transform:translateX(-50%);
+    font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:4px;
+    color:rgba(237,232,220,.65);
+    border:1px solid rgba(62,32,220,.55);
+    background:rgba(10,8,20,.55);
+    padding:5px 16px; border-radius:2px;
+  }
+  .title-stamp b{ color:#8a7bff; }
+
+  .groups{
+    display:flex; align-items:flex-end; justify-content:center;
+    gap:26px; flex-wrap:wrap;
+  }
+
+  /* ── AGRUPAMENTO POR PLAYER (quando 2+ personagens dele estão em cena) ── */
+  .pgroup{
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+  }
+  .pgroup-label{
+    font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:3px;
+    color:rgba(237,232,220,.55); text-transform:uppercase;
+  }
+  .pgroup-cards{
+    display:flex; gap:10px;
+    padding:8px; border-radius:8px;
+  }
+  .pgroup-cards.multi{
+    border:1px solid rgba(62,32,220,.4);
+    background:rgba(10,8,20,.25);
+  }
+
+  /* ── CARD DE PERSONAGEM ── */
+  .ccard{
+    width:280px;
+    background:rgba(237,232,220,0.94);
+    border:1px solid rgba(31,16,173,0.35);
+    border-top:3px solid var(--blood);
+    border-radius:4px;
+    padding:12px 14px 12px;
+    opacity:0; transform:translateY(24px);
+    animation: cardIn .5s ease forwards;
+  }
+  @keyframes cardIn{ to{ opacity:1; transform:translateY(0); } }
+
+  .ctop{ display:flex; align-items:center; gap:9px; margin-bottom:8px; }
+  .cavatar{
+    width:42px; height:42px; flex-shrink:0; border-radius:4px;
+    border:1.5px solid rgba(31,16,173,.5); background:rgba(31,16,173,.08);
+    overflow:hidden; display:flex; align-items:center; justify-content:center;
+    font-size:18px; color:rgba(31,16,173,.4);
+  }
+  .cavatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .cname{
+    font-family:'Oswald',sans-serif; font-size:14px; font-weight:700; letter-spacing:1px;
+    text-transform:uppercase; color:var(--ink);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .ctag{
+    font-family:'Share Tech Mono',monospace; font-size:8.5px; color:var(--blood);
+    letter-spacing:0.5px; margin-top:1px;
+  }
+  .forma-tag{
+    display:inline-block; margin-left:5px; font-size:7.5px; letter-spacing:1px;
+    color:#5a1a7a; background:rgba(90,26,122,.15); border:1px solid rgba(90,26,122,.4);
+    border-radius:2px; padding:0 4px;
+  }
+
+  .attrs{ display:flex; gap:5px; margin-bottom:8px; }
+  .attr{ flex:1; text-align:center; background:rgba(31,16,173,.06); border-radius:3px; padding:3px 0; }
+  .attr-val{ font-family:'Oswald',sans-serif; font-size:13px; font-weight:700; color:var(--blood); line-height:1; }
+  .attr-lbl{ font-family:'Share Tech Mono',monospace; font-size:6.5px; color:var(--ash); letter-spacing:1px; }
+
+  .srow{ display:flex; align-items:center; gap:5px; margin-bottom:3px; }
+  .slbl{ font-family:'Share Tech Mono',monospace; font-size:8px; color:var(--ash); width:24px; flex-shrink:0; }
+  .bbg{ flex:1; height:6px; background:rgba(0,0,0,0.1); border-radius:2px; overflow:hidden; }
+  .bfill{ height:100%; border-radius:2px; transition:width .5s; }
+  .bfill.pv{ background:linear-gradient(to right,#8B1A1A,#ef5350); }
+  .bfill.pe{ background:linear-gradient(to right,#005a52,#26a69a); }
+  .bfill.san{ background:linear-gradient(to right,#1f10ad,#7a5cff); }
+  .sval{ font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--ink); width:36px; text-align:right; flex-shrink:0; }
+
+  .fear-wrap{ margin-top:5px; padding-top:5px; border-top:1px solid rgba(31,16,173,0.18); }
+  .fear-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:2px; }
+  .flbl{ font-family:'Share Tech Mono',monospace; font-size:8px; color:var(--ash); }
+  .fnum{ font-family:'Oswald',sans-serif; font-size:12px; font-weight:700; }
+  .fpips{ display:flex; gap:1.5px; }
+  .fpip{ flex:1; height:4px; border-radius:1px; }
+
+  .conds{ display:flex; flex-wrap:wrap; gap:3px; margin-top:6px; }
+  .ctagchip{
+    font-family:'Share Tech Mono',monospace; font-size:7px; letter-spacing:.5px;
+    color:#8B1A1A; background:rgba(139,26,26,.1); border:1px solid rgba(139,26,26,.3);
+    border-radius:2px; padding:1px 5px;
+  }
+
+  /* ── POPUP DE DANO/CURA/MEDO ── */
+  .popup{ position:absolute; font-family:'Oswald',sans-serif; font-size:26px; font-weight:700; pointer-events:none; z-index:999; animation:popUp 1.5s ease-out forwards; }
+  .popup.dmg{ color:#ef5350; text-shadow:0 2px 10px rgba(239,83,80,.7); }
+  .popup.heal{ color:#4caf50; text-shadow:0 2px 10px rgba(76,175,80,.7); }
+  .popup.san{ color:#7a5cff; text-shadow:0 2px 10px rgba(122,92,255,.7); }
+  .popup.fear{ color:#ff9800; text-shadow:0 2px 10px rgba(255,152,0,.7); }
+  @keyframes popUp{
+    0%{ opacity:1; transform:translateY(0) scale(1); }
+    50%{ opacity:1; transform:translateY(-35px) scale(1.15); }
+    100%{ opacity:0; transform:translateY(-70px) scale(.8); }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="title-stamp">☠ <b>MONTE CARMESIM</b> · PERSONAGENS EM CENA</div>
+  <div class="groups" id="groups"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const db = getDatabase(initializeApp({
+  apiKey:"AIzaSyCSQXdyLvqC4zT2BkSwUKk-uostVn2BmA8",
+  authDomain:"rpg-ficha-monte-carmesim.firebaseapp.com",
+  databaseURL:"https://rpg-ficha-monte-carmesim-default-rtdb.firebaseio.com",
+  projectId:"rpg-ficha-monte-carmesim",
+  storageBucket:"rpg-ficha-monte-carmesim.firebasestorage.app",
+  messagingSenderId:"909026041375",
+  appId:"1:909026041375:web:df06386967dd9181a23f2a"
+}));
+
+const ORDER = ['Lucas','Gabi','Joao','Karina','Ana'];
+const NEX_LABELS=['5%','10%','15%','20%','25%','30%','35%','40%','45%','50%','55%','60%','65%','70%','75%','80%','85%','90%','95%','99%'];
+let players = {}, visible = {}, prevStats = {};
+
+onValue(ref(db,'players'), snap => { players = snap.val()||{}; render(); });
+onValue(ref(db,'overlay/visible'), snap => { visible = snap.val()||{}; render(); });
+
+function suf(slot){ return slot===1 ? '' : String(slot); }
+
+function render(){
+  const groups = document.getElementById('groups');
+  groups.innerHTML = '';
+
+  ORDER.forEach(name => {
+    const p = players[name]; if (!p) return;
+    const slots = [1,2,3].filter(slot => visible[name+'_'+slot]);
+    if (!slots.length) return;
+
+    const gWrap = document.createElement('div');
+    gWrap.className = 'pgroup';
+    gWrap.innerHTML = `<div class="pgroup-label">${name}</div><div class="pgroup-cards ${slots.length>1?'multi':''}"></div>`;
+    const cardsWrap = gWrap.querySelector('.pgroup-cards');
+
+    slots.forEach(slot => cardsWrap.appendChild(mkCard(name, p, slot)));
+    groups.appendChild(gWrap);
+  });
+
+  checkPopups();
+}
+
+function mkCard(name, p, slot){
+  const s = suf(slot);
+  const st = p['stats'+s] || {};
+  const fi = p['ficha'+s] || {};
+  const at = fi.atributos || {};
+  const agentName = fi.inputs?.id_nome?.trim() || `Ficha ${slot}`;
+  const cls = st.classe ? st.classe.charAt(0).toUpperCase()+st.classe.slice(1) : '—';
+  const nex = st.isSobrevivente ? (st.estagio?'Estágio '+st.estagio:'—') : (st.nex?(NEX_LABELS[parseInt(st.nex)-1]||'—'):'—');
+  const formaAlta = slot===3 && fi.formaAtiva==='alta';
+  const avKey = 'avatar'+s+(formaAlta?'_alt':'');
+  const avatar = p[avKey];
+
+  const pv=parseInt(st.pv_atual)||0, pvM=parseInt(st.pv_max)||1;
+  const pe=parseInt(st.pe_atual)||0, peM=parseInt(st.pe_max)||1;
+  const san=parseInt(st.san_atual)||0, sanM=parseInt(st.san_max)||1;
+  const fear=parseInt(st.fear)||0;
+  const pct=(a,b)=>Math.min(100,Math.max(0,Math.round(a/b*100)));
+  const fc=fear<=4?'#4caf50':fear<=8?'#cddc39':fear<=12?'#ff9800':fear<=16?'#f44336':'#b71c1c';
+  const pips=Array.from({length:20},(_,i)=>{
+    const col=i<4?'#4caf50':i<8?'#cddc39':i<12?'#ff9800':i<16?'#f44336':'#b71c1c';
+    return `<div class="fpip" style="background:${i<fear?col:'rgba(0,0,0,0.12)'}"></div>`;
+  }).join('');
+
+  const conds = Object.entries(fi.status||{}).filter(([,v])=>v).map(([k])=>k)
+    .concat(Object.entries(fi.dv||{}).filter(([,v])=>v).map(([k])=>k));
+  const condsHtml = conds.length ? `<div class="conds">${conds.map(c=>`<span class="ctagchip">${c}</span>`).join('')}</div>` : '';
+
+  const d = document.createElement('div');
+  d.className = 'ccard';
+  d.id = `card-${name}-${slot}`;
+  d.innerHTML = `
+    <div class="ctop">
+      <div class="cavatar">${avatar?`<img src="${avatar}" alt="">`:'☠'}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="cname">${agentName}${formaAlta?'<span class="forma-tag">⇄ NEX 50%</span>':''}</div>
+        <div class="ctag">${cls} · NEX ${nex}</div>
+      </div>
+    </div>
+    <div class="attrs">
+      <div class="attr"><div class="attr-val">${at.for??'—'}</div><div class="attr-lbl">FOR</div></div>
+      <div class="attr"><div class="attr-val">${at.agi??'—'}</div><div class="attr-lbl">AGI</div></div>
+      <div class="attr"><div class="attr-val">${at.int??'—'}</div><div class="attr-lbl">INT</div></div>
+      <div class="attr"><div class="attr-val">${at.pre??'—'}</div><div class="attr-lbl">PRE</div></div>
+      <div class="attr"><div class="attr-val">${at.vig??'—'}</div><div class="attr-lbl">VIG</div></div>
+    </div>
+    <div class="srow"><div class="slbl">PV</div><div class="bbg"><div class="bfill pv" style="width:${pct(pv,pvM)}%"></div></div><div class="sval">${pv}/${pvM}</div></div>
+    <div class="srow"><div class="slbl">PE</div><div class="bbg"><div class="bfill pe" style="width:${pct(pe,peM)}%"></div></div><div class="sval">${pe}/${peM}</div></div>
+    <div class="srow" style="margin-bottom:0"><div class="slbl">SAN</div><div class="bbg"><div class="bfill san" style="width:${pct(san,sanM)}%"></div></div><div class="sval">${san}/${sanM}</div></div>
+    <div class="fear-wrap">
+      <div class="fear-top"><span class="flbl">☠ MEDO</span><span class="fnum" style="color:${fc}">${fear}/20</span></div>
+      <div class="fpips">${pips}</div>
+    </div>
+    ${condsHtml}
+  `;
+  return d;
+}
+
+// ── Popups de dano/cura/medo ────────────────────────────────────────────
+function checkPopups(){
+  Object.entries(players).forEach(([name,p]) => {
+    [1,2,3].forEach(slot => {
+      if (!visible[name+'_'+slot]) return;
+      const key = name+'_'+slot;
+      const s = suf(slot);
+      const st = p['stats'+s] || {};
+      const prev = prevStats[key] || {};
+      ['pv','pe','san'].forEach(k => {
+        const a=parseInt(prev[k+'_atual'])||0, b=parseInt(st[k+'_atual'])||0;
+        if (prev[k+'_atual']!==undefined && a!==b) spawnPopup(name,slot,k,b-a);
+      });
+      const pf=parseInt(prev.fear)||0, cf=parseInt(st.fear)||0;
+      if (prev.fear!==undefined && pf!==cf) spawnPopup(name,slot,'fear',cf-pf);
+      prevStats[key] = JSON.parse(JSON.stringify(st));
+    });
+  });
+}
+function spawnPopup(name,slot,stat,delta){
+  const card=document.getElementById(`card-${name}-${slot}`); if (!card) return;
+  const rect=card.getBoundingClientRect();
+  const el=document.createElement('div');
+  const type=delta>0?'heal':stat==='san'?'san':stat==='fear'?'fear':'dmg';
+  const icon=stat==='san'?'🧠':stat==='fear'?'☠':stat==='pe'?'◈':'❤';
+  el.className='popup '+type;
+  el.textContent=(delta>0?'+':'')+delta+' '+icon;
+  el.style.left=(rect.left+rect.width*.3)+'px';
+  el.style.top=(rect.top+rect.height*.2)+'px';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),1600);
+}
+</script>
+</body>
+</html>
