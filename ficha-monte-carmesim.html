@@ -864,7 +864,15 @@
   const slotSuffix = () => (window.CHAR_SLOT === 1 ? '' : String(window.CHAR_SLOT));
   const fichaPath  = () => `players/${playerName}/ficha${slotSuffix()}`;
   const statsPath  = () => `players/${playerName}/stats${slotSuffix()}`;
-  const avatarPath = () => `players/${playerName}/avatar${slotSuffix()}`;
+  // No slot 3 (Runas do Vazio), o mesmo personagem existe em duas formas —
+  // NEX baixo e NEX alto. window.NEX_FORMA controla qual foto está ativa.
+  window.NEX_FORMA = 'baixa';
+  const avatarPath = () => `players/${playerName}/avatar${slotSuffix()}${(window.CHAR_SLOT === 3 && window.NEX_FORMA === 'alta') ? '_alt' : ''}`;
+  const poolVal = id => {
+    const e = document.getElementById(id);
+    if (!e) return '';
+    return (e.tagName === 'INPUT' ? e.value : e.textContent) || '';
+  };
 
   // Unsubscribers dos listeners em tempo real que são por-personagem
   // (precisam ser trocados quando o player muda de aba)
@@ -905,6 +913,7 @@
     const snap = await get(ref(db, fichaPath()));
     if (snap.exists()) {
       const saved = snap.val();
+      if (window.CHAR_SLOT === 3) window.NEX_FORMA = saved.formaAtiva || 'baixa';
 
       // Restore all inputs / textareas by data-save key
       if (saved.inputs) {
@@ -1064,6 +1073,7 @@
     if (slot === window.CHAR_SLOT) return;
     saveAll(); // flush do personagem atual antes de trocar
     window.CHAR_SLOT = slot;
+    window.NEX_FORMA = 'baixa';
     document.querySelectorAll('#char-tab-bar .char-tab').forEach((btn, i) => {
       btn.classList.toggle('active', i === slot - 1);
     });
@@ -1073,6 +1083,73 @@
     setCharTabLabel(slot, document.querySelector('[data-save="id_nome"]')?.value);
     recalcAll();
     syncStats();
+    updateNexFormaUI();
+  };
+
+  // ── Alternar NEX 5%/50% (só Personagem 3 — Runas do Vazio) ─────────────
+  // Mantém perícias, rituais/habilidades, inventário, defeitos/virtudes,
+  // contatos etc. intactos — troca só atributos, NEX, pontos atuais e foto.
+  function updateNexFormaUI() {
+    const btn = document.getElementById('nex-forma-toggle');
+    if (!btn) return;
+    if (window.CHAR_SLOT === 3) {
+      btn.style.display = 'inline-flex';
+      btn.textContent = window.NEX_FORMA === 'baixa' ? '⇄ Trocar para NEX 50%' : '⇄ Trocar para NEX 5%';
+    } else {
+      btn.style.display = 'none';
+    }
+  }
+  window.updateNexFormaUI = updateNexFormaUI;
+
+  window.toggleNexForma = async function() {
+    if (window.CHAR_SLOT !== 3) return;
+    const fromForma = window.NEX_FORMA;
+    const toForma = fromForma === 'baixa' ? 'alta' : 'baixa';
+
+    // 1. Guarda atributos/NEX/pontos atuais no "balde" da forma que está saindo
+    const snapshot = {
+      atributos: {
+        for: document.getElementById('atr_for')?.value || '1',
+        agi: document.getElementById('atr_agi')?.value || '1',
+        int: document.getElementById('atr_int')?.value || '1',
+        pre: document.getElementById('atr_pre')?.value || '1',
+        vig: document.getElementById('atr_vig')?.value || '1',
+      },
+      nex: document.getElementById('nexSelect')?.value || '1',
+      pv_atual:  poolVal('pv_atual'),
+      pe_atual:  poolVal('pe_atual'),
+      san_atual: poolVal('san_atual'),
+      pd_atual:  poolVal('pd_atual'),
+    };
+    await update(ref(db, `${fichaPath()}/formas/${fromForma}`), snapshot);
+
+    // 2. Troca a forma ativa
+    window.NEX_FORMA = toForma;
+
+    // 3. Carrega o "balde" da outra forma (se ainda não existe, usa o snapshot atual como ponto de partida)
+    const otherSnap = await get(ref(db, `${fichaPath()}/formas/${toForma}`));
+    const data = otherSnap.exists() ? otherSnap.val() : snapshot;
+
+    if (data.atributos) {
+      ['for','agi','int','pre','vig'].forEach(a => {
+        const el = document.getElementById(`atr_${a}`);
+        if (el) el.value = data.atributos[a] || 1;
+      });
+    }
+    if (data.nex) { const nexEl = document.getElementById('nexSelect'); if (nexEl) nexEl.value = data.nex; }
+    ['pv_atual','pe_atual','san_atual'].forEach(id => {
+      const e = document.getElementById(id);
+      if (e && data[id] !== undefined) { if (e.tagName === 'INPUT') e.value = data[id]; else e.textContent = data[id]; }
+    });
+    const pdEl = document.getElementById('pd_atual');
+    if (pdEl && data.pd_atual !== undefined) pdEl.textContent = data.pd_atual;
+
+    // 4. Troca a foto (avatarPath() já aponta pro sufixo certo pra essa forma)
+    subscribeCharListeners();
+
+    recalcAll();
+    saveAll();
+    updateNexFormaUI();
   };
 
   document.addEventListener('DOMContentLoaded', async () => {
@@ -1095,6 +1172,7 @@
     await loadFicha();
     subscribeCharListeners();
     refreshAllCharTabLabels();
+    updateNexFormaUI();
 
     // Nome do agente atualiza a aba em tempo real enquanto digita
     const nomeEl = document.querySelector('[data-save="id_nome"]');
@@ -1247,6 +1325,7 @@
       status,
       pools,
       lastSaved: Date.now(),
+      formaAtiva: window.NEX_FORMA || 'baixa',
     };
 
     showSaveIndicator('saving');
@@ -1333,6 +1412,7 @@
   <button class="char-tab active" id="char-tab-1" onclick="window.switchChar(1)">Personagem 1</button>
   <button class="char-tab" id="char-tab-2" onclick="window.switchChar(2)">Personagem 2</button>
   <button class="char-tab" id="char-tab-3" onclick="window.switchChar(3)">Personagem 3</button>
+  <button id="nex-forma-toggle" onclick="window.toggleNexForma()" style="display:none;font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:1px;color:#fff;background:var(--blood);border:none;padding:6px 10px;cursor:pointer;border-radius:4px 4px 0 0;margin-left:4px;">⇄ Trocar para NEX 50%</button>
 </div>
 
 <!-- ════════════════════════════════════════════════════ PAGE 1 ═ -->
