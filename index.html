@@ -143,7 +143,8 @@
     font-family: 'Share Tech Mono', monospace;
     font-size: 8px;
     letter-spacing: 0.5px;
-    color: var(--accent1);
+    color: var(--bone);
+    opacity: 0.85;
     text-transform: uppercase;
   }
   .char-slot {
@@ -220,7 +221,9 @@
     if (!classe) return '';
     const label = classe.charAt(0).toUpperCase() + classe.slice(1);
     if (isSob) return `${label} · Estágio ${estagio || 1}`;
-    return `${label} · NEX ${nex || 5}%`;
+    // nexSelect na ficha guarda um índice (1, 2, 3...), cada passo = 5%
+    const pct = (parseInt(nex) || 1) * 5;
+    return `${label} · NEX ${pct}%`;
   }
 
   async function buildPlayerCard(player) {
