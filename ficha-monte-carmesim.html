@@ -8,8 +8,8 @@
   @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700&display=swap');
 
   :root {
-    --blood:    #8B1A1A;
-    --crimson:  #C0392B;
+    --blood:    #1f10ad;
+    --crimson:  #3e20dc;
     --dark:     #1a1a1a;
     --charcoal: #ffffff;
     --iron:     #f2ede6;
@@ -629,6 +629,22 @@
   }
   #char-tab-bar .char-tab:hover { background: #3a3a3a; color: #ccc; }
   #char-tab-bar .char-tab.active { background: #ffffff; color: var(--blood); font-weight: 700; }
+  #char-tab-bar .back-to-hub {
+    font-family: 'Oswald', sans-serif;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: #ccc;
+    background: #444;
+    border: none;
+    padding: 6px 10px;
+    cursor: pointer;
+    border-radius: 4px 4px 0 0;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    margin-right: 4px;
+  }
+  #char-tab-bar .back-to-hub:hover { background: #1f10ad; color: #fff; }
   body { padding-top: 26px; }
 
   /* ─── INTERACTIVE ─── */
@@ -694,7 +710,7 @@
     font-weight: 700;
     letter-spacing: 3px;
     text-transform: uppercase;
-    color: #C0392B;
+    color: #3e20dc;
   }
   .fear-value-display {
     font-family: 'Share Tech Mono', monospace;
@@ -785,7 +801,6 @@
   }
   .nex-pip.active { background: var(--blood); border-color: var(--crimson); color: white; }
 
-  #clima-ficha-banner { position:fixed; bottom:0; left:0; right:0; z-index:9998; padding:5px 16px; display:none; align-items:center; gap:10px; font-family:'Oswald',sans-serif; font-size:11px; letter-spacing:1px; background:#0a0a18; border-top:1px solid #1a2a4a; color:#90caf9; }
 </style>
 <!-- Firebase -->
 <script type="module">
@@ -813,7 +828,7 @@
   // Block access if not an allowed player
   if (!playerName || !ALLOWED.includes(playerName)) {
     document.body.innerHTML = `
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#0a0a0a;color:#8B1A1A;font-family:'Oswald',sans-serif;text-align:center;gap:16px;">
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#0a0a0a;color:#1f10ad;font-family:'Oswald',sans-serif;text-align:center;gap:16px;">
         <div style="font-size:48px;">☠</div>
         <div style="font-size:24px;letter-spacing:4px;">ACESSO NEGADO</div>
         <div style="font-size:12px;color:#555;letter-spacing:2px;">MONTE CARMESIM · FICHA NÃO AUTORIZADA</div>
@@ -823,6 +838,23 @@
   }
 
   window.PLAYER_NAME = playerName;
+
+  // ── Nome do personagem em cada aba (lê "Nome do Agente" de cada slot) ──────
+  function tabLabelPath(slot) {
+    return `players/${playerName}/ficha${slot === 1 ? '' : slot}/inputs/id_nome`;
+  }
+  function setCharTabLabel(slot, name) {
+    const btn = document.getElementById(`char-tab-${slot}`);
+    if (btn) btn.textContent = (name && name.trim()) ? name.trim() : `Ficha ${slot}`;
+  }
+  async function refreshAllCharTabLabels() {
+    await Promise.all([1, 2, 3].map(async slot => {
+      try {
+        const snap = await get(ref(db, tabLabelPath(slot)));
+        setCharTabLabel(slot, snap.exists() ? snap.val() : '');
+      } catch (e) { /* sem conexão — mantém rótulo padrão */ }
+    }));
+  }
 
   // ── Character slot (até 3 personagens por player) ──────────────────────
   // Slot 1 usa os mesmos caminhos de sempre (players/<nome>/ficha, /stats,
@@ -853,6 +885,7 @@
     document.querySelectorAll('.dv-item').forEach(el => el.classList.remove('selected'));
     document.querySelectorAll('.status-item').forEach(el => el.classList.remove('active'));
     document.querySelectorAll('.nex-pip').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('[data-stars-row] span').forEach(s => { s.textContent = '☆'; s.style.color = '#d0c8b8'; });
     window.currentFear = 0;
     if (window.renderFear) window.renderFear();
     ['pv_atual','pe_atual','san_atual'].forEach(id => {
@@ -936,6 +969,16 @@
           inp.value = saved.pericias[i] !== undefined ? saved.pericias[i] : '';
         });
       }
+
+      // Restore estrelas de confiança dos Contatos & Aliados
+      document.querySelectorAll('[data-stars-row]').forEach(td => {
+        const idx = td.dataset.starsRow;
+        const n = (saved.contatosConfianca && saved.contatosConfianca[idx]) || 0;
+        Array.from(td.querySelectorAll('span')).forEach((s, i) => {
+          if (i < n) { s.textContent = '⭐'; s.style.color = '#c8a000'; }
+          else { s.textContent = '☆'; s.style.color = '#d0c8b8'; }
+        });
+      });
 
       // Restore defeitos/virtudes checked state
       if (saved.dv) {
@@ -1027,6 +1070,7 @@
     resetFichaFields();
     await loadFicha();
     subscribeCharListeners();
+    setCharTabLabel(slot, document.querySelector('[data-save="id_nome"]')?.value);
     recalcAll();
     syncStats();
   };
@@ -1050,6 +1094,13 @@
 
     await loadFicha();
     subscribeCharListeners();
+    refreshAllCharTabLabels();
+
+    // Nome do agente atualiza a aba em tempo real enquanto digita
+    const nomeEl = document.querySelector('[data-save="id_nome"]');
+    if (nomeEl) {
+      nomeEl.addEventListener('input', () => setCharTabLabel(window.CHAR_SLOT, nomeEl.value));
+    }
 
     // ── Pool atual edits ─────────────────────────────────────────────────────
     ['pv_atual','pe_atual','san_atual'].forEach(id => {
@@ -1063,6 +1114,16 @@
       });
     });
 
+    // ── PD atual (contenteditable — mesmo padrão do PV/PE/SAN) ─────────────
+    const pdEl = document.getElementById('pd_atual');
+    if (pdEl) {
+      pdEl.addEventListener('input', () => { schedSave(); syncStats(); });
+      pdEl.addEventListener('blur',  () => { saveAll(); syncStats(); });
+      pdEl.addEventListener('keydown', ev => {
+        if (!/^\d$/.test(ev.key) && !['Backspace','Delete','ArrowLeft','ArrowRight','Tab','Enter'].includes(ev.key)) ev.preventDefault();
+      });
+    }
+
     // ── Online presence ──────────────────────────────────────────────────────
     set(ref(db, `players/${playerName}/online`), true);
     window.addEventListener('beforeunload', () => {
@@ -1075,29 +1136,46 @@
       if (data && data.msg && data.ts) showAlert(data.msg, data.type || 'info');
     });
 
-    // ── Listen for clima changes ──────────────────────────────────────────────
-    onValue(ref(db, 'clima'), (snap) => {
-      const data = snap.val();
-      let banner = document.getElementById('clima-ficha-banner');
-      if (!banner) {
-        banner = document.createElement('div');
-        banner.id = 'clima-ficha-banner';
-        banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:9998;padding:5px 16px;display:flex;align-items:center;gap:10px;font-family:Oswald,sans-serif;font-size:11px;letter-spacing:1px;background:#0a0a18;border-top:1px solid #1a2a4a;color:#90caf9;';
-        document.body.appendChild(banner);
-      }
-      if (!data || !data.active) {
-        banner.style.display = 'none';
-        return;
-      }
-      banner.style.display = 'flex';
-      banner.innerHTML = `<span style="font-size:16px;">${data.icon||'🌙'}</span><span style="font-weight:700;">${data.titulo||''}</span><span style="color:#556;font-size:9px;">${data.desc||''}</span><span style="margin-left:auto;font-family:Share Tech Mono,monospace;font-size:13px;">${data.temp||''}</span>`;
-    });
-
   });
 
   // ── Save throttle ──────────────────────────────────────────────────────────
   let saveTimer = null;
-  window.schedSave = () => { clearTimeout(saveTimer); saveTimer = setTimeout(saveAll, 800); };
+  window.schedSave = () => {
+    showSaveIndicator('saving');
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveAll, 800);
+  };
+
+  // ── Indicador de salvamento (salvando… / ✓ salvo / erro) ────────────────────
+  let saveIndicatorHideTimer = null;
+  function showSaveIndicator(state) {
+    let ind = document.getElementById('save-indicator');
+    if (!ind) {
+      ind = document.createElement('div');
+      ind.id = 'save-indicator';
+      ind.style.cssText = 'position:fixed;top:4px;right:10px;z-index:9999;font-family:Oswald,sans-serif;font-size:10px;letter-spacing:1px;padding:4px 10px;border-radius:3px;transition:opacity 0.25s;opacity:0;pointer-events:none;';
+      document.body.appendChild(ind);
+    }
+    clearTimeout(saveIndicatorHideTimer);
+    if (state === 'saving') {
+      ind.textContent = '💾 Salvando…';
+      ind.style.background = '#4a4a4a';
+      ind.style.color = '#eee';
+      ind.style.opacity = '1';
+    } else if (state === 'saved') {
+      ind.textContent = '✓ Salvo';
+      ind.style.background = '#2E7D32';
+      ind.style.color = '#fff';
+      ind.style.opacity = '1';
+      saveIndicatorHideTimer = setTimeout(() => { ind.style.opacity = '0'; }, 1200);
+    } else if (state === 'error') {
+      ind.textContent = '⚠ Não foi possível salvar — verifique sua conexão';
+      ind.style.background = '#a6231e';
+      ind.style.color = '#fff';
+      ind.style.opacity = '1';
+      saveIndicatorHideTimer = setTimeout(() => { ind.style.opacity = '0'; }, 4000);
+    }
+  }
 
   // ── Full save to Firebase ──────────────────────────────────────────────────
   window.saveAll = () => {
@@ -1137,6 +1215,13 @@
       pericias[i] = inp.value;
     });
 
+    // Save estrelas de confiança dos Contatos & Aliados
+    const contatosConfianca = {};
+    document.querySelectorAll('[data-stars-row]').forEach(td => {
+      const idx = td.dataset.starsRow;
+      contatosConfianca[idx] = Array.from(td.querySelectorAll('span')).filter(s => s.textContent === '⭐').length;
+    });
+
     const pools = {};
     ['pv','pe','san'].forEach(k => {
       const cur = document.getElementById(`${k}_atual`);
@@ -1150,6 +1235,7 @@
       inputs,
       atributos,
       pericias,
+      contatosConfianca,
       classe:        document.getElementById('classeSelect')?.value || '',
       nex:           isSob ? '1' : (document.getElementById('nexSelect')?.value || '1'),
       estagio:       isSob ? (document.getElementById('estagioSelect')?.value || '1') : null,
@@ -1163,20 +1249,11 @@
       lastSaved: Date.now(),
     };
 
-    update(ref(db, fichaPath()), ficha);
+    showSaveIndicator('saving');
+    update(ref(db, fichaPath()), ficha)
+      .then(() => showSaveIndicator('saved'))
+      .catch(() => showSaveIndicator('error'));
     syncStats();
-
-    // Show tiny save indicator
-    let ind = document.getElementById('save-indicator');
-    if (!ind) {
-      ind = document.createElement('div');
-      ind.id = 'save-indicator';
-      ind.style.cssText = 'position:fixed;bottom:8px;right:12px;font-family:Share Tech Mono,monospace;font-size:9px;color:#4caf50;letter-spacing:1px;opacity:0;transition:opacity 0.3s;z-index:9999;';
-      document.body.appendChild(ind);
-    }
-    ind.textContent = '✓ salvo';
-    ind.style.opacity = '1';
-    setTimeout(() => ind.style.opacity = '0', 1500);
   };
 
   // ── Sync vital stats to hub ────────────────────────────────────────────────
@@ -1196,6 +1273,7 @@
       pe_max:    parseInt(document.getElementById('pe_max')?.textContent) || 0,
       san_atual: g('san_atual'),
       san_max:   parseInt(document.getElementById('san_max')?.textContent) || 0,
+      pd_atual:  g('pd_atual'),
       fear:      window.currentFear || 0,
       classe:    document.getElementById('classeSelect')?.value || '',
       nex:           isSob ? '1' : (document.getElementById('nexSelect')?.value || '1'),
@@ -1251,6 +1329,7 @@
 
 <!-- ── CHAR TAB BAR (troca entre até 3 personagens do mesmo player) ── -->
 <div id="char-tab-bar">
+  <a class="back-to-hub" href="index.html" title="Voltar para a seleção de fichas">← Fichas</a>
   <button class="char-tab active" id="char-tab-1" onclick="window.switchChar(1)">Personagem 1</button>
   <button class="char-tab" id="char-tab-2" onclick="window.switchChar(2)">Personagem 2</button>
   <button class="char-tab" id="char-tab-3" onclick="window.switchChar(3)">Personagem 3</button>
@@ -1279,23 +1358,20 @@
   </div>
 </div>
 
-<div id="clima-ficha-banner"></div>
 
 <div class="page">
 
   <!-- HEADER -->
   <div class="header">
-    <div class="corner-deco">▓░░ ORDO REALITAS
-░░░ CLASSIFICADO
+    <div class="corner-deco">▓░░ DAP
+░░░ CONFIDENCIAL
 ▓▓░ ████████████</div>
     <div class="header-title">
       <h1>Ficha de Agente</h1>
-      <h2>Sobrevivendo ao Horror · Ordem Paranormal RPG</h2>
+      <h2 style="font-size:7px;letter-spacing:3px;">Riverside · Monte Carmesim · Runas do Vazio</h2>
       <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--accent);letter-spacing:3px;margin-top:1mm;">AGENTE: <span id="player-name-display">—</span></div>
     </div>
-    <div class="corner-deco right">NEX ░░░░░░░░░░
-PATENTE ░░░░░░░░
-████████████ ░░▓</div>
+    <div class="corner-deco right"></div>
   </div>
 
   <!-- IDENTIFICAÇÃO -->
@@ -1414,7 +1490,7 @@ PATENTE ░░░░░░░░
 
       <!-- PV bônus -->
       <div style="background:#fff;border:1px solid #d0c8b8;border-radius:3px;padding:2mm;">
-        <div style="font-family:'Oswald',sans-serif;font-size:7.5px;color:#8B1A1A;letter-spacing:1px;text-transform:uppercase;margin-bottom:1.5mm;">⬤ Bônus em PV</div>
+        <div style="font-family:'Oswald',sans-serif;font-size:7.5px;color:#1f10ad;letter-spacing:1px;text-transform:uppercase;margin-bottom:1.5mm;">⬤ Bônus em PV</div>
         <div style="display:flex;flex-direction:column;gap:1.5mm;">
           <label style="display:flex;align-items:center;gap:1.5mm;font-size:8px;color:#3a2a10;cursor:pointer;">
             <input type="radio" name="pvBonusType" value="none" checked onchange="recalcAll()" style="cursor:pointer;"> Nenhum
@@ -1520,14 +1596,14 @@ PATENTE ░░░░░░░░
     <div class="pool-box pv">
       <div class="pool-label">⬤ Pontos de Vida</div>
       <div class="pool-current">
-        <input type="text" inputmode="numeric" id="pv_atual" value="" placeholder="0" style="width:52px;height:28px;border:none;border-bottom:2px solid #8B1A1A;background:transparent;color:#1a0a00;font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;outline:none;text-align:center;padding:0;">
+        <input type="text" inputmode="numeric" id="pv_atual" value="" placeholder="0" style="width:52px;height:28px;border:none;border-bottom:2px solid #1f10ad;background:transparent;color:#1a0a00;font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;outline:none;text-align:center;padding:0;">
         <div class="pool-sep">/</div>
-        <div class="pool-max" id="pv_max" style="color:#8B1A1A;font-weight:700;font-size:13px;">—</div>
+        <div class="pool-max" id="pv_max" style="color:#1f10ad;font-weight:700;font-size:13px;">—</div>
       </div>
       <div style="font-size:6px;color:var(--ash);margin-top:1mm;" id="pv_formula"></div>
       <div style="display:flex;align-items:center;gap:1mm;margin-top:1.5mm;border-top:1px solid #e0d8cc;padding-top:1.5mm;">
-        <span style="font-size:6.5px;color:#8B1A1A;letter-spacing:0.5px;white-space:nowrap;">Bônus/Penalidade:</span>
-        <input type="number" id="pv_manual_bonus" data-save="pv_manual_bonus" value="0" onchange="recalcAll();saveAll();" style="width:40px;height:18px;border:none;border-bottom:2px solid var(--crimson);background:#fff8f8;color:#8B1A1A;font-family:'Share Tech Mono',monospace;font-size:12px;font-weight:700;outline:none;text-align:center;border-radius:2px;" title="Bônus/Penalidade no PV máximo">
+        <span style="font-size:6.5px;color:#1f10ad;letter-spacing:0.5px;white-space:nowrap;">Bônus/Penalidade:</span>
+        <input type="number" id="pv_manual_bonus" data-save="pv_manual_bonus" value="0" onchange="recalcAll();saveAll();" style="width:40px;height:18px;border:none;border-bottom:2px solid var(--crimson);background:#fff8f8;color:#1f10ad;font-family:'Share Tech Mono',monospace;font-size:12px;font-weight:700;outline:none;text-align:center;border-radius:2px;" title="Bônus/Penalidade no PV máximo">
         <span style="font-size:6px;color:var(--ash);">no PV máx.</span>
       </div>
     </div>
@@ -1626,7 +1702,7 @@ PATENTE ░░░░░░░░
       <div class="def-val" style="display:flex;align-items:center;justify-content:center;gap:1mm;">
         <span id="def_base" style="color:var(--blood);font-family:'Oswald',sans-serif;font-size:14px;font-weight:700;">—</span>
         <span style="font-size:9px;color:var(--ash);">+</span>
-        <input id="def_bonus" type="number" value="0" onchange="recalcAll()" style="width:34px;height:18px;border:none;border-bottom:2px solid var(--blood);background:#fff8f8;color:#8B1A1A;font-family:'Share Tech Mono',monospace;font-size:12px;font-weight:700;outline:none;text-align:center;border-radius:2px;" title="Bônus extras">
+        <input id="def_bonus" type="number" value="0" onchange="recalcAll()" style="width:34px;height:18px;border:none;border-bottom:2px solid var(--blood);background:#fff8f8;color:#1f10ad;font-family:'Share Tech Mono',monospace;font-size:12px;font-weight:700;outline:none;text-align:center;border-radius:2px;" title="Bônus extras">
         <span style="font-size:8px;color:var(--ash);">=</span>
         <span id="def_total" style="color:#1a0a00;font-family:'Oswald',sans-serif;font-size:16px;font-weight:700;">—</span>
       </div>
@@ -1665,7 +1741,7 @@ PATENTE ░░░░░░░░
         <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.2);"><input type="text" placeholder="ex: 20" style="width:100%;height:13px;border:none;border-bottom:1px solid var(--smoke);background:transparent;color:#1a0a00;font-family:'Barlow Condensed',sans-serif;font-size:9px;outline:none;text-align:center;"></td>
         <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.2);"><input type="text" placeholder="ex: Curto" style="width:100%;height:13px;border:none;border-bottom:1px solid var(--smoke);background:transparent;color:#1a0a00;font-family:'Barlow Condensed',sans-serif;font-size:9px;outline:none;text-align:center;"></td>
         <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.2);"><div style="display:flex;align-items:center;gap:1mm;justify-content:center;">
-        <input type="number" min="0" placeholder="0" style="width:34px;height:18px;border:none;border-bottom:2px solid var(--crimson);background:#fff8f8;color:#8B1A1A;font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:700;outline:none;text-align:center;border-radius:2px;" title="Munição atual">
+        <input type="number" min="0" placeholder="0" style="width:34px;height:18px;border:none;border-bottom:2px solid var(--crimson);background:#fff8f8;color:#1f10ad;font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:700;outline:none;text-align:center;border-radius:2px;" title="Munição atual">
         <span style="font-size:8px;color:var(--ash);">/</span>
         <input type="number" min="0" placeholder="0" style="width:34px;height:18px;border:none;border-bottom:2px solid #bdb0a0;background:#f8f8f8;color:#6b5e50;font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:700;outline:none;text-align:center;border-radius:2px;" title="Munição máxima">
       </div></td>
@@ -1677,7 +1753,7 @@ PATENTE ░░░░░░░░
         <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.2);"><input type="text" placeholder="ex: 20" style="width:100%;height:13px;border:none;border-bottom:1px solid var(--smoke);background:transparent;color:#1a0a00;font-family:'Barlow Condensed',sans-serif;font-size:9px;outline:none;text-align:center;"></td>
         <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.2);"><input type="text" placeholder="ex: Curto" style="width:100%;height:13px;border:none;border-bottom:1px solid var(--smoke);background:transparent;color:#1a0a00;font-family:'Barlow Condensed',sans-serif;font-size:9px;outline:none;text-align:center;"></td>
         <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.2);"><div style="display:flex;align-items:center;gap:1mm;justify-content:center;">
-        <input type="number" min="0" placeholder="0" style="width:34px;height:18px;border:none;border-bottom:2px solid var(--crimson);background:#fff8f8;color:#8B1A1A;font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:700;outline:none;text-align:center;border-radius:2px;" title="Munição atual">
+        <input type="number" min="0" placeholder="0" style="width:34px;height:18px;border:none;border-bottom:2px solid var(--crimson);background:#fff8f8;color:#1f10ad;font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:700;outline:none;text-align:center;border-radius:2px;" title="Munição atual">
         <span style="font-size:8px;color:var(--ash);">/</span>
         <input type="number" min="0" placeholder="0" style="width:34px;height:18px;border:none;border-bottom:2px solid #bdb0a0;background:#f8f8f8;color:#6b5e50;font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:700;outline:none;text-align:center;border-radius:2px;" title="Munição máxima">
       </div></td>
@@ -1689,7 +1765,7 @@ PATENTE ░░░░░░░░
         <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.2);"><input type="text" placeholder="ex: 20" style="width:100%;height:13px;border:none;border-bottom:1px solid var(--smoke);background:transparent;color:#1a0a00;font-family:'Barlow Condensed',sans-serif;font-size:9px;outline:none;text-align:center;"></td>
         <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.2);"><input type="text" placeholder="ex: Curto" style="width:100%;height:13px;border:none;border-bottom:1px solid var(--smoke);background:transparent;color:#1a0a00;font-family:'Barlow Condensed',sans-serif;font-size:9px;outline:none;text-align:center;"></td>
         <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.2);"><div style="display:flex;align-items:center;gap:1mm;justify-content:center;">
-        <input type="number" min="0" placeholder="0" style="width:34px;height:18px;border:none;border-bottom:2px solid var(--crimson);background:#fff8f8;color:#8B1A1A;font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:700;outline:none;text-align:center;border-radius:2px;" title="Munição atual">
+        <input type="number" min="0" placeholder="0" style="width:34px;height:18px;border:none;border-bottom:2px solid var(--crimson);background:#fff8f8;color:#1f10ad;font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:700;outline:none;text-align:center;border-radius:2px;" title="Munição atual">
         <span style="font-size:8px;color:var(--ash);">/</span>
         <input type="number" min="0" placeholder="0" style="width:34px;height:18px;border:none;border-bottom:2px solid #bdb0a0;background:#f8f8f8;color:#6b5e50;font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:700;outline:none;text-align:center;border-radius:2px;" title="Munição máxima">
       </div></td>
@@ -1701,7 +1777,7 @@ PATENTE ░░░░░░░░
         <td style="padding:2px 2px;"><input type="text" placeholder="ex: 20" style="width:100%;height:13px;border:none;border-bottom:1px solid var(--smoke);background:transparent;color:#1a0a00;font-family:'Barlow Condensed',sans-serif;font-size:9px;outline:none;text-align:center;"></td>
         <td style="padding:2px 2px;"><input type="text" placeholder="ex: Curto" style="width:100%;height:13px;border:none;border-bottom:1px solid var(--smoke);background:transparent;color:#1a0a00;font-family:'Barlow Condensed',sans-serif;font-size:9px;outline:none;text-align:center;"></td>
         <td style="padding:2px 2px;"><div style="display:flex;align-items:center;gap:1mm;justify-content:center;">
-        <input type="number" min="0" placeholder="0" style="width:34px;height:18px;border:none;border-bottom:2px solid var(--crimson);background:#fff8f8;color:#8B1A1A;font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:700;outline:none;text-align:center;border-radius:2px;" title="Munição atual">
+        <input type="number" min="0" placeholder="0" style="width:34px;height:18px;border:none;border-bottom:2px solid var(--crimson);background:#fff8f8;color:#1f10ad;font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:700;outline:none;text-align:center;border-radius:2px;" title="Munição atual">
         <span style="font-size:8px;color:var(--ash);">/</span>
         <input type="number" min="0" placeholder="0" style="width:34px;height:18px;border:none;border-bottom:2px solid #bdb0a0;background:#f8f8f8;color:#6b5e50;font-family:'Share Tech Mono',monospace;font-size:11px;font-weight:700;outline:none;text-align:center;border-radius:2px;" title="Munição máxima">
       </div></td>
@@ -1936,7 +2012,7 @@ PATENTE ░░░░░░░░
 <div class="page">
 
   <div class="header">
-    <div class="corner-deco">▓░░ ORDO REALITAS
+    <div class="corner-deco">▓░░ DAP
 ░░░ HABILIDADES
 ▓▓░ INVENTÁRIO</div>
     <div class="header-title">
@@ -2033,7 +2109,7 @@ LIMITE CRÉD ░░░░
         </div>
       </div>
 
-      <div style="font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:2px;color:#8B1A1A;text-transform:uppercase;padding:2mm 0 1mm;border-top:1px solid #e0d8cc;margin-top:1mm;">🩹 Físicos / Corporais</div>
+      <div style="font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:2px;color:#1f10ad;text-transform:uppercase;padding:2mm 0 1mm;border-top:1px solid #e0d8cc;margin-top:1mm;">🩹 Físicos / Corporais</div>
 
       <div class="dv-item" onclick="this.classList.toggle('selected')">
         <div class="dv-check"></div>
@@ -2278,7 +2354,7 @@ LIMITE CRÉD ░░░░
         </div>
       </div>
 
-      <div style="font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:2px;color:#8B1A1A;text-transform:uppercase;padding:2mm 0 1mm;border-top:1px solid #e0d8cc;margin-top:1mm;">⚔ Ação & Combate</div>
+      <div style="font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:2px;color:#1f10ad;text-transform:uppercase;padding:2mm 0 1mm;border-top:1px solid #e0d8cc;margin-top:1mm;">⚔ Ação & Combate</div>
 
       <div class="dv-item" onclick="this.classList.toggle('selected')">
         <div class="dv-check"></div>
@@ -2376,8 +2452,8 @@ LIMITE CRÉD ░░░░
       <div class="sec-label">Personalidade</div>
       <div style="display:flex;flex-direction:column;gap:1.5mm;">
 
-        <div style="background:#f8f2ea;border:1px solid #d0c8b8;border-left:2px solid #8B1A1A;border-radius:3px;padding:1.5mm 2mm;">
-          <div style="font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:1.5px;color:#8B1A1A;text-transform:uppercase;margin-bottom:1mm;">🎭 Traço Principal</div>
+        <div style="background:#f8f2ea;border:1px solid #d0c8b8;border-left:2px solid #1f10ad;border-radius:3px;padding:1.5mm 2mm;">
+          <div style="font-family:'Oswald',sans-serif;font-size:7px;letter-spacing:1.5px;color:#1f10ad;text-transform:uppercase;margin-bottom:1mm;">🎭 Traço Principal</div>
           <textarea data-save="personalidade_traco" style="width:100%;min-height:8mm;border:none;background:transparent;color:#3a2a10;font-family:'Barlow Condensed',sans-serif;font-size:8.5px;outline:none;resize:none;" placeholder="Como você age com os outros?"></textarea>
         </div>
 
@@ -2411,32 +2487,32 @@ LIMITE CRÉD ░░░░
         <tr>
           <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.15);"><input data-save="contato_0_nome" type="text" placeholder="Nome..." style="width:100%;height:13px;border:none;border-bottom:1px solid var(--smoke);background:transparent;color:#1a0a00;font-size:8.5px;font-family:'Barlow Condensed',sans-serif;outline:none;"></td>
           <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.15);"><input data-save="contato_0_relacao" type="text" placeholder="Relação..." style="width:100%;height:13px;border:none;border-bottom:1px solid var(--smoke);background:transparent;color:#1a0a00;font-size:8.5px;font-family:'Barlow Condensed',sans-serif;outline:none;"></td>
-          <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.15);text-align:center;"><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span></td>
+          <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.15);text-align:center;" data-stars-row="0"><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span></td>
         </tr>
         <tr>
           <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.15);"><input data-save="contato_1_nome" type="text" placeholder="Nome..." style="width:100%;height:13px;border:none;border-bottom:1px solid var(--smoke);background:transparent;color:#1a0a00;font-size:8.5px;font-family:'Barlow Condensed',sans-serif;outline:none;"></td>
           <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.15);"><input data-save="contato_1_relacao" type="text" placeholder="Relação..." style="width:100%;height:13px;border:none;border-bottom:1px solid var(--smoke);background:transparent;color:#1a0a00;font-size:8.5px;font-family:'Barlow Condensed',sans-serif;outline:none;"></td>
-          <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.15);text-align:center;"><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span></td>
+          <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.15);text-align:center;" data-stars-row="1"><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span></td>
         </tr>
         <tr>
           <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.15);"><input data-save="contato_2_nome" type="text" placeholder="Nome..." style="width:100%;height:13px;border:none;border-bottom:1px solid var(--smoke);background:transparent;color:#1a0a00;font-size:8.5px;font-family:'Barlow Condensed',sans-serif;outline:none;"></td>
           <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.15);"><input data-save="contato_2_relacao" type="text" placeholder="Relação..." style="width:100%;height:13px;border:none;border-bottom:1px solid var(--smoke);background:transparent;color:#1a0a00;font-size:8.5px;font-family:'Barlow Condensed',sans-serif;outline:none;"></td>
-          <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.15);text-align:center;"><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span></td>
+          <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.15);text-align:center;" data-stars-row="2"><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span></td>
         </tr>
         <tr>
           <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.15);"><input data-save="contato_3_nome" type="text" placeholder="Nome..." style="width:100%;height:13px;border:none;border-bottom:1px solid var(--smoke);background:transparent;color:#1a0a00;font-size:8.5px;font-family:'Barlow Condensed',sans-serif;outline:none;"></td>
           <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.15);"><input data-save="contato_3_relacao" type="text" placeholder="Relação..." style="width:100%;height:13px;border:none;border-bottom:1px solid var(--smoke);background:transparent;color:#1a0a00;font-size:8.5px;font-family:'Barlow Condensed',sans-serif;outline:none;"></td>
-          <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.15);text-align:center;"><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span></td>
+          <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.15);text-align:center;" data-stars-row="3"><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span></td>
         </tr>
         <tr>
           <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.15);"><input data-save="contato_4_nome" type="text" placeholder="Nome..." style="width:100%;height:13px;border:none;border-bottom:1px solid var(--smoke);background:transparent;color:#1a0a00;font-size:8.5px;font-family:'Barlow Condensed',sans-serif;outline:none;"></td>
           <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.15);"><input data-save="contato_4_relacao" type="text" placeholder="Relação..." style="width:100%;height:13px;border:none;border-bottom:1px solid var(--smoke);background:transparent;color:#1a0a00;font-size:8.5px;font-family:'Barlow Condensed',sans-serif;outline:none;"></td>
-          <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.15);text-align:center;"><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span></td>
+          <td style="padding:2px 2px;border-bottom:1px solid rgba(90,90,90,0.15);text-align:center;" data-stars-row="4"><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span></td>
         </tr>
         <tr>
           <td style="padding:2px 2px;"><input data-save="contato_5_nome" type="text" placeholder="Nome..." style="width:100%;height:13px;border:none;border-bottom:1px solid var(--smoke);background:transparent;color:#1a0a00;font-size:8.5px;font-family:'Barlow Condensed',sans-serif;outline:none;"></td>
           <td style="padding:2px 2px;"><input data-save="contato_5_relacao" type="text" placeholder="Relação..." style="width:100%;height:13px;border:none;border-bottom:1px solid var(--smoke);background:transparent;color:#1a0a00;font-size:8.5px;font-family:'Barlow Condensed',sans-serif;outline:none;"></td>
-          <td style="padding:2px 2px;text-align:center;"><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span></td>
+          <td style="padding:2px 2px;text-align:center;" data-stars-row="5"><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span><span onclick="toggleStar(this)" style="cursor:pointer;font-size:10px;color:#d0c8b8;" data-on="⭐" data-off="☆">☆</span></td>
         </tr>
       </table>
       <div style="margin-top:1.5mm;font-size:6.5px;color:var(--ash);">⭐ = Totalmente confiável &nbsp;☆ = Desconhecido</div>
@@ -2852,7 +2928,9 @@ LIMITE CRÉD ░░░░
         else { s.textContent = '☆'; s.style.color = '#d0c8b8'; }
       });
     }
+    if (window.schedSave) window.schedSave();
   }
+  window.toggleStar = toggleStar;
 </script>
 
 <!-- ── CROP ENGINE ── -->
