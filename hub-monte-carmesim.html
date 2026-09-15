@@ -189,10 +189,35 @@
   /* Tags de perícia no card */
   .pericias-tags{padding:4px 12px 6px;display:flex;flex-wrap:wrap;gap:3px;border-top:1px solid var(--border);}
   .per-tag{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:600;padding:1px 6px;border-radius:2px;background:rgba(139,26,26,.2);color:#ff8a80;border:1px solid rgba(139,26,26,.35);}
+  /* ── PORTA DE ENTRADA (login de mestre) ── */
+  #hub-gate{ position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; background:var(--dark); }
+  #hub-gate-card{ width:100%; max-width:340px; background:var(--card); border:1px solid var(--border); border-left:3px solid var(--blood); border-radius:6px; padding:26px 26px 22px; text-align:center; }
+  #hub-gate-card .stamp{ display:inline-block; font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:2px; color:var(--bone); opacity:.8; border:1px solid var(--border); padding:3px 9px; border-radius:2px; margin-bottom:14px; }
+  #hub-gate-card h1{ font-family:'Oswald',sans-serif; font-size:20px; font-weight:700; letter-spacing:3px; color:var(--blood); text-transform:uppercase; margin-bottom:18px; }
+  #hub-gate-card .field{ text-align:left; margin-bottom:12px; }
+  #hub-gate-card .field label{ display:block; font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:1px; color:var(--ash); margin-bottom:4px; text-transform:uppercase; }
+  #hub-gate-card .field input{ width:100%; background:var(--dark); border:1px solid var(--border); border-radius:4px; color:var(--bone); font-family:'Barlow Condensed',sans-serif; font-size:14px; padding:9px 11px; outline:none; }
+  #hub-gate-card .field input:focus{ border-color:var(--blood); }
+  #hub-gate-card .submit-btn{ width:100%; margin-top:4px; background:var(--blood); color:#fff; border:none; border-radius:4px; font-family:'Oswald',sans-serif; font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:10px 0; cursor:pointer; }
+  #hub-gate-card .submit-btn:disabled{ opacity:.5; }
+  #hub-gate-card .msg{ font-family:'Share Tech Mono',monospace; font-size:11px; margin-top:10px; min-height:14px; color:#ff8a80; }
 </style>
 </head>
 <body>
 
+<!-- ── PORTA DE ENTRADA (login obrigatório de mestre) ── -->
+<div id="hub-gate">
+  <div id="hub-gate-card">
+    <div class="stamp">DAP · ACESSO RESTRITO AO MESTRE</div>
+    <h1>☠ Monte Carmesim</h1>
+    <div class="field"><label>E-mail</label><input type="email" id="gate-email" autocomplete="username"></div>
+    <div class="field"><label>Senha</label><input type="password" id="gate-pass" autocomplete="current-password"></div>
+    <button class="submit-btn" id="gate-btn" onclick="window.doGateLogin()">Entrar</button>
+    <div class="msg" id="gate-msg"></div>
+  </div>
+</div>
+
+<div id="hub-content" style="display:none;">
 <div class="hub-header">
   <div class="hub-title">
     <h1>☠ Monte Carmesim</h1>
@@ -201,6 +226,7 @@
   <div class="hub-status">
     <div class="online-count">● <span id="online-count">0</span> online</div>
     <button class="session-btn primary"   onclick="addPlayerPrompt()">+ Jogador</button>
+    <button class="act-btn" style="color:var(--ash);" onclick="window.doGateLogout()">Sair</button>
   </div>
 </div>
 
@@ -461,12 +487,14 @@
     </div>
   </div>
 </div>
+</div><!-- /#hub-content -->
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, set, get, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-const db = getDatabase(initializeApp({
+const fbApp = initializeApp({
   apiKey:"AIzaSyCSQXdyLvqC4zT2BkSwUKk-uostVn2BmA8",
   authDomain:"rpg-ficha-monte-carmesim.firebaseapp.com",
   databaseURL:"https://rpg-ficha-monte-carmesim-default-rtdb.firebaseio.com",
@@ -474,7 +502,41 @@ const db = getDatabase(initializeApp({
   storageBucket:"rpg-ficha-monte-carmesim.firebasestorage.app",
   messagingSenderId:"909026041375",
   appId:"1:909026041375:web:df06386967dd9181a23f2a"
-}));
+});
+const db = getDatabase(fbApp);
+const authInst = getAuth(fbApp);
+
+// ── Porta de entrada — só libera o painel se a conta logada for do mestre ──
+window.doGateLogin = async () => {
+  const email = document.getElementById('gate-email').value.trim();
+  const pass  = document.getElementById('gate-pass').value;
+  const btn = document.getElementById('gate-btn');
+  const msg = document.getElementById('gate-msg');
+  if (!email || !pass) { msg.textContent = 'Preencha e-mail e senha.'; return; }
+  btn.disabled = true; msg.textContent = 'Entrando...';
+  try {
+    await signInWithEmailAndPassword(authInst, email, pass);
+  } catch (e) {
+    msg.textContent = 'E-mail ou senha incorretos.';
+    btn.disabled = false;
+  }
+};
+window.doGateLogout = async () => { await signOut(authInst); };
+
+onAuthStateChanged(authInst, async (user) => {
+  const gate = document.getElementById('hub-gate');
+  const content = document.getElementById('hub-content');
+  if (!user) { gate.style.display = 'flex'; content.style.display = 'none'; return; }
+  const snap = await get(ref(db, 'users/'+user.uid));
+  const info = snap.exists() ? snap.val() : null;
+  if (info && info.role === 'master') {
+    gate.style.display = 'none';
+    content.style.display = 'block';
+  } else {
+    document.getElementById('gate-msg').textContent = 'Essa conta não tem acesso ao painel do mestre.';
+    await signOut(authInst);
+  }
+});
 
 window._pd = {};
 window._ovis = {};

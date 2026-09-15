@@ -647,6 +647,18 @@
   #char-tab-bar .back-to-hub:hover { background: #1f10ad; color: #fff; }
   body { padding-top: 26px; }
 
+  /* ── MODO SOMENTE LEITURA (Fase 3) ── */
+  #role-banner{
+    display:none; position:fixed; top:26px; left:0; right:0; z-index:9996;
+    align-items:center; justify-content:center; gap:8px;
+    background:#3a0a0a; color:#ffb3b3; border-bottom:2px solid #8B1A1A;
+    font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:1px;
+    padding:8px 12px; text-align:center;
+  }
+  body.readonly-mode { padding-top: 60px; }
+  body.readonly-mode .page { pointer-events:none; opacity:0.88; }
+  body.readonly-mode #char-tab-bar { pointer-events:auto; opacity:1; }
+
   /* ─── INTERACTIVE ─── */
   input[type=text], input[type=number], textarea {
     background: transparent;
@@ -806,6 +818,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getDatabase, ref, set, get, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCSQXdyLvqC4zT2BkSwUKk-uostVn2BmA8",
@@ -819,6 +832,7 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
+  const authInst = getAuth(app);
 
   // ── Player name from URL ───────────────────────────────────────────────────
   const ALLOWED = ['Lucas','Gabi','Joao','Karina','Ana'];
@@ -838,6 +852,36 @@
   }
 
   window.PLAYER_NAME = playerName;
+
+  // ── Login (Fase 3 — modo "suave": quem não tem conta ainda continua com ────
+  // acesso total, igual sempre foi; só entra em modo leitura quando outra
+  // pessoa LOGADA que não é dona nem mestre está vendo essa ficha) ──────────
+  window.CURRENT_ROLE = 'guest';
+  function applyRoleUI(role){
+    window.CURRENT_ROLE = role;
+    const banner = document.getElementById('role-banner');
+    if (role === 'other') {
+      document.body.classList.add('readonly-mode');
+      if (banner) { banner.style.display = 'flex'; banner.textContent = `🔒 Você está vendo a ficha de ${playerName} — somente leitura`; }
+    } else if (role === 'guest') {
+      document.body.classList.add('readonly-mode');
+      if (banner) { banner.style.display = 'flex'; banner.innerHTML = `🔒 Faça login pra editar — <a href="inicio.html" style="color:#ffdede;text-decoration:underline;">entrar</a>`; }
+    } else {
+      document.body.classList.remove('readonly-mode');
+      if (banner) banner.style.display = 'none';
+    }
+  }
+  onAuthStateChanged(authInst, async (user) => {
+    if (!user) { applyRoleUI('guest'); return; }
+    try {
+      const snap = await get(ref(db, 'users/'+user.uid));
+      if (!snap.exists()) { applyRoleUI('guest'); return; }
+      const info = snap.val();
+      if (info.role === 'master') applyRoleUI('master');
+      else if (info.name === playerName) applyRoleUI('owner');
+      else applyRoleUI('other');
+    } catch (e) { applyRoleUI('guest'); }
+  });
 
   // ── Nome do personagem em cada aba (lê "Nome do Agente" de cada slot) ──────
   function tabLabelPath(slot) {
@@ -1405,6 +1449,8 @@
 </script>
 </head>
 <body>
+
+<div id="role-banner"></div>
 
 <!-- ── CHAR TAB BAR (troca entre até 3 personagens do mesmo player) ── -->
 <div id="char-tab-bar">
