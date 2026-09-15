@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wiki · Monte Carmesim</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow+Condensed:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap');
+
+  :root{
+    --accent1:#3e20dc; --accent2:#2f18c4; --accent3:#1f10ad; --accent4:#100895; --accent5:#00007e;
+    --bone:#ede8dc; --ink:#1a1522; --ash:#8f8aa8;
+    --bg:#08050f; --panel:#100b1f; --panel2:#150e28;
+    --border:#241a4a;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+  body{
+    background: radial-gradient(ellipse at top, #150c33 0%, #08050f 70%);
+    color: var(--bone);
+    font-family:'Barlow Condensed',sans-serif;
+    min-height:100vh;
+  }
+  a{ color:inherit; text-decoration:none; }
+  ::selection{ background:var(--accent3); color:#fff; }
+
+  /* ── TOPBAR ── */
+  #topbar{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; gap:16px;
+    padding:12px 20px;
+    background:rgba(8,5,15,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--border);
+  }
+  #topbar .brand{
+    display:flex; align-items:center; gap:10px;
+    font-family:'Oswald',sans-serif; font-weight:700; letter-spacing:3px;
+    font-size:15px; color:var(--accent1); text-transform:uppercase;
+    cursor:pointer; white-space:nowrap;
+  }
+  #topbar .stamp{
+    font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:2px;
+    color:var(--ash); border:1px solid var(--accent4); border-radius:2px;
+    padding:2px 7px; white-space:nowrap;
+  }
+  #search{
+    flex:1; max-width:380px; margin-left:auto;
+    background:var(--panel2); border:1px solid var(--border); border-radius:4px;
+    color:var(--bone); font-family:'Barlow Condensed',sans-serif; font-size:13px;
+    padding:8px 12px; outline:none;
+  }
+  #search:focus{ border-color:var(--accent1); }
+  #search-results{
+    position:absolute; top:52px; right:20px; width:380px; max-width:calc(100vw - 40px);
+    background:var(--panel2); border:1px solid var(--border); border-radius:4px;
+    max-height:340px; overflow-y:auto; display:none; z-index:60;
+    box-shadow:0 10px 30px rgba(0,0,0,.5);
+  }
+  #search-results.show{ display:block; }
+  #search-results a{ display:block; padding:9px 14px; font-size:13px; border-bottom:1px solid var(--border); }
+  #search-results a:hover{ background:rgba(62,32,220,.15); }
+  #search-results .sr-cat{ font-family:'Share Tech Mono',monospace; font-size:8px; color:var(--accent1); letter-spacing:1px; display:block; }
+
+  /* ── LAYOUT ── */
+  #layout{ display:flex; max-width:1400px; margin:0 auto; }
+
+  /* ── SIDEBAR ── */
+  #sidebar{
+    width:250px; flex-shrink:0;
+    padding:22px 14px;
+    border-right:1px solid var(--border);
+    min-height:calc(100vh - 53px);
+  }
+  .side-group{ margin-bottom:20px; }
+  .side-title{
+    font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:3px;
+    color:var(--ash); text-transform:uppercase; padding:0 10px 6px;
+  }
+  .side-link{
+    display:flex; align-items:center; justify-content:space-between; gap:6px;
+    padding:7px 10px; border-radius:3px; font-size:13.5px;
+    color:var(--bone); cursor:pointer;
+  }
+  .side-link:hover{ background:rgba(62,32,220,.15); }
+  .side-link.active{ background:rgba(62,32,220,.28); color:#fff; }
+  .side-link .badge{
+    font-family:'Share Tech Mono',monospace; font-size:7.5px; letter-spacing:.5px;
+    color:var(--ash); border:1px solid var(--border); border-radius:2px; padding:1px 5px;
+  }
+
+  /* ── MAIN ── */
+  #main{ flex:1; min-width:0; padding:26px 34px 80px; }
+  .crumbs{
+    font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:1px;
+    color:var(--ash); margin-bottom:14px;
+  }
+  .crumbs a:hover{ color:var(--accent1); }
+
+  #article{ display:flex; gap:32px; align-items:flex-start; }
+  #article-body{ flex:1; min-width:0; }
+
+  .art-title{
+    font-family:'Oswald',sans-serif; font-size:36px; font-weight:700;
+    color:#fff; letter-spacing:.5px; border-bottom:3px solid var(--accent3);
+    padding-bottom:12px; margin-bottom:6px;
+  }
+  .art-sub{
+    font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:2px;
+    color:var(--accent1); text-transform:uppercase; margin-bottom:22px;
+  }
+  .art-section h2{
+    font-family:'Oswald',sans-serif; font-size:20px; font-weight:600; color:#fff;
+    margin:26px 0 10px; padding-bottom:6px; border-bottom:1px solid var(--border);
+  }
+  .art-section h3{
+    font-family:'Oswald',sans-serif; font-size:15px; font-weight:600; color:var(--accent1);
+    margin:16px 0 6px;
+  }
+  .art-section p{ font-size:15.5px; line-height:1.75; color:#d8d3e6; margin-bottom:10px; }
+  .art-section ul{ margin:8px 0 12px 22px; }
+  .art-section li{ font-size:15px; line-height:1.7; color:#d8d3e6; margin-bottom:4px; }
+  .art-section em{ color:var(--ash); }
+  .art-section strong{ color:#fff; }
+
+  /* ── RITUAL CARD ── */
+  .ritual{
+    background:var(--panel2); border:1px solid var(--border); border-left:3px solid var(--accent3);
+    border-radius:5px; padding:16px 18px; margin:14px 0;
+  }
+  .ritual-head{ display:flex; align-items:baseline; gap:10px; margin-bottom:8px; flex-wrap:wrap; }
+  .ritual-name{ font-family:'Oswald',sans-serif; font-size:17px; font-weight:700; color:#fff; }
+  .ritual-lvl{ font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--accent1); letter-spacing:1px; }
+  .ritual-stats{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:4px 14px;
+    font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--ash);
+    margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--border);
+  }
+  .ritual-stats b{ color:var(--bone); font-weight:400; }
+  .ritual-desc{ font-size:14.5px; line-height:1.7; color:#d8d3e6; }
+  .ritual-upgrade{
+    margin-top:8px; padding-top:8px; border-top:1px dashed var(--border);
+    font-size:13.5px; color:var(--ash); line-height:1.6;
+  }
+  .ritual-upgrade b{ color:var(--accent1); }
+
+  /* ── POWER BOX ── */
+  .power-box{
+    background:linear-gradient(135deg, rgba(62,32,220,.14), rgba(31,16,173,.06));
+    border:1px solid var(--accent3); border-radius:6px; padding:18px 20px; margin:16px 0 22px;
+  }
+  .power-box .pb-title{
+    font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:2px;
+    color:var(--accent1); text-transform:uppercase; margin-bottom:6px;
+  }
+  .power-box h3{ font-family:'Oswald',sans-serif; font-size:18px; color:#fff; margin-bottom:8px; }
+  .power-box p{ font-size:14.5px; line-height:1.7; color:#d8d3e6; }
+  .power-box em{ color:var(--accent1); font-style:normal; }
+
+  /* ── INFOBOX ── */
+  .infobox{
+    width:280px; flex-shrink:0;
+    background:var(--panel2); border:1px solid var(--border); border-radius:6px;
+    overflow:hidden; position:sticky; top:74px;
+  }
+  .infobox-img{
+    height:150px; display:flex; align-items:center; justify-content:center;
+    font-size:52px; background:linear-gradient(135deg, var(--accent4), var(--accent5));
+  }
+  .infobox-title{
+    font-family:'Oswald',sans-serif; font-size:17px; font-weight:700; color:#fff;
+    text-align:center; padding:12px 10px 10px; border-bottom:1px solid var(--border);
+  }
+  .infobox-row{
+    display:flex; justify-content:space-between; gap:8px;
+    padding:8px 12px; border-bottom:1px solid var(--border);
+    font-size:12px;
+  }
+  .infobox-row .k{ color:var(--ash); font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:.5px; }
+  .infobox-row .v{ color:var(--bone); text-align:right; }
+
+  /* ── HOME ── */
+  .hero{
+    background:linear-gradient(135deg, rgba(62,32,220,.18), rgba(8,5,15,0));
+    border:1px solid var(--border); border-radius:8px;
+    padding:40px 36px; margin-bottom:30px; text-align:center;
+  }
+  .hero h1{
+    font-family:'Oswald',sans-serif; font-size:34px; font-weight:700; letter-spacing:3px;
+    color:#fff; text-transform:uppercase;
+  }
+  .hero p{ font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:2px; color:var(--ash); margin-top:8px; }
+  .home-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:16px; }
+  .home-card{
+    background:var(--panel2); border:1px solid var(--border); border-left:3px solid var(--accent3);
+    border-radius:6px; padding:16px 18px; cursor:pointer; transition:border-color .15s, transform .15s;
+  }
+  .home-card:hover{ border-color:var(--accent1); transform:translateY(-2px); }
+  .home-card .hc-icon{ font-size:24px; margin-bottom:8px; }
+  .home-card .hc-title{ font-family:'Oswald',sans-serif; font-size:15px; font-weight:700; color:#fff; margin-bottom:4px; }
+  .home-card .hc-desc{ font-size:12.5px; color:var(--ash); line-height:1.5; }
+
+  /* ── STUB ── */
+  .stub-box{
+    border:1px dashed var(--border); border-radius:6px; padding:40px 20px;
+    text-align:center; color:var(--ash);
+  }
+  .stub-box .stub-icon{ font-size:30px; margin-bottom:10px; }
+  .stub-box p{ font-size:14px; line-height:1.6; max-width:420px; margin:0 auto; }
+
+  /* ── LOCATIONS LIST ── */
+  .loc-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-top:16px; }
+  .loc-card{
+    background:var(--panel2); border:1px solid var(--border); border-radius:5px; padding:14px 16px;
+  }
+  .loc-card .lc-title{ font-family:'Oswald',sans-serif; font-size:14.5px; font-weight:700; color:#fff; margin-bottom:4px; }
+  .loc-card .lc-desc{ font-size:12.5px; color:var(--ash); line-height:1.5; }
+
+  @media (max-width:900px){
+    #sidebar{ display:none; }
+    #article{ flex-direction:column; }
+    .infobox{ width:100%; position:static; }
+    #main{ padding:20px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="brand" onclick="nav('home')">☠ Wiki Monte Carmesim</div>
+  <div class="stamp">DAP · ACESSO PÚBLICO</div>
+  <input id="search" type="text" placeholder="Pesquisar na wiki..." autocomplete="off">
+</div>
+<div id="search-results"></div>
+
+<div id="layout">
+  <div id="sidebar"></div>
+  <div id="main">
+    <div class="crumbs" id="crumbs"></div>
+    <div id="article"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// CONTEÚDO DA WIKI
+// Cada entrada em ARTICLES vira uma página. category liga ao menu lateral.
+// ══════════════════════════════════════════════════════════════════
+
+const CATEGORIES = [
+  { id:'elementos', label:'Elementos Paranormais', icon:'🔥' },
+  { id:'locais',    label:'Locais',                icon:'🗺️' },
+  { id:'bestiario', label:'Bestiário',              icon:'👁️', stub:true },
+  { id:'agentes',   label:'Agentes',                icon:'🕴️', stub:true },
+  { id:'regras',    label:'Regras & Mecânicas',     icon:'📜', stub:true },
+];
+
+const ARTICLES = {
+
+  'fogo': {
+    title:'Fogo',
+    category:'elementos',
+    subtitle:'Elemento Composto · Sangue + Morte',
+    infobox:{
+      icon:'🔥',
+      rows:[
+        ['Origem','Sangue + Morte'],
+        ['Natureza','Intensidade na destruição'],
+        ['Círculos','1 a 4'],
+        ['Raridade','Raro — desconhecido pela DAP'],
+      ]
+    },
+    sections:[
+      { html:`<p>Todo elemento composto nasce do encontro de dois elementos-base. O que um busca e o que o outro nega definem a natureza do terceiro — nunca uma soma simples, sempre uma tensão.</p>
+      <p>O Sangue busca intensidade máxima. A Morte busca o fim de tudo. Quando os dois se encontram, nasce algo que é intensidade no momento da destruição — a emoção mais extrema possível comprimida no instante em que algo deixa de existir. O Fogo não é só chama física. É a combustão entre sentir e acabar. Por isso consome tudo que toca e não deixa nada igual ao que era.</p>
+      <p><em>Raro no mundo, desconhecido pela DAP.</em></p>` },
+
+      { heading:'Poder Paranormal', html:`
+      <div class="power-box">
+        <div class="pb-title">Poder Paranormal</div>
+        <h3>Chama Interna</h3>
+        <p>Sua conexão com o Fogo faz seu corpo irradiar calor sobrenatural. Você recebe imunidade a dano de fogo e resistência 5 a dano de Sangue. Além disso, quando sofre dano corpo a corpo, o atacante sofre 1d4 pontos de dano de Fogo automaticamente.</p>
+        <p><em>Afinidade:</em> a resistência a Sangue aumenta para 10 e o dano refletido aumenta para 1d8.</p>
+      </div>` },
+
+      { heading:'Rituais', html:`
+      <div class="ritual">
+        <div class="ritual-head"><span class="ritual-name">Centelha</span><span class="ritual-lvl">FOGO 1</span></div>
+        <div class="ritual-stats">
+          <div><b>Execução:</b> padrão</div><div><b>Alcance:</b> curto</div>
+          <div><b>Alvo:</b> 1 ser ou objeto</div><div><b>Duração:</b> instantânea</div>
+          <div><b>Resistência:</b> Reflexos parcial</div>
+        </div>
+        <div class="ritual-desc">Você conjura uma chama paranormal em sua mão e a projeta contra o alvo, que sofre 3d6 pontos de dano de Fogo. Se passar no teste de resistência, sofre apenas metade do dano.</div>
+        <div class="ritual-upgrade"><b>Discente</b> (+2 PE): muda o alvo para explosão com 3m de raio. Requer 2º círculo.<br><b>Verdadeiro</b> (+5 PE): muda o dano para 6d6 e o alvo para explosão com 6m de raio. Requer 3º círculo.</div>
+      </div>
+
+      <div class="ritual">
+        <div class="ritual-head"><span class="ritual-name">Amaldiçoar Arma (Fogo)</span><span class="ritual-lvl">FOGO 2</span></div>
+        <div class="ritual-stats">
+          <div><b>Execução:</b> padrão</div><div><b>Alcance:</b> toque</div>
+          <div><b>Alvo:</b> 1 arma corpo a corpo ou pacote de munição</div><div><b>Duração:</b> cena</div>
+        </div>
+        <div class="ritual-desc">Você imbui a arma com chamas paranormais. Ela causa +1d6 de dano de Fogo adicional. A cada ataque consecutivo bem-sucedido contra o mesmo alvo, o dano adicional aumenta em +1d4 cumulativo. Se o portador errar um ataque, o bônus cumulativo é perdido.</div>
+        <div class="ritual-upgrade"><b>Discente</b> (+3 PE): muda o bônus base para +2d6. Requer 3º círculo.<br><b>Verdadeiro</b> (+5 PE): muda o bônus base para +4d6 e o bônus cumulativo para +1d6. Requer 4º círculo e afinidade.</div>
+      </div>
+
+      <div class="ritual">
+        <div class="ritual-head"><span class="ritual-name">Pira</span><span class="ritual-lvl">FOGO 3</span></div>
+        <div class="ritual-stats">
+          <div><b>Execução:</b> padrão</div><div><b>Alcance:</b> médio</div>
+          <div><b>Área:</b> esfera com 6m de raio</div><div><b>Duração:</b> sustentada</div>
+          <div><b>Resistência:</b> Fortitude parcial</div>
+        </div>
+        <div class="ritual-desc">Você invoca uma explosão de chamas paranormais que persiste na área. Todo ser que iniciar seu turno na área sofre 3d6 pontos de dano de Fogo. Criaturas que falhem no teste de resistência ficam com hemorragia de fogo — no início de cada turno sofrem 1d6 de dano de Fogo adicional até passarem em um teste de Fortitude. Criaturas que passem no teste inicial sofrem apenas metade do dano e evitam a hemorragia.</div>
+        <div class="ritual-upgrade"><b>Discente</b> (+4 PE): muda o dano base para 5d6. Requer 4º círculo.<br><b>Verdadeiro</b> (+8 PE): como discente, e criaturas que falhem ficam vulneráveis enquanto estiverem em chamas. Requer 4º círculo e afinidade.</div>
+      </div>
+
+      <div class="ritual">
+        <div class="ritual-head"><span class="ritual-name">Forma Ígnea</span><span class="ritual-lvl">FOGO 4</span></div>
+        <div class="ritual-stats">
+          <div><b>Execução:</b> padrão</div><div><b>Alcance:</b> pessoal</div>
+          <div><b>Alvo:</b> você</div><div><b>Duração:</b> cena</div>
+        </div>
+        <div class="ritual-desc">Seu corpo entra em combustão paranormal. Você recebe imunidade a dano de Fogo, seus ataques corpo a corpo causam +2d6 de dano de Fogo adicional e você entra em Fúria do Sangue (recebe +5 em testes de ataque e rolagens de dano corpo a corpo e 20 PV temporários, mas não pode conjurar rituais enquanto estiver transformado). Além disso, qualquer ser que você atacar fica com a capacidade de cura reduzida à metade pelo resto da cena — o Fogo da Morte queima a possibilidade de regeneração junto com a carne.</div>
+        <div class="ritual-upgrade"><b>Discente</b> (+6 PE): os PV temporários aumentam para 40 e o dano adicional para +4d6. Requer afinidade.</div>
+      </div>
+      ` },
+    ]
+  },
+
+};
+
+// ── LOCAIS (lista simples por enquanto — aguardando você mandar quais) ──
+const LOCATIONS = [
+  // { title:'Nome do local', desc:'Descrição curta.' },
+];
+
+// ══════════════════════════════════════════════════════════════════
+// MOTOR DA WIKI (não precisa mexer daqui pra baixo)
+// ══════════════════════════════════════════════════════════════════
+
+function renderSidebar(activeCat, activeArt){
+  const el = document.getElementById('sidebar');
+  el.innerHTML = '';
+  CATEGORIES.forEach(cat=>{
+    const group = document.createElement('div');
+    group.className = 'side-group';
+    const title = document.createElement('div');
+    title.className = 'side-title';
+    title.textContent = cat.icon + '  ' + cat.label;
+    group.appendChild(title);
+
+    const artsInCat = Object.entries(ARTICLES).filter(([,a])=>a.category===cat.id);
+    if (cat.id==='locais'){
+      const link = document.createElement('div');
+      link.className = 'side-link' + (activeCat==='locais'&&!activeArt?' active':'');
+      link.innerHTML = `<span>Ver todos</span><span class="badge">${LOCATIONS.length}</span>`;
+      link.onclick = ()=>nav('categoria','locais');
+      group.appendChild(link);
+    } else if (artsInCat.length){
+      artsInCat.forEach(([key,a])=>{
+        const link = document.createElement('div');
+        link.className = 'side-link' + (activeArt===key?' active':'');
+        link.innerHTML = `<span>${a.title}</span>`;
+        link.onclick = ()=>nav('artigo',key);
+        group.appendChild(link);
+      });
+    } else if (cat.stub){
+      const link = document.createElement('div');
+      link.className = 'side-link';
+      link.style.color = 'var(--ash)';
+      link.style.fontStyle = 'italic';
+      link.innerHTML = `<span>Em construção</span>`;
+      group.appendChild(link);
+    }
+    el.appendChild(group);
+  });
+}
+
+function renderCrumbs(parts){
+  document.getElementById('crumbs').innerHTML = parts.map((p,i)=>
+    i<parts.length-1 ? `<a href="javascript:void(0)" onclick="${p.action}">${p.label}</a> / ` : `<span style="color:var(--bone)">${p.label}</span>`
+  ).join('');
+}
+
+function renderHome(){
+  renderSidebar(null,null);
+  renderCrumbs([{label:'Wiki Monte Carmesim'}]);
+  document.getElementById('article').innerHTML = `
+    <div class="hero">
+      <h1>☠ Wiki Monte Carmesim</h1>
+      <p>DAP · ORDEM PARANORMAL RPG · ACESSO PÚBLICO</p>
+    </div>
+    <div class="home-grid">
+      ${CATEGORIES.map(c=>`
+        <div class="home-card" onclick="nav('categoria','${c.id}')">
+          <div class="hc-icon">${c.icon}</div>
+          <div class="hc-title">${c.label}</div>
+          <div class="hc-desc">${c.stub && !Object.values(ARTICLES).some(a=>a.category===c.id) ? 'Em construção' : 'Explorar artigos'}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderCategory(catId){
+  const cat = CATEGORIES.find(c=>c.id===catId);
+  if (!cat) return renderHome();
+  renderSidebar(catId,null);
+  renderCrumbs([{label:'Wiki Monte Carmesim',action:"nav('home')"},{label:cat.label}]);
+
+  if (catId==='locais'){
+    document.getElementById('article').innerHTML = `
+      <div class="art-title">${cat.icon} ${cat.label}</div>
+      ${LOCATIONS.length ? `<div class="loc-grid">${LOCATIONS.map(l=>`
+        <div class="loc-card"><div class="lc-title">${l.title}</div><div class="lc-desc">${l.desc}</div></div>
+      `).join('')}</div>` : `
+      <div class="stub-box"><div class="stub-icon">🗺️</div><p>Nenhum local cadastrado ainda. Assim que a lista de locais conhecidos for confirmada, eles aparecem aqui.</p></div>`}
+    `;
+    return;
+  }
+
+  const arts = Object.entries(ARTICLES).filter(([,a])=>a.category===catId);
+  document.getElementById('article').innerHTML = `
+    <div class="art-title">${cat.icon} ${cat.label}</div>
+    ${arts.length ? `<div class="home-grid">${arts.map(([key,a])=>`
+      <div class="home-card" onclick="nav('artigo','${key}')">
+        <div class="hc-title">${a.title}</div>
+        <div class="hc-desc">${a.subtitle||''}</div>
+      </div>`).join('')}</div>` : `
+    <div class="stub-box"><div class="stub-icon">${cat.icon}</div><p>Essa categoria ainda está em construção — nenhum artigo publicado por enquanto.</p></div>`}
+  `;
+}
+
+function renderArticle(key){
+  const a = ARTICLES[key];
+  if (!a) return renderHome();
+  const cat = CATEGORIES.find(c=>c.id===a.category);
+  renderSidebar(a.category, key);
+  renderCrumbs([{label:'Wiki Monte Carmesim',action:"nav('home')"},{label:cat?cat.label:'',action:`nav('categoria','${a.category}')`},{label:a.title}]);
+
+  const sectionsHtml = a.sections.map(s=>`
+    <div class="art-section">${s.heading?`<h2>${s.heading}</h2>`:''}${s.html}</div>
+  `).join('');
+
+  document.getElementById('article').innerHTML = `
+    <div id="article-body">
+      <div class="art-title">${a.title}</div>
+      ${a.subtitle?`<div class="art-sub">${a.subtitle}</div>`:''}
+      ${sectionsHtml}
+    </div>
+    ${a.infobox?`
+    <div class="infobox">
+      <div class="infobox-img">${a.infobox.icon||'📄'}</div>
+      <div class="infobox-title">${a.title}</div>
+      ${a.infobox.rows.map(r=>`<div class="infobox-row"><span class="k">${r[0]}</span><span class="v">${r[1]}</span></div>`).join('')}
+    </div>`:''}
+  `;
+}
+
+function nav(type, id){
+  if (type==='home') location.hash = '';
+  else if (type==='categoria') location.hash = 'c/'+id;
+  else if (type==='artigo') location.hash = 'a/'+id;
+  window.scrollTo(0,0);
+}
+window.nav = nav;
+
+function route(){
+  const hash = location.hash.replace(/^#/,'');
+  if (!hash) return renderHome();
+  const [type,id] = hash.split('/');
+  if (type==='c') return renderCategory(id);
+  if (type==='a') return renderArticle(id);
+  return renderHome();
+}
+window.addEventListener('hashchange', route);
+route();
+
+// ── Busca ──
+const allSearchable = [
+  ...Object.entries(ARTICLES).map(([key,a])=>({key,title:a.title,cat:CATEGORIES.find(c=>c.id===a.category)?.label||'',type:'a'})),
+  ...CATEGORIES.map(c=>({key:c.id,title:c.label,cat:'Categoria',type:'c'})),
+];
+const searchInput = document.getElementById('search');
+const searchResults = document.getElementById('search-results');
+searchInput.addEventListener('input', ()=>{
+  const q = searchInput.value.trim().toLowerCase();
+  if (!q){ searchResults.classList.remove('show'); return; }
+  const matches = allSearchable.filter(x=>x.title.toLowerCase().includes(q));
+  if (!matches.length){ searchResults.innerHTML = '<div style="padding:14px;font-size:12px;color:var(--ash);">Nada encontrado.</div>'; }
+  else {
+    searchResults.innerHTML = matches.map(m=>`
+      <a href="javascript:void(0)" onclick="nav('${m.type==='c'?'categoria':'artigo'}','${m.key}');closeSearch();">
+        <span class="sr-cat">${m.cat}</span>${m.title}
+      </a>`).join('');
+  }
+  searchResults.classList.add('show');
+});
+function closeSearch(){ searchResults.classList.remove('show'); searchInput.value=''; }
+document.addEventListener('click', e=>{
+  if (!e.target.closest('#search') && !e.target.closest('#search-results')) searchResults.classList.remove('show');
+});
+</script>
+</body>
+</html>
