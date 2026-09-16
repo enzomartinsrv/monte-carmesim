@@ -600,53 +600,64 @@
     .status-item, .dv-item { cursor: default; }
     @page { margin: 5mm; size: A4; }
     #char-tab-bar { display: none !important; }
-    #prefs-btn, #prefs-panel { display: none !important; }
+    #prefs-panel, #side-menu, #side-menu-overlay { display: none !important; }
   }
 
-  /* ─── CHAR TAB BAR ─── */
+  /* ─── TOP BAR (slim, só hambúrguer + nome) ─── */
   #char-tab-bar {
     position: fixed;
-    top: 0; left: 50%;
-    transform: translateX(-50%);
+    top: 0; left: 0; right: 0;
     z-index: 9997;
     display: flex;
-    gap: 2px;
+    align-items: center;
+    gap: 10px;
     background: #1a1a1a;
-    padding: 4px 4px 0 4px;
-    border-radius: 0 0 6px 6px;
+    padding: 5px 12px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.3);
   }
-  #char-tab-bar .char-tab {
-    font-family: 'Oswald', sans-serif;
-    font-size: 10px;
-    letter-spacing: 1px;
-    color: #999;
-    background: #2a2a2a;
-    border: none;
-    padding: 6px 14px;
-    cursor: pointer;
-    border-radius: 4px 4px 0 0;
-    transition: background 0.15s, color 0.15s;
+  #menu-toggle-btn {
+    background: none; border: none; color: #fff; font-size: 17px; line-height: 1;
+    cursor: pointer; padding: 2px 4px;
   }
-  #char-tab-bar .char-tab:hover { background: #3a3a3a; color: #ccc; }
-  #char-tab-bar .char-tab.active { background: #ffffff; color: var(--blood); font-weight: 700; }
-  #char-tab-bar .back-to-hub {
-    font-family: 'Oswald', sans-serif;
-    font-size: 10px;
-    letter-spacing: 1px;
-    color: #ccc;
-    background: #444;
-    border: none;
-    padding: 6px 10px;
-    cursor: pointer;
-    border-radius: 4px 4px 0 0;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    margin-right: 4px;
+  #topbar-agent-name {
+    font-family: 'Oswald', sans-serif; font-size: 11px; letter-spacing: 1px; color: #bbb;
   }
-  #char-tab-bar .back-to-hub:hover { background: #1f10ad; color: #fff; }
   body { padding-top: 26px; }
+
+  /* ─── MENU LATERAL ─── */
+  #side-menu-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 9998;
+  }
+  #side-menu-overlay.open { display: block; }
+  #side-menu {
+    position: fixed; top: 0; left: -300px; bottom: 0; width: 280px; z-index: 9999;
+    background: #212121; color: #eee; box-shadow: 2px 0 16px rgba(0,0,0,.45);
+    transition: left .2s ease; display: flex; flex-direction: column; overflow-y: auto;
+  }
+  #side-menu.open { left: 0; }
+  .sm-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; border-bottom: 1px solid #3a3a3a;
+    font-family: 'Oswald', sans-serif; font-size: 13px; letter-spacing: 1px; color: #fff;
+  }
+  .sm-close { background: none; border: none; color: #999; font-size: 17px; cursor: pointer; line-height: 1; }
+  .sm-close:hover { color: #fff; }
+  .sm-section-label {
+    font-family: 'Share Tech Mono', monospace; font-size: 9px; letter-spacing: 2px;
+    color: #888; text-transform: uppercase; padding: 12px 16px 4px;
+  }
+  .sm-item {
+    display: block; width: 100%; text-align: left; background: none; border: none; color: #ddd;
+    font-family: 'Oswald', sans-serif; font-size: 12.5px; letter-spacing: .5px;
+    padding: 11px 16px; cursor: pointer; text-decoration: none; box-sizing: border-box;
+  }
+  .sm-item:hover { background: #2c2c2c; }
+  .sm-item.active { background: var(--blood); color: #fff; font-weight: 700; }
+  .sm-divider { height: 1px; background: #3a3a3a; margin: 6px 0; }
+  .sm-alert-box {
+    margin: 4px 16px 10px; padding: 10px 12px; background: #1a1330; border-left: 3px solid var(--crimson);
+    border-radius: 4px; font-size: 11.5px; line-height: 1.5; color: #ccc;
+  }
 
   /* ── MODO SOMENTE LEITURA (Fase 3) ── */
   #role-banner{
@@ -712,22 +723,24 @@
   .pp-sval{ font-family:'Share Tech Mono',monospace; font-size:9px; color:#ddd; width:34px; text-align:right; flex-shrink:0; }
   .pp-fear{ display:flex; align-items:center; justify-content:space-between; margin-top:6px; padding-top:6px; border-top:1px solid #241a4a; font-family:'Share Tech Mono',monospace; font-size:9px; color:#8f8aa8; }
 
-  /* ── PREFERÊNCIAS (engrenagem) ── */
+  .pp-placeholder{
+    margin:10px 10px 0; padding:16px 10px; border:1px dashed #3a2f6a; border-radius:5px;
+    display:flex; align-items:center; gap:10px; color:#6f68a0;
+  }
+  .pp-placeholder-icon{ font-size:20px; opacity:.6; }
+  .pp-placeholder-txt{ font-family:'Barlow Condensed',sans-serif; font-size:11px; line-height:1.4; }
+  .pp-placeholder-txt span{ font-family:'Share Tech Mono',monospace; font-size:8px; letter-spacing:1px; color:#4a4380; text-transform:uppercase; }
+
+  /* ── PREFERÊNCIAS (engrenagem, aberta pelo menu ☰) ── */
   @font-face {
     font-family: 'OpenDyslexic';
     src: url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic-regular.woff') format('woff');
     font-weight: normal; font-style: normal; font-display: swap;
   }
-  #prefs-btn{
-    position:fixed; top:4px; left:10px; z-index:9997;
-    width:22px; height:22px; border-radius:50%; border:1px solid var(--border,#c8bfb0);
-    background:rgba(255,255,255,.7); color:var(--blood); font-size:13px; line-height:1;
-    display:flex; align-items:center; justify-content:center; cursor:pointer;
-  }
   #prefs-panel{
-    display:none; position:fixed; top:32px; left:10px; z-index:9997;
-    width:250px; background:#fff; border:1px solid #c8bfb0; border-left:3px solid var(--blood);
-    border-radius:6px; padding:14px 16px; box-shadow:0 8px 24px rgba(0,0,0,.25);
+    display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:10000;
+    width:270px; background:#fff; border:1px solid #c8bfb0; border-left:3px solid var(--blood);
+    border-radius:6px; padding:16px 18px; box-shadow:0 12px 36px rgba(0,0,0,.4);
     font-family:'Barlow Condensed',sans-serif;
   }
   #prefs-panel.open{ display:block; }
@@ -1215,7 +1228,7 @@
     saveAll(); // flush do personagem atual antes de trocar
     window.CHAR_SLOT = slot;
     window.NEX_FORMA = 'baixa';
-    document.querySelectorAll('#char-tab-bar .char-tab').forEach((btn, i) => {
+    document.querySelectorAll('#side-menu .char-tab').forEach((btn, i) => {
       btn.classList.toggle('active', i === slot - 1);
     });
     resetFichaFields();
@@ -1234,7 +1247,7 @@
     const btn = document.getElementById('nex-forma-toggle');
     if (!btn) return;
     if (window.CHAR_SLOT === 3) {
-      btn.style.display = 'inline-flex';
+      btn.style.display = 'block';
       btn.textContent = window.NEX_FORMA === 'baixa' ? '⇄ Trocar para NEX 50%' : '⇄ Trocar para NEX 5%';
     } else {
       btn.style.display = 'none';
@@ -1406,9 +1419,13 @@
     // Show player name
     const nameEl = document.getElementById('player-name-display');
     if (nameEl) nameEl.textContent = playerName.toUpperCase();
+    const topbarName = document.getElementById('topbar-agent-name');
+    if (topbarName) topbarName.textContent = playerName.toUpperCase();
+    const smName = document.getElementById('sm-player-name');
+    if (smName) smName.textContent = playerName.toUpperCase();
 
     // ── Marca a aba correta (caso o link já venha com &char=2 ou &char=3) ──
-    document.querySelectorAll('#char-tab-bar .char-tab').forEach((btn, i) => {
+    document.querySelectorAll('#side-menu .char-tab').forEach((btn, i) => {
       btn.classList.toggle('active', i === window.CHAR_SLOT - 1);
     });
 
@@ -1612,27 +1629,32 @@
   }
   window.syncStats = syncStats;
 
-  // ── Alert banner ───────────────────────────────────────────────────────────
+  // ── Alert popup (cantinho da tela, pequeno) ─────────────────────────────
+  window.LAST_ALERT_MSG = '';
   function showAlert(msg, type) {
+    window.LAST_ALERT_MSG = msg;
+    if (window.refreshMenuAlert) window.refreshMenuAlert();
+
     let banner = document.getElementById('master-alert-banner');
     if (!banner) {
       banner = document.createElement('div');
       banner.id = 'master-alert-banner';
-      banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;padding:12px 20px;text-align:center;font-family:Oswald,sans-serif;font-size:14px;letter-spacing:2px;cursor:pointer;';
-      banner.onclick = () => banner.style.display = 'none';
+      banner.style.cssText = 'position:fixed;bottom:14px;right:14px;z-index:9999;max-width:240px;padding:10px 14px;border-radius:6px;text-align:left;font-family:Oswald,sans-serif;font-size:11.5px;letter-spacing:.5px;line-height:1.4;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35);opacity:0;transform:translateY(10px);transition:opacity .2s, transform .2s;';
+      banner.onclick = () => { banner.style.opacity = '0'; banner.style.transform = 'translateY(10px)'; };
       document.body.appendChild(banner);
     }
     const colors = {
-      danger:  'background:#8B1A1A;color:#fff;border-bottom:3px solid #ff4444;',
-      warning: 'background:#7a5800;color:#fff;border-bottom:3px solid #ffcc00;',
-      heal:    'background:#1a4a1a;color:#fff;border-bottom:3px solid #44ff44;',
-      mental:  'background:#2a0a4a;color:#fff;border-bottom:3px solid #cc44ff;',
-      info:    'background:#1a2a4a;color:#fff;border-bottom:3px solid #4488ff;',
+      danger:  'background:#8B1A1A;color:#fff;border-left:4px solid #ff4444;',
+      warning: 'background:#7a5800;color:#fff;border-left:4px solid #ffcc00;',
+      heal:    'background:#1a4a1a;color:#fff;border-left:4px solid #44ff44;',
+      mental:  'background:#2a0a4a;color:#fff;border-left:4px solid #cc44ff;',
+      info:    'background:#1a2a4a;color:#fff;border-left:4px solid #4488ff;',
     };
-    banner.style.cssText += colors[type] || colors.info;
-    banner.textContent = '📡 MESTRE: ' + msg + '  · (toque para fechar)';
-    banner.style.display = 'block';
-    setTimeout(() => { if(banner) banner.style.display = 'none'; }, 8000);
+    banner.style.cssText = banner.style.cssText.replace(/background:[^;]+;border-left:[^;]+;/, '') + (colors[type] || colors.info);
+    banner.innerHTML = '📡 <b>MESTRE</b><br>' + msg;
+    banner.style.opacity = '1';
+    banner.style.transform = 'translateY(0)';
+    setTimeout(() => { if(banner) { banner.style.opacity = '0'; banner.style.transform = 'translateY(10px)'; } }, 8000);
   }
   window.showAlert = showAlert;
 
@@ -1658,9 +1680,8 @@
 
 <div id="role-banner"></div>
 
-<button id="prefs-btn" onclick="window.togglePrefsPanel()" title="Preferências">⚙️</button>
 <div id="prefs-panel">
-  <h4>⚙️ Preferências</h4>
+  <h4 style="display:flex;align-items:center;justify-content:space-between;">⚙️ Preferências <span onclick="window.togglePrefsPanel(false)" style="cursor:pointer;color:var(--ash);font-size:14px;">✕</span></h4>
   <div class="prefs-row"><span>🌙 Tema escuro</span><label class="prefs-toggle"><input type="checkbox" id="pref-dark" onchange="window.applyPrefs()"><span class="slider"></span></label></div>
   <div class="prefs-row"><span>🔤 Fonte OpenDyslexic</span><label class="prefs-toggle"><input type="checkbox" id="pref-dyslexic" onchange="window.applyPrefs()"><span class="slider"></span></label></div>
   <div class="prefs-row"><span>🧹 Modo simples</span><label class="prefs-toggle"><input type="checkbox" id="pref-simple" onchange="window.applyPrefs()"><span class="slider"></span></label></div>
@@ -1672,8 +1693,10 @@
     function loadPrefs(){
       try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e){ return {}; }
     }
-    window.togglePrefsPanel = function(){
-      document.getElementById('prefs-panel').classList.toggle('open');
+    window.togglePrefsPanel = function(forceState){
+      const panel = document.getElementById('prefs-panel');
+      const active = typeof forceState === 'boolean' ? forceState : !panel.classList.contains('open');
+      panel.classList.toggle('open', active);
     };
     window.applyPrefs = function(){
       const prefs = {
@@ -1688,31 +1711,68 @@
       document.body.classList.toggle('performance-mode', prefs.performance);
       localStorage.setItem(KEY, JSON.stringify(prefs));
     };
+    // ── Menu lateral (☰) ──
+    window.toggleSideMenu = function(forceState){
+      const menu = document.getElementById('side-menu');
+      const overlay = document.getElementById('side-menu-overlay');
+      const active = typeof forceState === 'boolean' ? forceState : !menu.classList.contains('open');
+      menu.classList.toggle('open', active);
+      overlay.classList.toggle('open', active);
+    };
+    window.refreshMenuAlert = function(){
+      const box = document.getElementById('sm-alert-box');
+      if (box) box.textContent = window.LAST_ALERT_MSG || 'Nenhum aviso ainda.';
+    };
     // Aplica preferências salvas assim que a página carrega (antes de qualquer coisa do Firebase)
     document.addEventListener('DOMContentLoaded', function(){
       const prefs = loadPrefs();
       const map = {dark:'pref-dark', dyslexic:'pref-dyslexic', simple:'pref-simple', performance:'pref-performance'};
       Object.keys(map).forEach(k => { const el = document.getElementById(map[k]); if (el) el.checked = !!prefs[k]; });
       window.applyPrefs();
-      // fecha o painel se clicar fora
+      window.refreshMenuAlert();
+      // fecha o painel de preferências se clicar fora
       document.addEventListener('click', function(e){
         const panel = document.getElementById('prefs-panel');
-        const btn = document.getElementById('prefs-btn');
-        if (panel.classList.contains('open') && !panel.contains(e.target) && e.target !== btn) panel.classList.remove('open');
+        if (panel.classList.contains('open') && !panel.contains(e.target)) panel.classList.remove('open');
       });
     });
   })();
 </script>
 
-<!-- ── CHAR TAB BAR (troca entre até 3 personagens do mesmo player) ── -->
+<!-- ── TOP BAR (slim) + MENU LATERAL ── -->
 <div id="char-tab-bar">
-  <a class="back-to-hub" href="index.html" title="Voltar para a seleção de fichas">← Fichas</a>
-  <button class="char-tab active" id="char-tab-1" onclick="window.switchChar(1)">Personagem 1</button>
-  <button class="char-tab" id="char-tab-2" onclick="window.switchChar(2)">Personagem 2</button>
-  <button class="char-tab" id="char-tab-3" onclick="window.switchChar(3)">Personagem 3</button>
-  <button id="nex-forma-toggle" onclick="window.toggleNexForma()" style="display:none;font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:1px;color:#fff;background:var(--blood);border:none;padding:6px 10px;cursor:pointer;border-radius:4px 4px 0 0;margin-left:4px;">⇄ Trocar para NEX 50%</button>
-  <button id="hub-mode-toggle" onclick="window.toggleHubMode()" style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:1px;color:#ccc;background:#3a2a6a;border:none;padding:6px 10px;cursor:pointer;border-radius:4px 4px 0 0;margin-left:4px;">👥 Hub</button>
+  <button id="menu-toggle-btn" onclick="window.toggleSideMenu()" title="Menu">☰</button>
+  <span id="topbar-agent-name">—</span>
 </div>
+
+<div id="side-menu-overlay" onclick="window.toggleSideMenu(false)"></div>
+<div id="side-menu">
+  <div class="sm-header">
+    <span id="sm-player-name">—</span>
+    <button class="sm-close" onclick="window.toggleSideMenu(false)">✕</button>
+  </div>
+
+  <div class="sm-section-label">Personagens</div>
+  <button class="sm-item char-tab active" id="char-tab-1" onclick="window.switchChar(1)">Personagem 1</button>
+  <button class="sm-item char-tab" id="char-tab-2" onclick="window.switchChar(2)">Personagem 2</button>
+  <button class="sm-item char-tab" id="char-tab-3" onclick="window.switchChar(3)">Personagem 3</button>
+  <button class="sm-item" id="nex-forma-toggle" onclick="window.toggleNexForma()" style="display:none;color:#c88bff;">⇄ Trocar para NEX 50%</button>
+
+  <div class="sm-divider"></div>
+
+  <button class="sm-item" onclick="window.togglePrefsPanel();window.toggleSideMenu(false);">⚙️ Preferências</button>
+  <button class="sm-item" id="hub-mode-toggle" onclick="window.toggleHubMode();window.toggleSideMenu(false);">👥 Hub do Grupo</button>
+
+  <div class="sm-divider"></div>
+
+  <div class="sm-section-label">Último aviso do mestre</div>
+  <div class="sm-alert-box" id="sm-alert-box">Nenhum aviso ainda.</div>
+
+  <div class="sm-divider"></div>
+
+  <a class="sm-item" href="inicio.html">← Voltar ao início</a>
+</div>
+
 
 <!-- ════════════════════════════════════════════════════ PAGE 1 ═ -->
 <!-- LEFT PANEL -->
@@ -3017,6 +3077,19 @@ LIMITE CRÉD ░░░░
       <button class="pp-btn" onclick="window.toggleHubMode(false)" title="Fechar">✕</button>
     </div>
   </div>
+
+  <!-- Reservado — transmissão de tela do mestre (ainda não funcional) -->
+  <div class="pp-placeholder" id="pp-stream-slot">
+    <div class="pp-placeholder-icon">🖥️</div>
+    <div class="pp-placeholder-txt">Transmissão do mestre<br><span>em breve</span></div>
+  </div>
+
+  <!-- Reservado — chat de voz do Discord (ainda não funcional) -->
+  <div class="pp-placeholder" id="pp-discord-slot">
+    <div class="pp-placeholder-icon">💬</div>
+    <div class="pp-placeholder-txt">Chat do Discord<br><span>em breve</span></div>
+  </div>
+
   <div id="party-pane-list"></div>
 </div>
 
