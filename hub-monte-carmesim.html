@@ -232,6 +232,23 @@
 
 <div class="hub-body">
   <div class="hub-main">
+    <!-- TRACKER DE INICIATIVA -->
+    <div style="margin-bottom:20px;">
+      <div class="sec" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>⚔ Tracker de Iniciativa</span>
+        <div style="display:flex;gap:6px;">
+          <button class="act-btn green" id="tracker-start-btn" onclick="startTracker()">▶ Iniciar</button>
+          <button class="act-btn" onclick="prevTrackerTurn()">◀</button>
+          <button class="act-btn" onclick="nextTrackerTurn()">▶ Próximo</button>
+          <button class="act-btn red" onclick="endTracker()">✕ Encerrar</button>
+        </div>
+      </div>
+      <div id="tracker-round" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--accent);text-align:center;margin-bottom:6px;letter-spacing:1px;display:none;">RODADA <span id="tracker-round-num">1</span></div>
+      <div id="tracker-list" style="display:flex;flex-direction:column;gap:5px;margin-bottom:8px;">
+        <div style="color:var(--ash);font-size:11px;font-family:'Share Tech Mono',monospace;padding:10px;">Vazio — use o botão ⚔ nos cards de agente/NPC pra adicionar aqui.</div>
+      </div>
+    </div>
+
     <div class="sec">👤 Agentes</div>
     <div class="players-grid" id="players-grid">
       <div style="color:var(--ash);font-size:12px;font-family:'Share Tech Mono',monospace;padding:20px;">Aguardando jogadores... clique em + Jogador para adicionar.</div>
@@ -552,6 +569,7 @@ onValue(ref(db,'players'), snap => {
 onValue(ref(db,'overlay/visible'), snap => {
   window._ovis = snap.val()||{};
   renderCards(window._pd);
+  renderNpcs();
 });
 
 window.toggleOverlayVis=(name,slot)=>{
@@ -560,6 +578,110 @@ window.toggleOverlayVis=(name,slot)=>{
   update(ref(db,'overlay/visible'),{[key]:nv});
   addLog((nv?'👁 Mostrando ':'🚫 Ocultando ')+name+' (ficha '+slot+') no overlay','alert');
 };
+
+window.toggleNpcVis=(id)=>{
+  const key='npc_'+id;
+  const nv=!window._ovis[key];
+  update(ref(db,'overlay/visible'),{[key]:nv});
+  addLog((nv?'👁 Mostrando ':'🚫 Ocultando ')+(window._npcs[id]?.nome||id)+' pros players','alert');
+};
+
+// ── Tracker de Iniciativa (Fase 5/6) ────────────────────────────────────────
+window._tracker = {};
+onValue(ref(db,'combat'), snap => {
+  window._tracker = snap.val() || {};
+  renderTracker();
+});
+
+function trackerOrderArray(){
+  const order = window._tracker.order || {};
+  return Object.entries(order).map(([id,e])=>({id,...e})).sort((a,b)=>(b.initiative||0)-(a.initiative||0));
+}
+
+window.addPlayerToTracker = (name, slot) => {
+  const id = 'p_'+name+'_'+slot;
+  const order = window._tracker.order || {};
+  if (order[id]) { addLog('Esse personagem já está no tracker.','alert'); return; }
+  const suf = slot===1?'':slot;
+  const label = window._pd[name]?.['ficha'+suf]?.inputs?.id_nome?.trim() || name;
+  update(ref(db,'combat/order'), { [id]: { type:'player', name, slot, label, initiative:0, showHealth:true } });
+  addLog(label+' adicionado ao tracker.','alert');
+};
+
+window.addToTracker = (npcId) => {
+  const id = 'n_'+npcId;
+  const order = window._tracker.order || {};
+  if (order[id]) { addLog('Esse NPC já está no tracker.','alert'); return; }
+  const npc = window._npcs[npcId] || {};
+  update(ref(db,'combat/order'), { [id]: { type:'npc', npcId, label: npc.nome||'NPC', initiative:0, showHealth:false } });
+  addLog((npc.nome||'NPC')+' adicionado ao tracker.','alert');
+};
+
+window.removeFromTracker = (id) => { update(ref(db,'combat/order'), { [id]: null }); };
+window.setTrackerInit = (id, val) => { update(ref(db,'combat/order/'+id), { initiative: parseInt(val)||0 }); };
+window.toggleTrackerHealth = (id) => {
+  const order = window._tracker.order || {};
+  update(ref(db,'combat/order/'+id), { showHealth: !(order[id]?.showHealth) });
+};
+
+window.startTracker = () => {
+  if (!Object.keys(window._tracker.order||{}).length) { addLog('Adicione participantes antes de iniciar.','alert'); return; }
+  update(ref(db,'combat'), { active: true, turnIndex: 0, round: 1 });
+  addLog('⚔ Combate iniciado.','alert');
+};
+window.endTracker = () => {
+  set(ref(db,'combat'), { active:false, order:null, turnIndex:0, round:1 });
+  addLog('⚔ Combate encerrado.','alert');
+};
+window.nextTrackerTurn = () => {
+  const arr = trackerOrderArray();
+  if (!arr.length) return;
+  let idx = (window._tracker.turnIndex||0) + 1;
+  let round = window._tracker.round||1;
+  if (idx >= arr.length) { idx = 0; round++; }
+  update(ref(db,'combat'), { turnIndex: idx, round });
+};
+window.prevTrackerTurn = () => {
+  const arr = trackerOrderArray();
+  if (!arr.length) return;
+  let idx = (window._tracker.turnIndex||0) - 1;
+  if (idx < 0) idx = arr.length - 1;
+  update(ref(db,'combat'), { turnIndex: idx });
+};
+
+function renderTracker(){
+  const list = document.getElementById('tracker-list');
+  if (!list) return;
+  const roundBox = document.getElementById('tracker-round');
+  const startBtn = document.getElementById('tracker-start-btn');
+  const arr = trackerOrderArray();
+  const active = !!window._tracker.active;
+  roundBox.style.display = active ? 'block' : 'none';
+  document.getElementById('tracker-round-num').textContent = window._tracker.round || 1;
+  startBtn.style.display = active ? 'none' : 'inline-flex';
+
+  if (!arr.length) {
+    list.innerHTML = '<div style="color:var(--ash);font-size:11px;font-family:\'Share Tech Mono\',monospace;padding:10px;">Vazio — use o botão ⚔ nos cards de agente/NPC pra adicionar aqui.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  arr.forEach((e, i) => {
+    const isTurn = active && i === (window._tracker.turnIndex || 0);
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;background:'+(isTurn?'rgba(184,134,11,.15)':'var(--card)')+';border:1px solid '+(isTurn?'var(--accent)':'var(--border)')+';border-radius:4px;padding:6px 10px;';
+    let healthHtml = '';
+    if (e.type === 'npc') {
+      healthHtml = `<label style="display:flex;align-items:center;gap:3px;font-size:8px;color:var(--ash);font-family:'Share Tech Mono',monospace;white-space:nowrap;"><input type="checkbox" ${e.showHealth?'checked':''} onchange="toggleTrackerHealth('${e.id}')"> vida</label>`;
+    }
+    row.innerHTML = `
+      <input type="number" value="${e.initiative||0}" onchange="setTrackerInit('${e.id}',this.value)" style="width:38px;flex-shrink:0;background:var(--dark);border:1px solid var(--border);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:12px;padding:2px 4px;border-radius:2px;text-align:center;">
+      <span style="flex:1;font-family:'Oswald',sans-serif;font-size:12px;font-weight:600;color:${e.type==='npc'?'#ce93d8':'#fff'};">${e.label}${e.type==='npc'?' <span style="font-size:7px;color:var(--ash);">NPC</span>':''}</span>
+      ${healthHtml}
+      <button class="act-btn" style="color:var(--ash);flex-shrink:0;" onclick="removeFromTracker('${e.id}')">✕</button>
+    `;
+    list.appendChild(row);
+  });
+}
 
 function renderCards(data){
   const grid=document.getElementById('players-grid');
@@ -634,6 +756,7 @@ function mkCard(name,player,slot){
 <button class="act-btn green"  onclick="quickDmg('${name}',${slot},'pv',1)">+ PV</button>
 <button class="act-btn purple" onclick="quickDmg('${name}',${slot},'san',-1)">− SAN</button>
 <button class="act-btn blue"   onclick="openQV('${name}',${slot})">👁 Ver</button>
+<button class="act-btn" onclick="addPlayerToTracker('${name}',${slot})" title="Adicionar ao tracker de iniciativa">⚔</button>
 </div>`;
   return d;
 }
@@ -850,10 +973,14 @@ function mkNpcCard(id, npc) {
     const pct = (a,b) => b>0?Math.min(100,Math.round(a/b*100)):0;
     const nexLabel = ['5%','10%','15%','20%','25%','30%','35%','40%','45%','50%','55%','60%','65%','70%','75%','80%','85%','90%','95%','99%'][parseInt(npc.nex||1)-1] || '—';
     const cls = npc.classe ? npc.classe.charAt(0).toUpperCase()+npc.classe.slice(1) : '—';
+    const isVisible = !!window._ovis['npc_'+id];
     d.innerHTML = `
       <div class="npc-header">
         <div><div class="npc-name">${npc.nome||'NPC'}</div><div class="npc-meta">${cls} · ${nexLabel}${npc.desc?' · '+npc.desc:''}</div></div>
-        <span class="npc-type-badge ${npc.tipo}">${tipoLabel(npc.tipo)}</span>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <button class="act-btn" title="Mostrar/ocultar pros players" style="${isVisible?'border-color:var(--blood);color:var(--bone);background:rgba(31,16,173,.35);':'color:var(--ash);'}" onclick="toggleNpcVis('${id}')">${isVisible?'👁':'🚫'}</button>
+          <span class="npc-type-badge ${npc.tipo}">${tipoLabel(npc.tipo)}</span>
+        </div>
       </div>
       <div class="npc-pools">
         <div class="pool-row"><div class="pool-lbl">PV</div><div class="pool-bar-wrap"><div class="pool-bar pv" style="width:${pct(pv,pvM)}%"></div></div><div class="pool-nums">${pv}/${pvM}</div></div>
@@ -867,6 +994,7 @@ function mkNpcCard(id, npc) {
         <button class="act-btn green" onclick="npcDmg('${id}','pv',1)">+ PV</button>
         <button class="act-btn purple" onclick="npcDmg('${id}','san',-1)">− SAN</button>
         <button class="act-btn blue"  onclick="openNpcEdit('${id}')">✏</button>
+        <button class="act-btn" onclick="addToTracker('${id}')" title="Adicionar ao tracker de iniciativa">⚔</button>
         <button class="act-btn" style="color:var(--ash);" onclick="deleteNpc('${id}')">✕</button>
       </div>`;
   } else {
@@ -876,6 +1004,7 @@ function mkNpcCard(id, npc) {
     const pct = (a,b) => b>0?Math.min(100,Math.round(a/b*100)):0;
     const machucado = pv <= pvM/2;
     const pvColor = machucado ? '#f44336' : '#ab47bc';
+    const isVisible = !!window._ovis['npc_'+id];
     const attrs = ['AGI','FOR','INT','PRE','VIG'].map((a,i)=>{
       const v = [npc.m_agi,npc.m_for,npc.m_int,npc.m_pre,npc.m_vig][i];
       return v!==undefined?`<span class="npc-attr">${a} <span>${v}</span></span>`:'';
@@ -887,7 +1016,10 @@ function mkNpcCard(id, npc) {
           <div class="npc-meta">${npc.desc||''}${npc.defesa?' · DEF '+npc.defesa:''}</div>
         </div>
         <div style="text-align:right;">
-          <span class="npc-type-badge ${npc.tipo}">${tipoLabel(npc.tipo)}</span>
+          <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;">
+            <button class="act-btn" title="Mostrar/ocultar pros players" style="${isVisible?'border-color:var(--blood);color:var(--bone);background:rgba(31,16,173,.35);':'color:var(--ash);'}" onclick="toggleNpcVis('${id}')">${isVisible?'👁':'🚫'}</button>
+            <span class="npc-type-badge ${npc.tipo}">${tipoLabel(npc.tipo)}</span>
+          </div>
           ${npc.vd?`<div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--accent);margin-top:2px;">VD ${npc.vd}</div>`:''}
         </div>
       </div>
@@ -908,6 +1040,7 @@ function mkNpcCard(id, npc) {
         <button class="act-btn red"   onclick="npcDmg('${id}','pv',-1)">− PV</button>
         <button class="act-btn green" onclick="npcDmg('${id}','pv',1)">+ PV</button>
         <button class="act-btn blue"  onclick="openNpcEdit('${id}')">✏</button>
+        <button class="act-btn" onclick="addToTracker('${id}')" title="Adicionar ao tracker de iniciativa">⚔</button>
         <button class="act-btn" style="color:var(--ash);" onclick="deleteNpc('${id}')">✕</button>
       </div>`;
   }
