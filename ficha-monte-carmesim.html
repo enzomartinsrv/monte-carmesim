@@ -600,6 +600,7 @@
     .status-item, .dv-item { cursor: default; }
     @page { margin: 5mm; size: A4; }
     #char-tab-bar { display: none !important; }
+    #prefs-btn, #prefs-panel { display: none !important; }
   }
 
   /* ─── CHAR TAB BAR ─── */
@@ -658,6 +659,102 @@
   body.readonly-mode { padding-top: 60px; }
   body.readonly-mode .page { pointer-events:none; opacity:0.88; }
   body.readonly-mode #char-tab-bar { pointer-events:auto; opacity:1; }
+
+  /* ── HUB DO PLAYER (Fase 4) ── */
+  #hub-mode-wrap.hub-active{ display:flex; height:calc(100vh - 26px); overflow:hidden; }
+  #hub-mode-wrap.hub-active.orient-v{ flex-direction:row; }
+  #hub-mode-wrap.hub-active.orient-h{ flex-direction:column; }
+  #hub-mode-wrap.hub-active #ficha-pane{ flex:0 0 var(--hub-split,65%); overflow:auto; height:100%; min-width:0; min-height:0; }
+  #hub-mode-wrap.hub-active.orient-h #ficha-pane{ width:100%; height:var(--hub-split,65%); }
+  #hub-divider{ display:none; }
+  #hub-mode-wrap.hub-active #hub-divider{
+    display:flex; align-items:center; justify-content:center; flex:0 0 10px;
+    background:#1a1330; cursor:col-resize; user-select:none;
+  }
+  #hub-mode-wrap.hub-active.orient-h #hub-divider{ cursor:row-resize; }
+  #hub-divider span{ width:3px; height:34px; background:#5a4a9a; border-radius:2px; }
+  #hub-mode-wrap.hub-active.orient-h #hub-divider span{ width:34px; height:3px; }
+  #hub-divider:hover span, #hub-divider.dragging span{ background:#3e20dc; }
+
+  #party-pane{ display:none; }
+  #hub-mode-wrap.hub-active #party-pane{
+    display:flex; flex-direction:column; flex:1 1 auto; min-width:0; min-height:0;
+    background:#0e0a1c; color:#ede8dc; overflow:hidden;
+    font-family:'Barlow Condensed',sans-serif;
+  }
+  #party-pane-header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 14px; border-bottom:1px solid #241a4a;
+    font-family:'Oswald',sans-serif; font-size:12px; font-weight:700; letter-spacing:2px;
+    text-transform:uppercase; color:#8a7bff; flex-shrink:0;
+  }
+  .pp-btn{
+    background:#1a1330; border:1px solid #29205a; color:#ccc; border-radius:3px;
+    font-size:11px; padding:4px 8px; cursor:pointer; margin-left:4px;
+  }
+  .pp-btn:hover{ border-color:#3e20dc; color:#fff; }
+  #party-pane-list{ flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:10px; }
+  .pp-empty{ font-family:'Share Tech Mono',monospace; font-size:10px; color:#8f8aa8; text-align:center; padding:20px 10px; }
+
+  .pp-card{ background:#150e28; border:1px solid #241a4a; border-left:3px solid #1f10ad; border-radius:4px; padding:10px 12px; }
+  .pp-top{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .pp-avatar{ width:30px; height:30px; border-radius:3px; border:1px solid #3a2f6a; background:rgba(31,16,173,.15); overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
+  .pp-avatar img{ width:100%; height:100%; object-fit:cover; }
+  .pp-name{ font-family:'Oswald',sans-serif; font-size:12.5px; font-weight:700; color:#fff; }
+  .pp-tag{ font-family:'Share Tech Mono',monospace; font-size:9px; color:#8a7bff; }
+  .pp-srow{ display:flex; align-items:center; gap:5px; margin-bottom:3px; }
+  .pp-slbl{ font-family:'Share Tech Mono',monospace; font-size:8.5px; color:#8f8aa8; width:22px; flex-shrink:0; }
+  .pp-bbg{ flex:1; height:6px; background:rgba(255,255,255,.08); border-radius:2px; overflow:hidden; }
+  .pp-bfill{ height:100%; border-radius:2px; }
+  .pp-bfill.pv{ background:linear-gradient(to right,#8B1A1A,#ef5350); }
+  .pp-bfill.pe{ background:linear-gradient(to right,#005a52,#26a69a); }
+  .pp-bfill.san{ background:linear-gradient(to right,#1f10ad,#7a5cff); }
+  .pp-sval{ font-family:'Share Tech Mono',monospace; font-size:9px; color:#ddd; width:34px; text-align:right; flex-shrink:0; }
+  .pp-fear{ display:flex; align-items:center; justify-content:space-between; margin-top:6px; padding-top:6px; border-top:1px solid #241a4a; font-family:'Share Tech Mono',monospace; font-size:9px; color:#8f8aa8; }
+
+  /* ── PREFERÊNCIAS (engrenagem) ── */
+  @font-face {
+    font-family: 'OpenDyslexic';
+    src: url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic-regular.woff') format('woff');
+    font-weight: normal; font-style: normal; font-display: swap;
+  }
+  #prefs-btn{
+    position:fixed; top:4px; left:10px; z-index:9997;
+    width:22px; height:22px; border-radius:50%; border:1px solid var(--border,#c8bfb0);
+    background:rgba(255,255,255,.7); color:var(--blood); font-size:13px; line-height:1;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  #prefs-panel{
+    display:none; position:fixed; top:32px; left:10px; z-index:9997;
+    width:250px; background:#fff; border:1px solid #c8bfb0; border-left:3px solid var(--blood);
+    border-radius:6px; padding:14px 16px; box-shadow:0 8px 24px rgba(0,0,0,.25);
+    font-family:'Barlow Condensed',sans-serif;
+  }
+  #prefs-panel.open{ display:block; }
+  #prefs-panel h4{ font-family:'Oswald',sans-serif; font-size:12px; letter-spacing:1px; color:var(--blood); text-transform:uppercase; margin-bottom:10px; }
+  .prefs-row{ display:flex; align-items:center; justify-content:space-between; padding:7px 0; border-bottom:1px solid #eee; font-size:12.5px; color:#3a2a10; }
+  .prefs-row:last-child{ border-bottom:none; }
+  .prefs-toggle{ position:relative; width:34px; height:18px; flex-shrink:0; }
+  .prefs-toggle input{ opacity:0; width:0; height:0; }
+  .prefs-toggle .slider{ position:absolute; inset:0; background:#ccc; border-radius:18px; cursor:pointer; transition:.15s; }
+  .prefs-toggle .slider::before{ content:''; position:absolute; width:14px; height:14px; left:2px; top:2px; background:#fff; border-radius:50%; transition:.15s; }
+  .prefs-toggle input:checked + .slider{ background:var(--blood); }
+  .prefs-toggle input:checked + .slider::before{ transform:translateX(16px); }
+
+  /* Tema escuro — aproximação por inversão de cor (ver aviso no chat) */
+  body.dark-mode{ filter:invert(0.92) hue-rotate(180deg); background:#1a1a2e; }
+  body.dark-mode img{ filter:invert(1) hue-rotate(180deg); }
+
+  /* Fonte OpenDyslexic */
+  body.dyslexic-mode, body.dyslexic-mode *{ font-family:'OpenDyslexic', sans-serif !important; }
+
+  /* Modo simples — esconde elementos decorativos, mantém todos os dados */
+  body.simple-mode .corner-deco,
+  body.simple-mode #pv_formula, body.simple-mode #pe_formula,
+  body.simple-mode #san_formula, body.simple-mode #pd_formula { display:none !important; }
+
+  /* Modo desempenho — corta animações, sombras e transições */
+  body.performance-mode *{ animation:none !important; transition:none !important; box-shadow:none !important; text-shadow:none !important; }
 
   /* ─── INTERACTIVE ─── */
   input[type=text], input[type=number], textarea {
@@ -1196,6 +1293,115 @@
     updateNexFormaUI();
   };
 
+  // ── Hub do Player (Fase 4) ──────────────────────────────────────────────
+  const NEX_LABELS = ['5%','10%','15%','20%','25%','30%','35%','40%','45%','50%','55%','60%','65%','70%','75%','80%','85%','90%','95%','99%'];
+  let partyUnsub1 = null, partyUnsub2 = null;
+  let hubOrientation = localStorage.getItem('hubOrientation') || 'v'; // v = lado a lado, h = empilhado
+  let hubSplit = parseInt(localStorage.getItem('hubSplit')) || 65; // % ocupado pela ficha
+
+  window.toggleHubMode = function(forceState) {
+    const wrap = document.getElementById('hub-mode-wrap');
+    const btn  = document.getElementById('hub-mode-toggle');
+    const active = typeof forceState === 'boolean' ? forceState : !wrap.classList.contains('hub-active');
+    wrap.classList.toggle('hub-active', active);
+    wrap.classList.toggle('orient-v', hubOrientation === 'v');
+    wrap.classList.toggle('orient-h', hubOrientation === 'h');
+    wrap.style.setProperty('--hub-split', hubSplit + '%');
+    if (btn) btn.style.background = active ? 'var(--blood)' : '#3a2a6a';
+    if (active) {
+      subscribePartyPane();
+    } else {
+      if (partyUnsub1) partyUnsub1(); if (partyUnsub2) partyUnsub2();
+    }
+  };
+
+  window.togglePartyOrientation = function() {
+    hubOrientation = hubOrientation === 'v' ? 'h' : 'v';
+    localStorage.setItem('hubOrientation', hubOrientation);
+    const wrap = document.getElementById('hub-mode-wrap');
+    wrap.classList.toggle('orient-v', hubOrientation === 'v');
+    wrap.classList.toggle('orient-h', hubOrientation === 'h');
+  };
+
+  // Arrastar a divisória pra redimensionar
+  (function setupHubDivider() {
+    const divider = document.getElementById('hub-divider');
+    const wrap = document.getElementById('hub-mode-wrap');
+    if (!divider) return;
+    let dragging = false;
+    divider.addEventListener('mousedown', () => { dragging = true; divider.classList.add('dragging'); document.body.style.userSelect = 'none'; });
+    window.addEventListener('mouseup', () => {
+      if (!dragging) return;
+      dragging = false; divider.classList.remove('dragging'); document.body.style.userSelect = '';
+      localStorage.setItem('hubSplit', hubSplit);
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!dragging) return;
+      const rect = wrap.getBoundingClientRect();
+      let pct;
+      if (hubOrientation === 'v') pct = ((e.clientX - rect.left) / rect.width) * 100;
+      else pct = ((e.clientY - rect.top) / rect.height) * 100;
+      pct = Math.max(20, Math.min(80, pct));
+      hubSplit = Math.round(pct);
+      wrap.style.setProperty('--hub-split', hubSplit + '%');
+    });
+  })();
+
+  function subscribePartyPane() {
+    if (partyUnsub1) partyUnsub1();
+    if (partyUnsub2) partyUnsub2();
+    let players = {}, visible = {};
+    const rerender = () => renderPartyPane(players, visible);
+    partyUnsub1 = onValue(ref(db, 'players'), snap => { players = snap.val() || {}; rerender(); });
+    partyUnsub2 = onValue(ref(db, 'overlay/visible'), snap => { visible = snap.val() || {}; rerender(); });
+  }
+
+  function renderPartyPane(players, visible) {
+    const list = document.getElementById('party-pane-list');
+    if (!list) return;
+    list.innerHTML = '';
+    let count = 0;
+    Object.entries(players).forEach(([name, p]) => {
+      [1,2,3].forEach(slot => {
+        if (!visible[name+'_'+slot]) return;
+        if (name === playerName && slot === window.CHAR_SLOT) return; // não mostra a própria ficha aberta agora
+        const suf = slot === 1 ? '' : String(slot);
+        const st = p['stats'+suf] || {};
+        const fi = p['ficha'+suf] || {};
+        const agentName = fi.inputs?.id_nome?.trim() || `Ficha ${slot}`;
+        const cls = st.classe ? st.classe.charAt(0).toUpperCase()+st.classe.slice(1) : '—';
+        const nex = st.isSobrevivente ? (st.estagio?'Estágio '+st.estagio:'—') : (st.nex?(NEX_LABELS[parseInt(st.nex)-1]||'—'):'—');
+        const formaAlta = slot===3 && fi.formaAtiva==='alta';
+        const avatar = p['avatar'+suf+(formaAlta?'_alt':'')];
+        const pv=parseInt(st.pv_atual)||0, pvM=parseInt(st.pv_max)||1;
+        const pe=parseInt(st.pe_atual)||0, peM=parseInt(st.pe_max)||1;
+        const san=parseInt(st.san_atual)||0, sanM=parseInt(st.san_max)||1;
+        const fear=parseInt(st.fear)||0;
+        const pct=(a,b)=>Math.min(100,Math.max(0,Math.round(a/b*100)));
+        const fc=fear<=4?'#4caf50':fear<=8?'#cddc39':fear<=12?'#ff9800':fear<=16?'#f44336':'#b71c1c';
+
+        const card = document.createElement('div');
+        card.className = 'pp-card';
+        card.innerHTML = `
+          <div class="pp-top">
+            <div class="pp-avatar">${avatar?`<img src="${avatar}" alt="">`:'☠'}</div>
+            <div style="flex:1;min-width:0;">
+              <div class="pp-name">${agentName}${formaAlta?' <span style="color:#c88bff;">⇄50%</span>':''}</div>
+              <div class="pp-tag">${name} · ${cls} · NEX ${nex}</div>
+            </div>
+          </div>
+          <div class="pp-srow"><div class="pp-slbl">PV</div><div class="pp-bbg"><div class="pp-bfill pv" style="width:${pct(pv,pvM)}%"></div></div><div class="pp-sval">${pv}/${pvM}</div></div>
+          <div class="pp-srow"><div class="pp-slbl">PE</div><div class="pp-bbg"><div class="pp-bfill pe" style="width:${pct(pe,peM)}%"></div></div><div class="pp-sval">${pe}/${peM}</div></div>
+          <div class="pp-srow" style="margin-bottom:0;"><div class="pp-slbl">SAN</div><div class="pp-bbg"><div class="pp-bfill san" style="width:${pct(san,sanM)}%"></div></div><div class="pp-sval">${san}/${sanM}</div></div>
+          <div class="pp-fear"><span>☠ Medo</span><span style="color:${fc};font-weight:700;">${fear}/20</span></div>
+        `;
+        list.appendChild(card);
+        count++;
+      });
+    });
+    if (!count) list.innerHTML = '<div class="pp-empty">Nenhum outro personagem visível no momento — o mestre controla quem aparece aqui.</div>';
+  }
+
   document.addEventListener('DOMContentLoaded', async () => {
     // Show player name
     const nameEl = document.getElementById('player-name-display');
@@ -1452,6 +1658,52 @@
 
 <div id="role-banner"></div>
 
+<button id="prefs-btn" onclick="window.togglePrefsPanel()" title="Preferências">⚙️</button>
+<div id="prefs-panel">
+  <h4>⚙️ Preferências</h4>
+  <div class="prefs-row"><span>🌙 Tema escuro</span><label class="prefs-toggle"><input type="checkbox" id="pref-dark" onchange="window.applyPrefs()"><span class="slider"></span></label></div>
+  <div class="prefs-row"><span>🔤 Fonte OpenDyslexic</span><label class="prefs-toggle"><input type="checkbox" id="pref-dyslexic" onchange="window.applyPrefs()"><span class="slider"></span></label></div>
+  <div class="prefs-row"><span>🧹 Modo simples</span><label class="prefs-toggle"><input type="checkbox" id="pref-simple" onchange="window.applyPrefs()"><span class="slider"></span></label></div>
+  <div class="prefs-row"><span>⚡ Modo desempenho</span><label class="prefs-toggle"><input type="checkbox" id="pref-performance" onchange="window.applyPrefs()"><span class="slider"></span></label></div>
+</div>
+<script>
+  (function(){
+    const KEY = 'fichaPrefs';
+    function loadPrefs(){
+      try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch(e){ return {}; }
+    }
+    window.togglePrefsPanel = function(){
+      document.getElementById('prefs-panel').classList.toggle('open');
+    };
+    window.applyPrefs = function(){
+      const prefs = {
+        dark: document.getElementById('pref-dark').checked,
+        dyslexic: document.getElementById('pref-dyslexic').checked,
+        simple: document.getElementById('pref-simple').checked,
+        performance: document.getElementById('pref-performance').checked,
+      };
+      document.body.classList.toggle('dark-mode', prefs.dark);
+      document.body.classList.toggle('dyslexic-mode', prefs.dyslexic);
+      document.body.classList.toggle('simple-mode', prefs.simple);
+      document.body.classList.toggle('performance-mode', prefs.performance);
+      localStorage.setItem(KEY, JSON.stringify(prefs));
+    };
+    // Aplica preferências salvas assim que a página carrega (antes de qualquer coisa do Firebase)
+    document.addEventListener('DOMContentLoaded', function(){
+      const prefs = loadPrefs();
+      const map = {dark:'pref-dark', dyslexic:'pref-dyslexic', simple:'pref-simple', performance:'pref-performance'};
+      Object.keys(map).forEach(k => { const el = document.getElementById(map[k]); if (el) el.checked = !!prefs[k]; });
+      window.applyPrefs();
+      // fecha o painel se clicar fora
+      document.addEventListener('click', function(e){
+        const panel = document.getElementById('prefs-panel');
+        const btn = document.getElementById('prefs-btn');
+        if (panel.classList.contains('open') && !panel.contains(e.target) && e.target !== btn) panel.classList.remove('open');
+      });
+    });
+  })();
+</script>
+
 <!-- ── CHAR TAB BAR (troca entre até 3 personagens do mesmo player) ── -->
 <div id="char-tab-bar">
   <a class="back-to-hub" href="index.html" title="Voltar para a seleção de fichas">← Fichas</a>
@@ -1459,6 +1711,7 @@
   <button class="char-tab" id="char-tab-2" onclick="window.switchChar(2)">Personagem 2</button>
   <button class="char-tab" id="char-tab-3" onclick="window.switchChar(3)">Personagem 3</button>
   <button id="nex-forma-toggle" onclick="window.toggleNexForma()" style="display:none;font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:1px;color:#fff;background:var(--blood);border:none;padding:6px 10px;cursor:pointer;border-radius:4px 4px 0 0;margin-left:4px;">⇄ Trocar para NEX 50%</button>
+  <button id="hub-mode-toggle" onclick="window.toggleHubMode()" style="font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:1px;color:#ccc;background:#3a2a6a;border:none;padding:6px 10px;cursor:pointer;border-radius:4px 4px 0 0;margin-left:4px;">👥 Hub</button>
 </div>
 
 <!-- ════════════════════════════════════════════════════ PAGE 1 ═ -->
@@ -1485,6 +1738,8 @@
 </div>
 
 
+<div id="hub-mode-wrap">
+<div id="ficha-pane">
 <div class="page">
 
   <!-- HEADER -->
@@ -2750,6 +3005,22 @@ LIMITE CRÉD ░░░░
   </div>
 
 </div>
+</div><!-- /#ficha-pane -->
+
+<div id="hub-divider" title="Arraste para redimensionar"><span></span></div>
+
+<div id="party-pane">
+  <div id="party-pane-header">
+    <span>👥 Outros Agentes</span>
+    <div id="party-pane-controls">
+      <button class="pp-btn" id="pp-orient-btn" onclick="window.togglePartyOrientation()" title="Alternar corte vertical/horizontal">⇄</button>
+      <button class="pp-btn" onclick="window.toggleHubMode(false)" title="Fechar">✕</button>
+    </div>
+  </div>
+  <div id="party-pane-list"></div>
+</div>
+
+</div><!-- /#hub-mode-wrap -->
 
 <script>
   // ── Salvamento imediato para dv-item / status-item ──────────────
