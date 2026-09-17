@@ -1363,14 +1363,6 @@
     });
   })();
 
-  window.openDiscordChat = function() {
-    window.open(
-      'https://streamkit.discord.com/overlay/chat/1512854361540133084/1512863063550853370?icon=true&online=true&logo=white&text_color=%23ffffff&text_size=15&text_outline_color=%23ffffff&text_outline_size=0&text_shadow_color=%23000000&text_shadow_size=34&bg_color=%23333333&bg_opacity=1&bg_shadow_color=%23000000&bg_shadow_size=0&invite_code=A3QJkrnbpz&limit_speaking=false&small_avatars=false&hide_names=false&fade_chat=90&streamer_avatar_first=false',
-      'discordChat',
-      'width=580,height=215,resizable=yes'
-    );
-  };
-
   let partyUnsub3 = null, partyUnsub4 = null;
   function subscribePartyPane() {
     if (partyUnsub1) partyUnsub1();
@@ -1378,14 +1370,14 @@
     if (partyUnsub3) partyUnsub3();
     if (partyUnsub4) partyUnsub4();
     let players = {}, visible = {}, combat = {}, npcs = {};
-    const rerender = () => { renderPartyPane(players, visible); renderPartyTracker(combat, npcs, visible); };
+    const rerender = () => { renderPartyPane(players, visible); renderPartyTracker(combat, npcs, visible, players); };
     partyUnsub1 = onValue(ref(db, 'players'), snap => { players = snap.val() || {}; rerender(); });
     partyUnsub2 = onValue(ref(db, 'overlay/visible'), snap => { visible = snap.val() || {}; rerender(); });
     partyUnsub3 = onValue(ref(db, 'combat'), snap => { combat = snap.val() || {}; rerender(); });
     partyUnsub4 = onValue(ref(db, 'npcs'), snap => { npcs = snap.val() || {}; rerender(); });
   }
 
-  function renderPartyTracker(combat, npcs, visible) {
+  function renderPartyTracker(combat, npcs, visible, players) {
     const box = document.getElementById('pp-tracker');
     if (!box) return;
     if (!combat.active) { box.style.display = 'none'; return; }
@@ -1407,12 +1399,21 @@
         ${arr.map((e, i) => {
           const isTurn = i === turnIdx;
           let healthHtml = '';
-          if (e.type === 'npc' && e.showHealth) {
+          let photoSrc = null;
+          if (e.type === 'npc') {
             const npc = npcs[e.npcId] || {};
-            const pv = npc.pv_atual ?? npc.pv_max ?? 0, pvM = npc.pv_max ?? 1;
-            healthHtml = `<div class="pp-bbg" style="width:60px;flex-shrink:0;"><div class="pp-bfill pv" style="width:${pct(pv,pvM)}%"></div></div>`;
+            photoSrc = npc.foto || null;
+            if (e.showHealth) {
+              const pv = npc.pv_atual ?? npc.pv_max ?? 0, pvM = npc.pv_max ?? 1;
+              healthHtml = `<div class="pp-bbg" style="width:60px;flex-shrink:0;"><div class="pp-bfill pv" style="width:${pct(pv,pvM)}%"></div></div>`;
+            }
+          } else {
+            const suf = e.slot===1?'':e.slot;
+            photoSrc = players[e.name]?.['avatar'+suf] || null;
           }
+          const photoHtml = `<div style="width:22px;height:22px;flex-shrink:0;border-radius:3px;overflow:hidden;background:#0e0a1c;display:flex;align-items:center;justify-content:center;font-size:10px;">${photoSrc?`<img src="${photoSrc}" style="width:100%;height:100%;object-fit:cover;">`:'☠'}</div>`;
           return `<div style="display:flex;align-items:center;gap:8px;background:${isTurn?'rgba(255,183,77,.15)':'#150e28'};border:1px solid ${isTurn?'#ffb74d':'#241a4a'};border-radius:4px;padding:5px 9px;">
+            ${photoHtml}
             <span style="font-family:'Oswald',sans-serif;font-size:11.5px;font-weight:600;color:${e.type==='npc'?'#ce93d8':'#fff'};flex:1;">${isTurn?'▶ ':''}${e.label}</span>
             ${healthHtml}
           </div>`;
@@ -3135,12 +3136,6 @@ LIMITE CRÉD ░░░░
   <div class="pp-placeholder" id="pp-stream-slot">
     <div class="pp-placeholder-icon">🖥️</div>
     <div class="pp-placeholder-txt">Transmissão do mestre<br><span>em breve</span></div>
-  </div>
-
-  <!-- Chat de voz do Discord (StreamKit não permite iframe — abre em janela própria) -->
-  <div id="pp-discord-slot" class="pp-placeholder" style="cursor:pointer;" onclick="window.openDiscordChat()">
-    <div class="pp-placeholder-icon">💬</div>
-    <div class="pp-placeholder-txt">Chat do Discord<br><span>toque para abrir</span></div>
   </div>
 
   <div id="pp-tracker" style="display:none;"></div>
