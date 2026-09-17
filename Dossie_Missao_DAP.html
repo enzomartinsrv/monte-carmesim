@@ -1,0 +1,1835 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Dossiê de Missão — DAP</title>
+<style>
+  :root{
+    --gray-dark:#33373a;
+    --gray-mid:#6b7075;
+    --gray-light:#c9cdd0;
+    --manila:#d8c49a;
+    --manila-dark:#c2a877;
+    --red:#a8231c;
+    --cream:#f5f3ee;
+    --paper:#fbfaf7;
+    --user-font: Arial, Helvetica, sans-serif;
+    --user-scale: 1;
+  }
+  *{box-sizing:border-box;}
+  html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; color-adjust:exact; }
+  *{ -webkit-print-color-adjust:exact; print-color-adjust:exact; color-adjust:exact; }
+  body{
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    background:#5a5a55;
+    color:var(--gray-dark);
+  }
+
+  /* ---------- barra de ferramentas (só na tela) ---------- */
+  .toolbar{
+    position:sticky; top:0; z-index:50;
+    background:var(--gray-dark);
+    color:#fff;
+    padding:10px 20px;
+    box-shadow:0 2px 8px rgba(0,0,0,.3);
+  }
+  .toolbar-row{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+  .toolbar-row + .toolbar-row{ margin-top:10px; padding-top:10px; border-top:1px solid #4a4e51; }
+  .toolbar h1{font-size:15px; margin:0; font-weight:700; letter-spacing:.02em;}
+  .toolbar .actions{display:flex; gap:10px; align-items:center;}
+  .toolbar button{
+    font-family:inherit; font-size:13px; font-weight:700;
+    border:none; border-radius:4px; padding:9px 16px; cursor:pointer;
+  }
+  .btn-primary{background:var(--red); color:#fff;}
+  .btn-primary:hover{background:#8f1d17;}
+  .btn-ghost{background:transparent; color:var(--gray-light); border:1px solid var(--gray-mid) !important;}
+  .btn-ghost:hover{background:rgba(255,255,255,.08);}
+  .print-hint{font-size:10.5px; color:var(--gray-light); opacity:.75;}
+
+  .style-tools{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .style-group{ display:flex; align-items:center; gap:7px; }
+  .style-group label{ font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--gray-light); }
+  .style-tools select{
+    font-family:inherit; font-size:12.5px; padding:5px 8px; border-radius:4px; border:1px solid var(--gray-mid);
+    background:#fff; color:var(--gray-dark);
+  }
+  .size-btn{
+    width:26px; height:26px; border-radius:4px; border:1px solid var(--gray-mid) !important;
+    background:transparent; color:#fff; font-weight:800; font-size:13px; cursor:pointer; padding:0 !important;
+  }
+  .size-label{ font-size:12px; color:var(--gray-light); min-width:34px; text-align:center; display:inline-block; }
+  .swatch-group{ display:flex; align-items:center; gap:6px; }
+  .swatch{
+    width:22px; height:22px; border-radius:50%; border:1.5px solid #fff; cursor:pointer; padding:0;
+  }
+  .swatch.black{background:#111;}
+  .swatch.yellow{background:#f4d93e;}
+  .swatch.red{background:#c0392b;}
+  .swatch.green{background:#3ba55d;}
+  .swatch.none{background:#fff; position:relative;}
+  .swatch.none::after{ content:''; position:absolute; inset:3px; border-top:2px solid #c0392b; transform:rotate(45deg); }
+  .style-hint{ font-size:10.5px; color:var(--gray-light); opacity:.8; }
+
+  /* ---------- abas de tipo de documento ---------- */
+  .doc-tabs{ display:flex; gap:8px; }
+  .doc-tab{
+    font-family:inherit; font-size:13px; font-weight:700;
+    border:1.5px solid var(--gray-mid); background:transparent; color:var(--gray-light);
+    border-radius:5px 5px 0 0; padding:9px 18px; cursor:pointer;
+  }
+  .doc-tab.active{ background:#fff; color:var(--gray-dark); border-color:#fff; }
+  .doc-tab:not(.active):hover{ background:rgba(255,255,255,.08); }
+
+  /* ---------- abas de ficha (múltiplas instâncias por tipo) ---------- */
+  .instance-row{ display:none; align-items:center; gap:8px; flex-wrap:wrap; }
+  .instance-row.active-row{ display:flex; }
+  .instance-tabs{ display:flex; gap:6px; flex-wrap:wrap; }
+  .instance-tab{
+    display:flex; align-items:center; gap:8px;
+    background:rgba(255,255,255,.06); border:1px solid var(--gray-mid); border-radius:4px;
+    padding:6px 6px 6px 12px; font-size:12px; color:var(--gray-light); cursor:pointer;
+  }
+  .instance-tab.active{ background:#fff; color:var(--gray-dark); border-color:#fff; }
+  .instance-tab .tab-label{ cursor:text; }
+  .instance-tab .tab-label:hover{ text-decoration:underline dotted; }
+  .instance-tab .tab-close{
+    width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:12px; line-height:1; opacity:.6; flex-shrink:0;
+  }
+  .instance-tab .tab-close:hover{ opacity:1; background:rgba(0,0,0,.15); }
+  .add-instance-btn{
+    font-family:inherit; font-size:12px; font-weight:700; border:1.5px dashed var(--gray-mid); background:transparent;
+    color:var(--gray-light); border-radius:4px; padding:6.5px 12px; cursor:pointer;
+  }
+  .add-instance-btn:hover{ background:rgba(255,255,255,.08); border-style:solid; }
+
+  .type-panel{ display:none; }
+  .type-panel.active{ display:block; }
+  .doc-instance{ display:none; }
+  .doc-instance.active{ display:block; }
+
+  /* ---------- páginas ---------- */
+  .sheet{
+    width:8.5in;
+    min-height:11in;
+    margin:28px auto;
+    background:#fff;
+    box-shadow:0 4px 18px rgba(0,0,0,.35);
+    position:relative;
+    padding:0.55in;
+  }
+  .sheet.manila{ background:var(--manila); }
+
+  .header-bar{
+    background:var(--gray-dark);
+    color:#fff;
+    margin:-0.55in -0.55in 26px -0.55in;
+    padding:22px 0.55in 16px 0.55in;
+    border-bottom:4px solid var(--red);
+    position:relative;
+  }
+  .header-bar .h-top{font-size:9px; letter-spacing:.06em; color:var(--gray-light); text-transform:uppercase;}
+  .header-bar .h-title{font-size:23px; font-weight:800; margin:4px 0 4px;}
+  .header-bar .h-sub{font-size:9px; letter-spacing:.05em; color:var(--gray-light); text-transform:uppercase;}
+  .emblem{
+    position:absolute; right:0.55in; top:16px;
+    width:38px; height:38px; border-radius:50%;
+    border:1.4px solid var(--gray-light);
+    display:flex; align-items:center; justify-content:center;
+    font-size:9px; font-weight:800; color:var(--gray-light);
+  }
+  .emblem::before{
+    content:''; position:absolute; width:26px; height:26px; border-radius:50%;
+    border:1px solid var(--gray-light);
+  }
+
+  .field-row{display:flex; gap:18px; margin-bottom:22px; flex-wrap:wrap;}
+  .field{flex:1; min-width:110px;}
+  .field-label{
+    display:block; font-size:9.5px; font-weight:800; color:var(--gray-mid);
+    text-transform:uppercase; letter-spacing:.04em; margin-bottom:5px;
+  }
+  .field-input{
+    width:100%; border:none; border-bottom:1px solid var(--gray-mid);
+    background:var(--cream); padding:7px 8px; font-family:var(--user-font); color:var(--gray-dark);
+    font-size:calc(13px * var(--user-scale)); min-height:1.4em; cursor:text;
+  }
+  .field-input:focus{outline:2px solid var(--red); outline-offset:1px;}
+  .field-input:empty:before{content:attr(data-placeholder); color:#9a9d9f;}
+
+  .field-area{
+    min-height:150px; border:1px solid var(--gray-light); background:var(--cream);
+    padding:12px; line-height:1.5; white-space:pre-wrap;
+    overflow-wrap:break-word; font-family:var(--user-font);
+    font-size:calc(12.5px * var(--user-scale));
+  }
+  .field-area:focus{outline:2px solid var(--red);}
+  .field-area:empty:before{content:attr(data-placeholder); color:#9a9d9f;}
+
+  .stamp{
+    display:inline-block;
+    border:3px solid var(--red);
+    color:var(--red);
+    font-weight:800;
+    letter-spacing:1.5px;
+    border-radius:4px;
+    background:rgba(255,255,255,.4);
+  }
+
+  /* ---------- caixas de foto ---------- */
+  .photo-box{
+    position:relative;
+    border:2px dashed var(--gray-mid);
+    background:var(--paper);
+    display:flex; align-items:center; justify-content:center;
+    text-align:center; color:var(--gray-mid); font-size:10.5px;
+    cursor:pointer; overflow:hidden; border-radius:2px;
+  }
+  .photo-box:hover{border-color:var(--gray-dark);}
+  .photo-box img{width:100%; height:100%; object-fit:cover; display:none;}
+  .photo-box input[type=file]{display:none;}
+  .photo-box .placeholder-text{padding:10px; pointer-events:none;}
+  .photo-box .placeholder-text b{display:block; margin-top:4px; color:var(--gray-dark);}
+  .photo-box .clip{position:absolute; top:6px; right:10px; font-size:16px; opacity:.55; pointer-events:none;}
+  .photo-box .change-hint{
+    position:absolute; bottom:6px; right:8px; font-size:8.5px;
+    background:rgba(255,255,255,.85); padding:2px 6px; border-radius:3px;
+    display:none;
+  }
+  .photo-box.has-img .change-hint{display:block;}
+  .photo-box.has-img .placeholder-text{display:none;}
+
+  .caption-input{margin-top:6px;}
+
+  footer.page-footer{
+    position:absolute; bottom:0.4in; left:0.55in; right:0.55in;
+    display:flex; justify-content:space-between; font-size:8.5px; color:var(--gray-mid);
+    border-top:1px solid var(--gray-light); padding-top:6px;
+  }
+
+  /* ---------- capa ---------- */
+  .cover-frame{
+    position:absolute; inset:18px; border:1.4px solid var(--manila-dark);
+  }
+  .cover-tab{
+    position:absolute; top:16px; left:42px; width:260px; padding:8px 0;
+    background:var(--manila-dark); border:1px solid #8a6f42;
+    text-align:center; font-size:8.5px; font-weight:800; color:var(--gray-dark);
+  }
+  .cover-fold{
+    position:absolute; bottom:18px; right:18px; width:0; height:0;
+    border-style:solid; border-width:0 0 40px 40px; border-color:transparent transparent var(--manila-dark) transparent;
+  }
+  .cover-center{
+    position:absolute; top:0; left:0; right:0; bottom:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:34px;
+  }
+  .cover-stamp{font-size:30px; padding:16px 34px; transform:rotate(-11deg);}
+  .seal{
+    width:96px; height:96px; border-radius:50%; border:1.6px solid var(--manila-dark);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;
+  }
+  .seal::before{content:''; position:absolute; inset:7px; border-radius:50%; border:1px solid var(--manila-dark);}
+  .seal b{font-size:17px; color:var(--gray-dark);}
+  .seal span{font-size:6.5px; color:var(--gray-dark); margin-top:3px; letter-spacing:.04em;}
+
+  .id-card{
+    position:absolute; left:0.6in; right:0.6in; bottom:1.05in;
+    background:var(--paper); border:1px solid var(--gray-mid);
+    padding:14px 16px 16px; border-left:6px solid var(--red);
+  }
+  .id-card .id-title{font-size:9px; font-weight:800; color:var(--gray-mid); letter-spacing:.04em; margin-bottom:8px;}
+  .id-card .field-row{margin-bottom:12px;}
+  .id-card .field-row:last-child{margin-bottom:0;}
+
+  /* ---------- contracapa ---------- */
+  .backcover-flap{
+    position:absolute; top:0; left:0; right:0; height:170px;
+    background:var(--manila-dark);
+    clip-path:polygon(0 0, 100% 0, 50% 100%);
+  }
+  .backcover-seal{
+    position:absolute; top:144px; left:50%; transform:translateX(-50%);
+    width:52px; height:52px; border-radius:50%; background:var(--red);
+    color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px;
+  }
+  .backcover-stamp{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-60%) rotate(-10deg);
+    font-size:24px; padding:16px 30px; white-space:nowrap;
+  }
+  .backcover-text{
+    position:absolute; top:57%; left:0; right:0; text-align:center;
+  }
+  .backcover-text .l1{font-weight:800; font-size:12px; color:var(--gray-dark); margin-bottom:6px;}
+  .backcover-text .l2{font-size:9px; color:var(--gray-dark);}
+
+  /* ---------- grade de fotos (registros visuais) ---------- */
+  .photo-grid{
+    display:flex; flex-wrap:wrap; gap:26px;
+  }
+  .photo-grid > div{ width:calc(50% - 13px); }
+  .photo-grid .photo-box{height:230px;}
+
+  .ficha-cols{display:flex; gap:24px;}
+  .ficha-cols .col-left{flex:1;}
+  .ficha-cols .col-right{width:230px; flex-shrink:0;}
+  .ficha-cols .photo-box{height:230px;}
+  .ficha-cols .field-area{min-height:230px;}
+
+  .agentes-area{min-height:190px;}
+
+  /* ---------- ficha de contenção (anomalia) ---------- */
+  .hazard-stripe{
+    position:absolute; left:0; right:0; height:16px;
+    background:repeating-linear-gradient(45deg, #1c1c1c, #1c1c1c 12px, #f2c230 12px, #f2c230 24px);
+  }
+  .hazard-stripe.top{ top:0; }
+  .hazard-stripe.bottom{ bottom:0; }
+  .sheet.hazard{ background:var(--gray-dark); color:#fff; }
+  .sheet.hazard .cover-frame{ border-color:#f2c230; }
+  .sheet.hazard .cover-tab{ background:#f2c230; border-color:#8a6f0a; color:#1c1c1c; }
+  .sheet.hazard .cover-fold{ border-color:transparent transparent #f2c230 transparent; }
+  .sheet.hazard .seal{ border-color:#f2c230; }
+  .sheet.hazard .seal::before{ border-color:#f2c230; }
+  .sheet.hazard .seal b{ color:#fff; }
+  .sheet.hazard .seal span{ color:#d8d8d8; }
+  .risk-tag{
+    display:inline-block; padding:3px 10px; border-radius:3px; font-size:10px; font-weight:800;
+    letter-spacing:.04em; background:#f2c230; color:#1c1c1c;
+  }
+
+  /* ---------- impressão ---------- */
+  @media print{
+    body{background:#fff;}
+    .toolbar{display:none !important;}
+    .sheet{
+      box-shadow:none; margin:0; width:8.5in; min-height:11in;
+      page-break-after:always; padding:0.55in;
+    }
+    .sheet.manila, .sheet.hazard{ height:11in; overflow:hidden; }
+    .sheet:last-child{page-break-after:auto;}
+    .change-hint{display:none !important;}
+    .photo-box{cursor:default;}
+    @page{ size:letter; margin:0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="toolbar-row">
+    <h1 id="mainTitle">DOSSIÊ DE MISSÃO — DAP (editável)</h1>
+    <div class="actions">
+      <span class="print-hint">Se as cores não saírem no PDF, marque "Gráficos em segundo plano" na tela de impressão</span>
+      <button class="btn-ghost" onclick="clearAll()">Limpar tudo</button>
+      <button class="btn-primary" onclick="window.print()">Baixar como PDF</button>
+    </div>
+  </div>
+  <div class="toolbar-row">
+    <div class="doc-tabs">
+      <button class="doc-tab active" id="tab-btn-dossie" onclick="switchDocType('dossie')">📁 Dossiê de Missão</button>
+      <button class="doc-tab" id="tab-btn-relatorio" onclick="switchDocType('relatorio')">📄 Relatório de Missão</button>
+      <button class="doc-tab" id="tab-btn-anomalia" onclick="switchDocType('anomalia')">☣️ Ficha de Contenção</button>
+    </div>
+    <span class="style-hint">clique duas vezes no nome de uma ficha pra renomear</span>
+  </div>
+  <div class="toolbar-row instance-row active-row" id="instance-row-dossie">
+    <div class="instance-tabs" id="instance-tabs-dossie">
+      <div class="instance-tab active" data-instance="dossie-1" onclick="switchInstance('dossie','dossie-1')">
+        <span class="tab-label" ondblclick="renameTab(event,'dossie','dossie-1')">Missão 1</span>
+        <span class="tab-close" title="Remover ficha" onclick="removeInstance(event,'dossie','dossie-1')">×</span>
+      </div>
+    </div>
+    <button class="add-instance-btn" onclick="addInstance('dossie')">+ Nova ficha</button>
+  </div>
+  <div class="toolbar-row instance-row" id="instance-row-relatorio">
+    <div class="instance-tabs" id="instance-tabs-relatorio">
+      <div class="instance-tab active" data-instance="relatorio-1" onclick="switchInstance('relatorio','relatorio-1')">
+        <span class="tab-label" ondblclick="renameTab(event,'relatorio','relatorio-1')">Relatório 1</span>
+        <span class="tab-close" title="Remover ficha" onclick="removeInstance(event,'relatorio','relatorio-1')">×</span>
+      </div>
+    </div>
+    <button class="add-instance-btn" onclick="addInstance('relatorio')">+ Nova ficha</button>
+  </div>
+  <div class="toolbar-row instance-row" id="instance-row-anomalia">
+    <div class="instance-tabs" id="instance-tabs-anomalia">
+      <div class="instance-tab active" data-instance="anomalia-1" onclick="switchInstance('anomalia','anomalia-1')">
+        <span class="tab-label" ondblclick="renameTab(event,'anomalia','anomalia-1')">Ficha 1</span>
+        <span class="tab-close" title="Remover ficha" onclick="removeInstance(event,'anomalia','anomalia-1')">×</span>
+      </div>
+    </div>
+    <button class="add-instance-btn" onclick="addInstance('anomalia')">+ Nova ficha</button>
+  </div>
+  <div class="toolbar-row style-tools">
+    <div class="style-group">
+      <label>Fonte</label>
+      <select id="fontSelect" onchange="setFont(this.value)">
+        <option value="Arial, Helvetica, sans-serif">Padrão</option>
+        <option value="'Courier New', Courier, monospace">Máquina de escrever</option>
+        <option value="Georgia, 'Times New Roman', serif">Serifada / relatório</option>
+        <option value="'Trebuchet MS', sans-serif">Manuscrita de agente</option>
+      </select>
+    </div>
+    <div class="style-group">
+      <label>Tamanho do texto</label>
+      <button class="size-btn" onclick="changeSize(-1)">A-</button>
+      <span class="size-label" id="sizeLabel">100%</span>
+      <button class="size-btn" onclick="changeSize(1)">A+</button>
+    </div>
+    <div class="style-group">
+      <label>Destacar seleção</label>
+      <div class="swatch-group">
+        <button class="swatch black" title="Censurar (preto)" onmousedown="event.preventDefault()" onclick="applyHighlight('black')"></button>
+        <button class="swatch yellow" title="Marca-texto amarelo" onmousedown="event.preventDefault()" onclick="applyHighlight('#f4d93e')"></button>
+        <button class="swatch red" title="Marca-texto vermelho" onmousedown="event.preventDefault()" onclick="applyHighlight('#e8a5a0')"></button>
+        <button class="swatch green" title="Marca-texto verde" onmousedown="event.preventDefault()" onclick="applyHighlight('#a9dfbf')"></button>
+        <button class="swatch none" title="Remover destaque" onmousedown="event.preventDefault()" onclick="applyHighlight('none')"></button>
+      </div>
+    </div>
+    <span class="style-hint">Selecione um trecho de texto em qualquer campo e clique numa cor</span>
+  </div>
+</div>
+
+<div class="type-panel active" id="type-dossie">
+<div class="instances-container" id="instances-dossie">
+<div class="doc-instance active" data-instance-id="dossie-1">
+
+<!-- ============ PÁGINA 1 — CAPA ============ -->
+<div class="sheet manila">
+  <div class="cover-frame"></div>
+  <div class="cover-fold"></div>
+  <div class="cover-tab">DIRETORIA DE ASSUNTOS PARANORMAIS</div>
+  <div class="cover-center">
+    <div class="stamp cover-stamp">CONFIDENCIAL</div>
+    <div class="seal"><b>DAP</b><span>EST. — SIGILUM</span></div>
+  </div>
+  <div class="id-card">
+    <div class="id-title">IDENTIFICAÇÃO DO ARQUIVO</div>
+    <div class="field-row">
+      <div class="field">
+        <span class="field-label">Código</span>
+        <div class="field-input" contenteditable="true" data-placeholder="Ex: DAP-014"></div>
+      </div>
+      <div class="field" style="flex:2">
+        <span class="field-label">Título da missão</span>
+        <div class="field-input" contenteditable="true"></div>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <span class="field-label">Classificação</span>
+        <div class="field-input" contenteditable="true"></div>
+      </div>
+      <div class="field" style="flex:2">
+        <span class="field-label">Agente responsável pelo arquivo</span>
+        <div class="field-input" contenteditable="true"></div>
+      </div>
+    </div>
+  </div>
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 1 de 5 — Capa do Dossiê</span></footer>
+</div>
+
+<!-- ============ PÁGINA 2 — FICHA DA MISSÃO ============ -->
+<div class="sheet">
+  <div class="header-bar">
+    <div class="h-top">DOSSIÊS DE CAMPO • CLASSIFICADO</div>
+    <div class="h-title">FICHA DA MISSÃO</div>
+    <div class="h-sub"></div>
+    <div class="emblem">DAP</div>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <span class="field-label">Código da missão</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Data de abertura</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Status</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Risco</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field" style="flex:1 0 100%;">
+      <span class="field-label">Título da missão</span>
+      <div class="field-input" contenteditable="true" style="font-size:15px;"></div>
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <span class="field-label">Local</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Andar / setor envolvido</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+  </div>
+
+  <div class="ficha-cols">
+    <div class="col-left">
+      <span class="field-label">Resumo / briefing</span>
+      <div class="field-area" contenteditable="true" data-placeholder="Descreva o que aconteceu, o objetivo da missão e informações relevantes..."></div>
+    </div>
+    <div class="col-right">
+      <span class="field-label">Registro visual 1</span>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 01</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+    </div>
+  </div>
+
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 2 de 5 — Ficha da Missão</span></footer>
+</div>
+
+<!-- ============ PÁGINA 3 — REGISTROS VISUAIS ============ -->
+<div class="sheet">
+  <div class="header-bar">
+    <div class="h-top">DOSSIÊS DE CAMPO • CLASSIFICADO</div>
+    <div class="h-title">REGISTROS VISUAIS</div>
+    <div class="h-sub"></div>
+    <div class="emblem">DAP</div>
+  </div>
+
+  <div class="photo-grid">
+    <div>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 02</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+      <div class="field-input caption-input" contenteditable="true" data-placeholder="Legenda do anexo 02"></div>
+    </div>
+    <div>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 03</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+      <div class="field-input caption-input" contenteditable="true" data-placeholder="Legenda do anexo 03"></div>
+    </div>
+    <div>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 04</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+      <div class="field-input caption-input" contenteditable="true" data-placeholder="Legenda do anexo 04"></div>
+    </div>
+    <div>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 05</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+      <div class="field-input caption-input" contenteditable="true" data-placeholder="Legenda do anexo 05"></div>
+    </div>
+  </div>
+
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 3 de 5 — Registros Visuais Adicionais</span></footer>
+</div>
+
+<!-- ============ PÁGINA 4 — AGENTES ============ -->
+<div class="sheet">
+  <div class="header-bar">
+    <div class="h-top">DOSSIÊS DE CAMPO • CLASSIFICADO</div>
+    <div class="h-title">DESIGNAÇÃO DE AGENTES</div>
+    <div class="h-sub"></div>
+    <div class="emblem">DAP</div>
+  </div>
+
+  <span class="field-label">Agentes designados&nbsp; <span style="text-transform:none; font-weight:400;">(preencha com os agentes escolhidos para a missão)</span></span>
+  <div class="field-area agentes-area" contenteditable="true" data-placeholder="Ex: Agente Cravo — infiltração&#10;Agente Ipê — suporte de combate"></div>
+
+  <br>
+  <span class="field-label">Agentes recomendados pela diretoria&nbsp; <span style="text-transform:none; font-weight:400;">(sugestão de perfil ideal para a missão)</span></span>
+  <div class="field-area agentes-area" contenteditable="true" data-placeholder="Ex: perfil investigativo, resistência a efeitos mentais..."></div>
+
+  <div class="field-row" style="margin-top:26px;">
+    <div class="field" style="flex:2;">
+      <span class="field-label">Assinatura do responsável</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Data</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+  </div>
+
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 4 de 5 — Designação de Agentes</span></footer>
+</div>
+
+<!-- ============ PÁGINA 5 — CONTRACAPA ============ -->
+<div class="sheet manila">
+  <div class="backcover-flap"></div>
+  <div class="backcover-seal">DAP</div>
+  <div class="backcover-stamp stamp">ARQUIVO ENCERRADO</div>
+  <div class="backcover-text">
+    <div class="l1">DIRETORIA DE ASSUNTOS PARANORMAIS</div>
+    <div class="l2">ESTE DOSSIÊ É PROPRIEDADE DA DAP — NÃO DEVE SER RETIRADO DAS DEPENDÊNCIAS</div>
+  </div>
+  <footer class="page-footer" style="justify-content:center;"><span>Página 5 de 5 — Fechamento do Dossiê</span></footer>
+</div>
+
+</div><!-- /doc-instance --></div><!-- /instances-container --></div><!-- /type-panel dossie -->
+
+<div class="type-panel" id="type-relatorio">
+<div class="instances-container" id="instances-relatorio">
+<div class="doc-instance active" data-instance-id="relatorio-1">
+
+<!-- ============ RELATÓRIO — PÁGINA 1 — CAPA ============ -->
+<div class="sheet manila">
+  <div class="cover-frame"></div>
+  <div class="cover-fold"></div>
+  <div class="cover-tab">DIRETORIA DE ASSUNTOS PARANORMAIS</div>
+  <div class="cover-center">
+    <div class="stamp cover-stamp">RELATÓRIO FINAL</div>
+    <div class="seal"><b>DAP</b><span>EST. — SIGILUM</span></div>
+  </div>
+  <div class="id-card">
+    <div class="id-title">IDENTIFICAÇÃO DO RELATÓRIO</div>
+    <div class="field-row">
+      <div class="field">
+        <span class="field-label">Código da missão</span>
+        <div class="field-input" contenteditable="true" data-placeholder="Ex: DAP-014"></div>
+      </div>
+      <div class="field" style="flex:2">
+        <span class="field-label">Título da missão</span>
+        <div class="field-input" contenteditable="true"></div>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <span class="field-label">Data de conclusão</span>
+        <div class="field-input" contenteditable="true"></div>
+      </div>
+      <div class="field" style="flex:2">
+        <span class="field-label">Agente relator</span>
+        <div class="field-input" contenteditable="true"></div>
+      </div>
+    </div>
+  </div>
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 1 de 5 — Capa do Relatório</span></footer>
+</div>
+
+<!-- ============ RELATÓRIO — PÁGINA 2 — RESUMO DOS EVENTOS ============ -->
+<div class="sheet">
+  <div class="header-bar">
+    <div class="h-top">RELATÓRIOS DE CAMPO • CLASSIFICADO</div>
+    <div class="h-title">RESUMO DO RELATÓRIO</div>
+    <div class="h-sub"></div>
+    <div class="emblem">DAP</div>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <span class="field-label">Código da missão</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Data de conclusão</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Status final</span>
+      <div class="field-input" contenteditable="true" data-placeholder="Sucesso / Parcial / Fracasso"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Baixas / feridos</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field" style="flex:1 0 100%;">
+      <span class="field-label">Título da missão</span>
+      <div class="field-input" contenteditable="true" style="font-size:15px;"></div>
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <span class="field-label">Local</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Andar / setor envolvido</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+  </div>
+
+  <div class="ficha-cols">
+    <div class="col-left">
+      <span class="field-label">Resumo dos eventos</span>
+      <div class="field-area" contenteditable="true" data-placeholder="Narre o que aconteceu durante a missão, na ordem dos fatos..."></div>
+    </div>
+    <div class="col-right">
+      <span class="field-label">Registro visual 1</span>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 01</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+    </div>
+  </div>
+
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 2 de 5 — Resumo do Relatório</span></footer>
+</div>
+
+<!-- ============ RELATÓRIO — PÁGINA 3 — REGISTROS VISUAIS ============ -->
+<div class="sheet">
+  <div class="header-bar">
+    <div class="h-top">RELATÓRIOS DE CAMPO • CLASSIFICADO</div>
+    <div class="h-title">EVIDÊNCIAS COLETADAS</div>
+    <div class="h-sub"></div>
+    <div class="emblem">DAP</div>
+  </div>
+
+  <div class="photo-grid">
+    <div>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 02</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+      <div class="field-input caption-input" contenteditable="true" data-placeholder="Legenda do anexo 02"></div>
+    </div>
+    <div>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 03</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+      <div class="field-input caption-input" contenteditable="true" data-placeholder="Legenda do anexo 03"></div>
+    </div>
+    <div>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 04</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+      <div class="field-input caption-input" contenteditable="true" data-placeholder="Legenda do anexo 04"></div>
+    </div>
+    <div>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 05</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+      <div class="field-input caption-input" contenteditable="true" data-placeholder="Legenda do anexo 05"></div>
+    </div>
+  </div>
+
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 3 de 5 — Evidências Coletadas</span></footer>
+</div>
+
+<!-- ============ RELATÓRIO — PÁGINA 4 — AGENTES E DESCOBERTAS ============ -->
+<div class="sheet">
+  <div class="header-bar">
+    <div class="h-top">RELATÓRIOS DE CAMPO • CLASSIFICADO</div>
+    <div class="h-title">AGENTES E DESCOBERTAS</div>
+    <div class="h-sub"></div>
+    <div class="emblem">DAP</div>
+  </div>
+
+  <span class="field-label">Agentes que participaram&nbsp; <span style="text-transform:none; font-weight:400;">(nome e função de cada um na missão)</span></span>
+  <div class="field-area agentes-area" contenteditable="true" data-placeholder="Ex: Agente Cravo — infiltração, saiu ileso&#10;Agente Ipê — suporte de combate, ferimento leve"></div>
+
+  <br>
+  <span class="field-label">Itens ou descobertas recuperados</span>
+  <div class="field-area agentes-area" contenteditable="true" data-placeholder="Ex: artefato ocultista não identificado, encaminhado ao nível -3..."></div>
+
+  <br>
+  <span class="field-label">Recomendações para a diretoria</span>
+  <div class="field-area" style="min-height:110px;" contenteditable="true" data-placeholder="Sugestões de acompanhamento, riscos remanescentes, próximos passos..."></div>
+
+  <div class="field-row" style="margin-top:22px;">
+    <div class="field" style="flex:2;">
+      <span class="field-label">Assinatura do agente relator</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Data</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+  </div>
+
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 4 de 5 — Agentes e Descobertas</span></footer>
+</div>
+
+<!-- ============ RELATÓRIO — PÁGINA 5 — CONTRACAPA ============ -->
+<div class="sheet manila">
+  <div class="backcover-flap"></div>
+  <div class="backcover-seal">DAP</div>
+  <div class="backcover-stamp stamp">RELATÓRIO ARQUIVADO</div>
+  <div class="backcover-text">
+    <div class="l1">DIRETORIA DE ASSUNTOS PARANORMAIS</div>
+    <div class="l2">ESTE RELATÓRIO É PROPRIEDADE DA DAP — NÃO DEVE SER RETIRADO DAS DEPENDÊNCIAS</div>
+  </div>
+  <footer class="page-footer" style="justify-content:center;"><span>Página 5 de 5 — Fechamento do Relatório</span></footer>
+</div>
+
+</div><!-- /doc-instance --></div><!-- /instances-container --></div><!-- /type-panel relatorio -->
+
+<div class="type-panel" id="type-anomalia">
+<div class="instances-container" id="instances-anomalia">
+<div class="doc-instance active" data-instance-id="anomalia-1">
+
+<!-- ============ ANOMALIA — PÁGINA 1 — CAPA ============ -->
+<div class="sheet hazard">
+  <div class="hazard-stripe top"></div>
+  <div class="hazard-stripe bottom"></div>
+  <div class="cover-frame"></div>
+  <div class="cover-tab">DIRETORIA DE ASSUNTOS PARANORMAIS</div>
+  <div class="cover-center">
+    <div class="stamp cover-stamp" style="background:rgba(0,0,0,.25);">CLASSIFICADO</div>
+    <div class="seal"><b>DAP</b><span>EST. — SIGILUM</span></div>
+  </div>
+  <div class="id-card">
+    <div class="id-title">IDENTIFICAÇÃO DA ANOMALIA</div>
+    <div class="field-row">
+      <div class="field">
+        <span class="field-label">Código de registro</span>
+        <div class="field-input" contenteditable="true" data-placeholder="Ex: DAP-ANM-014"></div>
+      </div>
+      <div class="field" style="flex:2">
+        <span class="field-label">Nome / designação</span>
+        <div class="field-input" contenteditable="true"></div>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <span class="field-label">Classe de risco</span>
+        <div class="field-input" contenteditable="true" data-placeholder="Estável / Instável / Caótica / Cataclísmica"></div>
+      </div>
+      <div class="field" style="flex:2">
+        <span class="field-label">Nível de contenção necessário</span>
+        <div class="field-input" contenteditable="true"></div>
+      </div>
+    </div>
+  </div>
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 1 de 6 — Capa da Ficha</span></footer>
+</div>
+
+<!-- ============ ANOMALIA — PÁGINA 2 — DADOS E DESCRIÇÃO ============ -->
+<div class="sheet">
+  <div class="header-bar">
+    <div class="h-top">REGISTRO DE ANOMALIA • CLASSIFICADO</div>
+    <div class="h-title">DADOS E DESCRIÇÃO</div>
+    <div class="h-sub"></div>
+    <div class="emblem">DAP</div>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <span class="field-label">Código de registro</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Classe de risco</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Nível de contenção</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Data de catalogação</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field" style="flex:1 0 100%;">
+      <span class="field-label">Nome / designação</span>
+      <div class="field-input" contenteditable="true" style="font-size:15px;"></div>
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <span class="field-label">Local de descoberta</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Local de contenção atual (andar/setor)</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+  </div>
+
+  <div class="ficha-cols">
+    <div class="col-left">
+      <span class="field-label">Descrição física / aparência</span>
+      <div class="field-area" contenteditable="true" data-placeholder="Descreva a aparência, tamanho, som, cheiro ou qualquer característica perceptível..."></div>
+    </div>
+    <div class="col-right">
+      <span class="field-label">Registro visual 1</span>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 01</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+    </div>
+  </div>
+
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 2 de 6 — Dados e Descrição</span></footer>
+</div>
+
+<!-- ============ ANOMALIA — PÁGINA 3 — PROCEDIMENTOS E PROPRIEDADES ============ -->
+<div class="sheet">
+  <div class="header-bar">
+    <div class="h-top">REGISTRO DE ANOMALIA • CLASSIFICADO</div>
+    <div class="h-title">CONTENÇÃO E PROPRIEDADES</div>
+    <div class="h-sub"></div>
+    <div class="emblem">DAP</div>
+  </div>
+
+  <span class="field-label">Procedimentos de contenção</span>
+  <div class="field-area agentes-area" contenteditable="true" data-placeholder="Como a anomalia deve ser mantida contida: estrutura, vigilância, restrições de acesso..."></div>
+
+  <br>
+  <span class="field-label">Propriedades / comportamento anômalo</span>
+  <div class="field-area agentes-area" contenteditable="true" data-placeholder="O que a anomalia faz, como se manifesta, sob quais condições..."></div>
+
+  <br>
+  <span class="field-label">Gatilhos ou fraquezas conhecidas</span>
+  <div class="field-area" style="min-height:100px;" contenteditable="true" data-placeholder="O que ativa, acalma ou neutraliza a anomalia, se algo for conhecido..."></div>
+
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 3 de 6 — Contenção e Propriedades</span></footer>
+</div>
+
+<!-- ============ ANOMALIA — PÁGINA 4 — REGISTROS VISUAIS ============ -->
+<div class="sheet">
+  <div class="header-bar">
+    <div class="h-top">REGISTRO DE ANOMALIA • CLASSIFICADO</div>
+    <div class="h-title">REGISTROS VISUAIS</div>
+    <div class="h-sub"></div>
+    <div class="emblem">DAP</div>
+  </div>
+
+  <div class="photo-grid">
+    <div>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 02</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+      <div class="field-input caption-input" contenteditable="true" data-placeholder="Legenda do anexo 02"></div>
+    </div>
+    <div>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 03</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+      <div class="field-input caption-input" contenteditable="true" data-placeholder="Legenda do anexo 03"></div>
+    </div>
+    <div>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 04</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+      <div class="field-input caption-input" contenteditable="true" data-placeholder="Legenda do anexo 04"></div>
+    </div>
+    <div>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 05</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+      <div class="field-input caption-input" contenteditable="true" data-placeholder="Legenda do anexo 05"></div>
+    </div>
+  </div>
+
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 4 de 6 — Registros Visuais</span></footer>
+</div>
+
+<!-- ============ ANOMALIA — PÁGINA 5 — HISTÓRICO E NOTAS ============ -->
+<div class="sheet">
+  <div class="header-bar">
+    <div class="h-top">REGISTRO DE ANOMALIA • CLASSIFICADO</div>
+    <div class="h-title">HISTÓRICO E NOTAS</div>
+    <div class="h-sub"></div>
+    <div class="emblem">DAP</div>
+  </div>
+
+  <span class="field-label">Histórico de incidentes</span>
+  <div class="field-area agentes-area" contenteditable="true" data-placeholder="Ex: 14/03 — tentativa de fuga contida pelo Agente Cravo, sem baixas..."></div>
+
+  <br>
+  <span class="field-label">Notas adicionais dos pesquisadores</span>
+  <div class="field-area agentes-area" contenteditable="true" data-placeholder="Hipóteses, observações, pontos em aberto para investigação..."></div>
+
+  <div class="field-row" style="margin-top:22px;">
+    <div class="field" style="flex:2;">
+      <span class="field-label">Pesquisador responsável</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Data</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+  </div>
+
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 5 de 6 — Histórico e Notas</span></footer>
+</div>
+
+<!-- ============ ANOMALIA — PÁGINA 6 — CONTRACAPA ============ -->
+<div class="sheet hazard" style="color:#fff;">
+  <div class="hazard-stripe top"></div>
+  <div class="hazard-stripe bottom"></div>
+  <div class="cover-center" style="gap:26px;">
+    <span class="risk-tag">ACESSO RESTRITO</span>
+    <div class="stamp cover-stamp" style="background:rgba(0,0,0,.25);">ANOMALIA CATALOGADA</div>
+    <div style="text-align:center;">
+      <div style="font-weight:800; font-size:12px; margin-bottom:6px;">DIRETORIA DE ASSUNTOS PARANORMAIS</div>
+      <div style="font-size:9px; color:#d8d8d8;">ESTA FICHA É PROPRIEDADE DA DAP — NÃO DEVE SER RETIRADA DAS DEPENDÊNCIAS</div>
+    </div>
+  </div>
+  <footer class="page-footer" style="justify-content:center; border-color:#666;"><span style="color:#d8d8d8;">Página 6 de 6 — Fechamento da Ficha</span></footer>
+</div>
+
+</div><!-- /doc-instance --></div><!-- /instances-container --></div><!-- /type-panel anomalia -->
+
+<template id="template-dossie">
+<div class="doc-instance" data-instance-id="">
+
+<!-- ============ PÁGINA 1 — CAPA ============ -->
+<div class="sheet manila">
+  <div class="cover-frame"></div>
+  <div class="cover-fold"></div>
+  <div class="cover-tab">DIRETORIA DE ASSUNTOS PARANORMAIS</div>
+  <div class="cover-center">
+    <div class="stamp cover-stamp">CONFIDENCIAL</div>
+    <div class="seal"><b>DAP</b><span>EST. — SIGILUM</span></div>
+  </div>
+  <div class="id-card">
+    <div class="id-title">IDENTIFICAÇÃO DO ARQUIVO</div>
+    <div class="field-row">
+      <div class="field">
+        <span class="field-label">Código</span>
+        <div class="field-input" contenteditable="true" data-placeholder="Ex: DAP-014"></div>
+      </div>
+      <div class="field" style="flex:2">
+        <span class="field-label">Título da missão</span>
+        <div class="field-input" contenteditable="true"></div>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <span class="field-label">Classificação</span>
+        <div class="field-input" contenteditable="true"></div>
+      </div>
+      <div class="field" style="flex:2">
+        <span class="field-label">Agente responsável pelo arquivo</span>
+        <div class="field-input" contenteditable="true"></div>
+      </div>
+    </div>
+  </div>
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 1 de 5 — Capa do Dossiê</span></footer>
+</div>
+
+<!-- ============ PÁGINA 2 — FICHA DA MISSÃO ============ -->
+<div class="sheet">
+  <div class="header-bar">
+    <div class="h-top">DOSSIÊS DE CAMPO • CLASSIFICADO</div>
+    <div class="h-title">FICHA DA MISSÃO</div>
+    <div class="h-sub"></div>
+    <div class="emblem">DAP</div>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <span class="field-label">Código da missão</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Data de abertura</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Status</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Risco</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field" style="flex:1 0 100%;">
+      <span class="field-label">Título da missão</span>
+      <div class="field-input" contenteditable="true" style="font-size:15px;"></div>
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <span class="field-label">Local</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Andar / setor envolvido</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+  </div>
+
+  <div class="ficha-cols">
+    <div class="col-left">
+      <span class="field-label">Resumo / briefing</span>
+      <div class="field-area" contenteditable="true" data-placeholder="Descreva o que aconteceu, o objetivo da missão e informações relevantes..."></div>
+    </div>
+    <div class="col-right">
+      <span class="field-label">Registro visual 1</span>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 01</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+    </div>
+  </div>
+
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 2 de 5 — Ficha da Missão</span></footer>
+</div>
+
+<!-- ============ PÁGINA 3 — REGISTROS VISUAIS ============ -->
+<div class="sheet">
+  <div class="header-bar">
+    <div class="h-top">DOSSIÊS DE CAMPO • CLASSIFICADO</div>
+    <div class="h-title">REGISTROS VISUAIS</div>
+    <div class="h-sub"></div>
+    <div class="emblem">DAP</div>
+  </div>
+
+  <div class="photo-grid">
+    <div>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 02</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+      <div class="field-input caption-input" contenteditable="true" data-placeholder="Legenda do anexo 02"></div>
+    </div>
+    <div>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 03</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+      <div class="field-input caption-input" contenteditable="true" data-placeholder="Legenda do anexo 03"></div>
+    </div>
+    <div>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 04</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+      <div class="field-input caption-input" contenteditable="true" data-placeholder="Legenda do anexo 04"></div>
+    </div>
+    <div>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 05</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+      <div class="field-input caption-input" contenteditable="true" data-placeholder="Legenda do anexo 05"></div>
+    </div>
+  </div>
+
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 3 de 5 — Registros Visuais Adicionais</span></footer>
+</div>
+
+<!-- ============ PÁGINA 4 — AGENTES ============ -->
+<div class="sheet">
+  <div class="header-bar">
+    <div class="h-top">DOSSIÊS DE CAMPO • CLASSIFICADO</div>
+    <div class="h-title">DESIGNAÇÃO DE AGENTES</div>
+    <div class="h-sub"></div>
+    <div class="emblem">DAP</div>
+  </div>
+
+  <span class="field-label">Agentes designados&nbsp; <span style="text-transform:none; font-weight:400;">(preencha com os agentes escolhidos para a missão)</span></span>
+  <div class="field-area agentes-area" contenteditable="true" data-placeholder="Ex: Agente Cravo — infiltração&#10;Agente Ipê — suporte de combate"></div>
+
+  <br>
+  <span class="field-label">Agentes recomendados pela diretoria&nbsp; <span style="text-transform:none; font-weight:400;">(sugestão de perfil ideal para a missão)</span></span>
+  <div class="field-area agentes-area" contenteditable="true" data-placeholder="Ex: perfil investigativo, resistência a efeitos mentais..."></div>
+
+  <div class="field-row" style="margin-top:26px;">
+    <div class="field" style="flex:2;">
+      <span class="field-label">Assinatura do responsável</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Data</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+  </div>
+
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 4 de 5 — Designação de Agentes</span></footer>
+</div>
+
+<!-- ============ PÁGINA 5 — CONTRACAPA ============ -->
+<div class="sheet manila">
+  <div class="backcover-flap"></div>
+  <div class="backcover-seal">DAP</div>
+  <div class="backcover-stamp stamp">ARQUIVO ENCERRADO</div>
+  <div class="backcover-text">
+    <div class="l1">DIRETORIA DE ASSUNTOS PARANORMAIS</div>
+    <div class="l2">ESTE DOSSIÊ É PROPRIEDADE DA DAP — NÃO DEVE SER RETIRADO DAS DEPENDÊNCIAS</div>
+  </div>
+  <footer class="page-footer" style="justify-content:center;"><span>Página 5 de 5 — Fechamento do Dossiê</span></footer>
+</div>
+
+</div>
+</template>
+
+<template id="template-relatorio">
+<div class="doc-instance" data-instance-id="">
+
+<!-- ============ RELATÓRIO — PÁGINA 1 — CAPA ============ -->
+<div class="sheet manila">
+  <div class="cover-frame"></div>
+  <div class="cover-fold"></div>
+  <div class="cover-tab">DIRETORIA DE ASSUNTOS PARANORMAIS</div>
+  <div class="cover-center">
+    <div class="stamp cover-stamp">RELATÓRIO FINAL</div>
+    <div class="seal"><b>DAP</b><span>EST. — SIGILUM</span></div>
+  </div>
+  <div class="id-card">
+    <div class="id-title">IDENTIFICAÇÃO DO RELATÓRIO</div>
+    <div class="field-row">
+      <div class="field">
+        <span class="field-label">Código da missão</span>
+        <div class="field-input" contenteditable="true" data-placeholder="Ex: DAP-014"></div>
+      </div>
+      <div class="field" style="flex:2">
+        <span class="field-label">Título da missão</span>
+        <div class="field-input" contenteditable="true"></div>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <span class="field-label">Data de conclusão</span>
+        <div class="field-input" contenteditable="true"></div>
+      </div>
+      <div class="field" style="flex:2">
+        <span class="field-label">Agente relator</span>
+        <div class="field-input" contenteditable="true"></div>
+      </div>
+    </div>
+  </div>
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 1 de 5 — Capa do Relatório</span></footer>
+</div>
+
+<!-- ============ RELATÓRIO — PÁGINA 2 — RESUMO DOS EVENTOS ============ -->
+<div class="sheet">
+  <div class="header-bar">
+    <div class="h-top">RELATÓRIOS DE CAMPO • CLASSIFICADO</div>
+    <div class="h-title">RESUMO DO RELATÓRIO</div>
+    <div class="h-sub"></div>
+    <div class="emblem">DAP</div>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <span class="field-label">Código da missão</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Data de conclusão</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Status final</span>
+      <div class="field-input" contenteditable="true" data-placeholder="Sucesso / Parcial / Fracasso"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Baixas / feridos</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field" style="flex:1 0 100%;">
+      <span class="field-label">Título da missão</span>
+      <div class="field-input" contenteditable="true" style="font-size:15px;"></div>
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <span class="field-label">Local</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Andar / setor envolvido</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+  </div>
+
+  <div class="ficha-cols">
+    <div class="col-left">
+      <span class="field-label">Resumo dos eventos</span>
+      <div class="field-area" contenteditable="true" data-placeholder="Narre o que aconteceu durante a missão, na ordem dos fatos..."></div>
+    </div>
+    <div class="col-right">
+      <span class="field-label">Registro visual 1</span>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 01</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+    </div>
+  </div>
+
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 2 de 5 — Resumo do Relatório</span></footer>
+</div>
+
+<!-- ============ RELATÓRIO — PÁGINA 3 — REGISTROS VISUAIS ============ -->
+<div class="sheet">
+  <div class="header-bar">
+    <div class="h-top">RELATÓRIOS DE CAMPO • CLASSIFICADO</div>
+    <div class="h-title">EVIDÊNCIAS COLETADAS</div>
+    <div class="h-sub"></div>
+    <div class="emblem">DAP</div>
+  </div>
+
+  <div class="photo-grid">
+    <div>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 02</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+      <div class="field-input caption-input" contenteditable="true" data-placeholder="Legenda do anexo 02"></div>
+    </div>
+    <div>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 03</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+      <div class="field-input caption-input" contenteditable="true" data-placeholder="Legenda do anexo 03"></div>
+    </div>
+    <div>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 04</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+      <div class="field-input caption-input" contenteditable="true" data-placeholder="Legenda do anexo 04"></div>
+    </div>
+    <div>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 05</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+      <div class="field-input caption-input" contenteditable="true" data-placeholder="Legenda do anexo 05"></div>
+    </div>
+  </div>
+
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 3 de 5 — Evidências Coletadas</span></footer>
+</div>
+
+<!-- ============ RELATÓRIO — PÁGINA 4 — AGENTES E DESCOBERTAS ============ -->
+<div class="sheet">
+  <div class="header-bar">
+    <div class="h-top">RELATÓRIOS DE CAMPO • CLASSIFICADO</div>
+    <div class="h-title">AGENTES E DESCOBERTAS</div>
+    <div class="h-sub"></div>
+    <div class="emblem">DAP</div>
+  </div>
+
+  <span class="field-label">Agentes que participaram&nbsp; <span style="text-transform:none; font-weight:400;">(nome e função de cada um na missão)</span></span>
+  <div class="field-area agentes-area" contenteditable="true" data-placeholder="Ex: Agente Cravo — infiltração, saiu ileso&#10;Agente Ipê — suporte de combate, ferimento leve"></div>
+
+  <br>
+  <span class="field-label">Itens ou descobertas recuperados</span>
+  <div class="field-area agentes-area" contenteditable="true" data-placeholder="Ex: artefato ocultista não identificado, encaminhado ao nível -3..."></div>
+
+  <br>
+  <span class="field-label">Recomendações para a diretoria</span>
+  <div class="field-area" style="min-height:110px;" contenteditable="true" data-placeholder="Sugestões de acompanhamento, riscos remanescentes, próximos passos..."></div>
+
+  <div class="field-row" style="margin-top:22px;">
+    <div class="field" style="flex:2;">
+      <span class="field-label">Assinatura do agente relator</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Data</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+  </div>
+
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 4 de 5 — Agentes e Descobertas</span></footer>
+</div>
+
+<!-- ============ RELATÓRIO — PÁGINA 5 — CONTRACAPA ============ -->
+<div class="sheet manila">
+  <div class="backcover-flap"></div>
+  <div class="backcover-seal">DAP</div>
+  <div class="backcover-stamp stamp">RELATÓRIO ARQUIVADO</div>
+  <div class="backcover-text">
+    <div class="l1">DIRETORIA DE ASSUNTOS PARANORMAIS</div>
+    <div class="l2">ESTE RELATÓRIO É PROPRIEDADE DA DAP — NÃO DEVE SER RETIRADO DAS DEPENDÊNCIAS</div>
+  </div>
+  <footer class="page-footer" style="justify-content:center;"><span>Página 5 de 5 — Fechamento do Relatório</span></footer>
+</div>
+
+</div>
+</template>
+
+<template id="template-anomalia">
+<div class="doc-instance" data-instance-id="">
+
+<!-- ============ ANOMALIA — PÁGINA 1 — CAPA ============ -->
+<div class="sheet hazard">
+  <div class="hazard-stripe top"></div>
+  <div class="hazard-stripe bottom"></div>
+  <div class="cover-frame"></div>
+  <div class="cover-tab">DIRETORIA DE ASSUNTOS PARANORMAIS</div>
+  <div class="cover-center">
+    <div class="stamp cover-stamp" style="background:rgba(0,0,0,.25);">CLASSIFICADO</div>
+    <div class="seal"><b>DAP</b><span>EST. — SIGILUM</span></div>
+  </div>
+  <div class="id-card">
+    <div class="id-title">IDENTIFICAÇÃO DA ANOMALIA</div>
+    <div class="field-row">
+      <div class="field">
+        <span class="field-label">Código de registro</span>
+        <div class="field-input" contenteditable="true" data-placeholder="Ex: DAP-ANM-014"></div>
+      </div>
+      <div class="field" style="flex:2">
+        <span class="field-label">Nome / designação</span>
+        <div class="field-input" contenteditable="true"></div>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <span class="field-label">Classe de risco</span>
+        <div class="field-input" contenteditable="true" data-placeholder="Estável / Instável / Caótica / Cataclísmica"></div>
+      </div>
+      <div class="field" style="flex:2">
+        <span class="field-label">Nível de contenção necessário</span>
+        <div class="field-input" contenteditable="true"></div>
+      </div>
+    </div>
+  </div>
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 1 de 6 — Capa da Ficha</span></footer>
+</div>
+
+<!-- ============ ANOMALIA — PÁGINA 2 — DADOS E DESCRIÇÃO ============ -->
+<div class="sheet">
+  <div class="header-bar">
+    <div class="h-top">REGISTRO DE ANOMALIA • CLASSIFICADO</div>
+    <div class="h-title">DADOS E DESCRIÇÃO</div>
+    <div class="h-sub"></div>
+    <div class="emblem">DAP</div>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <span class="field-label">Código de registro</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Classe de risco</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Nível de contenção</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Data de catalogação</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field" style="flex:1 0 100%;">
+      <span class="field-label">Nome / designação</span>
+      <div class="field-input" contenteditable="true" style="font-size:15px;"></div>
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <span class="field-label">Local de descoberta</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Local de contenção atual (andar/setor)</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+  </div>
+
+  <div class="ficha-cols">
+    <div class="col-left">
+      <span class="field-label">Descrição física / aparência</span>
+      <div class="field-area" contenteditable="true" data-placeholder="Descreva a aparência, tamanho, som, cheiro ou qualquer característica perceptível..."></div>
+    </div>
+    <div class="col-right">
+      <span class="field-label">Registro visual 1</span>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 01</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+    </div>
+  </div>
+
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 2 de 6 — Dados e Descrição</span></footer>
+</div>
+
+<!-- ============ ANOMALIA — PÁGINA 3 — PROCEDIMENTOS E PROPRIEDADES ============ -->
+<div class="sheet">
+  <div class="header-bar">
+    <div class="h-top">REGISTRO DE ANOMALIA • CLASSIFICADO</div>
+    <div class="h-title">CONTENÇÃO E PROPRIEDADES</div>
+    <div class="h-sub"></div>
+    <div class="emblem">DAP</div>
+  </div>
+
+  <span class="field-label">Procedimentos de contenção</span>
+  <div class="field-area agentes-area" contenteditable="true" data-placeholder="Como a anomalia deve ser mantida contida: estrutura, vigilância, restrições de acesso..."></div>
+
+  <br>
+  <span class="field-label">Propriedades / comportamento anômalo</span>
+  <div class="field-area agentes-area" contenteditable="true" data-placeholder="O que a anomalia faz, como se manifesta, sob quais condições..."></div>
+
+  <br>
+  <span class="field-label">Gatilhos ou fraquezas conhecidas</span>
+  <div class="field-area" style="min-height:100px;" contenteditable="true" data-placeholder="O que ativa, acalma ou neutraliza a anomalia, se algo for conhecido..."></div>
+
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 3 de 6 — Contenção e Propriedades</span></footer>
+</div>
+
+<!-- ============ ANOMALIA — PÁGINA 4 — REGISTROS VISUAIS ============ -->
+<div class="sheet">
+  <div class="header-bar">
+    <div class="h-top">REGISTRO DE ANOMALIA • CLASSIFICADO</div>
+    <div class="h-title">REGISTROS VISUAIS</div>
+    <div class="h-sub"></div>
+    <div class="emblem">DAP</div>
+  </div>
+
+  <div class="photo-grid">
+    <div>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 02</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+      <div class="field-input caption-input" contenteditable="true" data-placeholder="Legenda do anexo 02"></div>
+    </div>
+    <div>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 03</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+      <div class="field-input caption-input" contenteditable="true" data-placeholder="Legenda do anexo 03"></div>
+    </div>
+    <div>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 04</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+      <div class="field-input caption-input" contenteditable="true" data-placeholder="Legenda do anexo 04"></div>
+    </div>
+    <div>
+      <label class="photo-box">
+        <input type="file" accept="image/*" onchange="loadImage(event)">
+        <img>
+        <span class="clip">📎</span>
+        <span class="placeholder-text">Clique para inserir uma imagem<b>ANEXO 05</b></span>
+        <span class="change-hint">clique para trocar</span>
+      </label>
+      <div class="field-input caption-input" contenteditable="true" data-placeholder="Legenda do anexo 05"></div>
+    </div>
+  </div>
+
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 4 de 6 — Registros Visuais</span></footer>
+</div>
+
+<!-- ============ ANOMALIA — PÁGINA 5 — HISTÓRICO E NOTAS ============ -->
+<div class="sheet">
+  <div class="header-bar">
+    <div class="h-top">REGISTRO DE ANOMALIA • CLASSIFICADO</div>
+    <div class="h-title">HISTÓRICO E NOTAS</div>
+    <div class="h-sub"></div>
+    <div class="emblem">DAP</div>
+  </div>
+
+  <span class="field-label">Histórico de incidentes</span>
+  <div class="field-area agentes-area" contenteditable="true" data-placeholder="Ex: 14/03 — tentativa de fuga contida pelo Agente Cravo, sem baixas..."></div>
+
+  <br>
+  <span class="field-label">Notas adicionais dos pesquisadores</span>
+  <div class="field-area agentes-area" contenteditable="true" data-placeholder="Hipóteses, observações, pontos em aberto para investigação..."></div>
+
+  <div class="field-row" style="margin-top:22px;">
+    <div class="field" style="flex:2;">
+      <span class="field-label">Pesquisador responsável</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+    <div class="field">
+      <span class="field-label">Data</span>
+      <div class="field-input" contenteditable="true"></div>
+    </div>
+  </div>
+
+  <footer class="page-footer"><span>DAP — USO INTERNO E CONFIDENCIAL</span><span>Página 5 de 6 — Histórico e Notas</span></footer>
+</div>
+
+<!-- ============ ANOMALIA — PÁGINA 6 — CONTRACAPA ============ -->
+<div class="sheet hazard" style="color:#fff;">
+  <div class="hazard-stripe top"></div>
+  <div class="hazard-stripe bottom"></div>
+  <div class="cover-center" style="gap:26px;">
+    <span class="risk-tag">ACESSO RESTRITO</span>
+    <div class="stamp cover-stamp" style="background:rgba(0,0,0,.25);">ANOMALIA CATALOGADA</div>
+    <div style="text-align:center;">
+      <div style="font-weight:800; font-size:12px; margin-bottom:6px;">DIRETORIA DE ASSUNTOS PARANORMAIS</div>
+      <div style="font-size:9px; color:#d8d8d8;">ESTA FICHA É PROPRIEDADE DA DAP — NÃO DEVE SER RETIRADA DAS DEPENDÊNCIAS</div>
+    </div>
+  </div>
+  <footer class="page-footer" style="justify-content:center; border-color:#666;"><span style="color:#d8d8d8;">Página 6 de 6 — Fechamento da Ficha</span></footer>
+</div>
+
+</div>
+</template>
+
+<script>
+document.execCommand('styleWithCSS', false, true);
+
+// impede que os campos de uma linha só (não são .field-area) quebrem linha com Enter
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('field-input')) {
+    e.preventDefault();
+  }
+});
+
+function setFont(font){
+  document.documentElement.style.setProperty('--user-font', font);
+}
+
+let fontScalePct = 100;
+function changeSize(delta){
+  fontScalePct = Math.min(160, Math.max(70, fontScalePct + delta*10));
+  document.documentElement.style.setProperty('--user-scale', fontScalePct/100);
+  document.getElementById('sizeLabel').textContent = fontScalePct + '%';
+}
+
+function applyHighlight(color){
+  const sel = window.getSelection();
+  if (!sel || sel.isCollapsed || !sel.toString().trim()) {
+    alert('Selecione um trecho de texto em algum campo antes de escolher a cor.');
+    return;
+  }
+  try{ document.execCommand('styleWithCSS', false, true); }catch(e){}
+  if (color === 'black'){
+    document.execCommand('backColor', false, '#111111');
+    document.execCommand('foreColor', false, '#111111');
+  } else if (color === 'none'){
+    document.execCommand('backColor', false, 'transparent');
+    document.execCommand('foreColor', false, '#33373a');
+  } else {
+    document.execCommand('backColor', false, color);
+    document.execCommand('foreColor', false, '#222222');
+  }
+}
+
+function loadImage(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const box = evt.target.closest('.photo-box');
+  const reader = new FileReader();
+  reader.onload = e => {
+    box.querySelector('img').src = e.target.result;
+    box.querySelector('img').style.display = 'block';
+    box.classList.add('has-img');
+  };
+  reader.readAsDataURL(file);
+}
+
+const DOC_NAMES = { dossie: 'DOSSIÊ DE MISSÃO', relatorio: 'RELATÓRIO DE MISSÃO', anomalia: 'FICHA DE CONTENÇÃO' };
+const TAB_BASE_LABEL = { dossie: 'Missão', relatorio: 'Relatório', anomalia: 'Ficha' };
+let instanceCounters = { dossie: 1, relatorio: 1, anomalia: 1 };
+
+function switchDocType(type){
+  document.querySelectorAll('.type-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('type-' + type).classList.add('active');
+  document.querySelectorAll('.doc-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-btn-' + type).classList.add('active');
+  document.querySelectorAll('.instance-row').forEach(r => r.classList.remove('active-row'));
+  document.getElementById('instance-row-' + type).classList.add('active-row');
+  const nice = DOC_NAMES[type];
+  document.title = nice + ' — DAP';
+  document.getElementById('mainTitle').textContent = nice + ' — DAP (editável)';
+}
+
+function switchInstance(type, instanceId){
+  document.querySelectorAll('#instances-' + type + ' .doc-instance').forEach(d => d.classList.remove('active'));
+  document.querySelector('#instances-' + type + ' [data-instance-id="' + instanceId + '"]').classList.add('active');
+  document.querySelectorAll('#instance-tabs-' + type + ' .instance-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('#instance-tabs-' + type + ' [data-instance="' + instanceId + '"]').classList.add('active');
+}
+
+function addInstance(type){
+  instanceCounters[type]++;
+  const n = instanceCounters[type];
+  const newId = type + '-' + n;
+
+  const tplContent = document.getElementById('template-' + type).content.cloneNode(true);
+  const instDiv = tplContent.querySelector('.doc-instance');
+  instDiv.setAttribute('data-instance-id', newId);
+  document.querySelectorAll('#instances-' + type + ' .doc-instance').forEach(d => d.classList.remove('active'));
+  instDiv.classList.add('active');
+  document.getElementById('instances-' + type).appendChild(instDiv);
+
+  document.querySelectorAll('#instance-tabs-' + type + ' .instance-tab').forEach(t => t.classList.remove('active'));
+  const tab = document.createElement('div');
+  tab.className = 'instance-tab active';
+  tab.setAttribute('data-instance', newId);
+  tab.onclick = () => switchInstance(type, newId);
+
+  const label = document.createElement('span');
+  label.className = 'tab-label';
+  label.textContent = TAB_BASE_LABEL[type] + ' ' + n;
+  label.ondblclick = (e) => renameTab(e, type, newId);
+
+  const close = document.createElement('span');
+  close.className = 'tab-close';
+  close.title = 'Remover ficha';
+  close.textContent = '×';
+  close.onclick = (e) => removeInstance(e, type, newId);
+
+  tab.appendChild(label);
+  tab.appendChild(close);
+  document.getElementById('instance-tabs-' + type).appendChild(tab);
+
+  tab.scrollIntoView({ behavior: 'smooth', inline: 'nearest' });
+}
+
+function removeInstance(evt, type, instanceId){
+  evt.stopPropagation();
+  const container = document.getElementById('instances-' + type);
+  if (container.querySelectorAll('.doc-instance').length <= 1){
+    alert('Precisa manter pelo menos uma ficha aberta.');
+    return;
+  }
+  if (!confirm('Remover esta ficha? O conteúdo preenchido nela será perdido.')) return;
+
+  const instEl = document.querySelector('#instances-' + type + ' [data-instance-id="' + instanceId + '"]');
+  const wasActive = instEl.classList.contains('active');
+  instEl.remove();
+  document.querySelector('#instance-tabs-' + type + ' [data-instance="' + instanceId + '"]').remove();
+
+  if (wasActive){
+    const first = container.querySelector('.doc-instance');
+    switchInstance(type, first.getAttribute('data-instance-id'));
+  }
+}
+
+function renameTab(evt, type, instanceId){
+  evt.stopPropagation();
+  const label = evt.target;
+  const name = prompt('Nome da ficha:', label.textContent);
+  if (name && name.trim()) label.textContent = name.trim();
+}
+
+function clearAll(){
+  if(!confirm('Isso vai apagar todos os campos e fotos preenchidos nesta ficha. Continuar?')) return;
+  const activeType = document.querySelector('.doc-tab.active').id.replace('tab-btn-', '');
+  const scope = document.querySelector('#instances-' + activeType + ' .doc-instance.active');
+  scope.querySelectorAll('.field-input, .field-area').forEach(e => e.innerHTML = '');
+  scope.querySelectorAll('.photo-box').forEach(box => {
+    box.classList.remove('has-img');
+    box.querySelector('img').src = '';
+    box.querySelector('img').style.display = 'none';
+    box.querySelector('input[type=file]').value = '';
+  });
+}
+</script>
+
+</body>
+</html>
