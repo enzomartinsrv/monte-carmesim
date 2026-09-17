@@ -216,22 +216,40 @@
   .loc-card .lc-title{ font-family:'Oswald',sans-serif; font-size:14.5px; font-weight:700; color:#fff; margin-bottom:4px; }
   .loc-card .lc-desc{ font-size:12.5px; color:var(--ash); line-height:1.5; }
 
+  #wiki-menu-btn{ display:none; }
   @media (max-width:900px){
-    #sidebar{ display:none; }
+    #wiki-menu-btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      background:none; border:1px solid var(--border); border-radius:4px; color:var(--bone);
+      font-size:16px; width:32px; height:32px; cursor:pointer; flex-shrink:0;
+    }
+    #topbar{ flex-wrap:wrap; gap:10px; }
+    #search{ order:3; max-width:100%; flex-basis:100%; }
+    #sidebar{
+      display:block; position:fixed; top:0; bottom:0; left:-280px; width:260px; z-index:70;
+      background:var(--bg); transition:left .2s ease; box-shadow:2px 0 16px rgba(0,0,0,.5);
+      overflow-y:auto;
+    }
+    #sidebar.open{ left:0; }
+    #sidebar-overlay{ display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:65; }
+    #sidebar-overlay.open{ display:block; }
     #article{ flex-direction:column; }
     .infobox{ width:100%; position:static; }
-    #main{ padding:20px; }
+    #main{ padding:16px; }
+    .art-title{ font-size:26px; }
   }
 </style>
 </head>
 <body>
 
 <div id="topbar">
+  <button id="wiki-menu-btn" onclick="toggleWikiSidebar()">☰</button>
   <a href="inicio.html" style="font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--ash);border:1px solid var(--border);border-radius:3px;padding:6px 10px;white-space:nowrap;">← Início</a>
   <div class="brand" onclick="nav('home')">☠ Wiki Monte Carmesim</div>
   <div class="stamp">DAP · ACESSO PÚBLICO</div>
   <input id="search" type="text" placeholder="Pesquisar na wiki..." autocomplete="off">
 </div>
+<div id="sidebar-overlay" onclick="toggleWikiSidebar(false)"></div>
 <div id="search-results"></div>
 
 <div id="layout">
@@ -465,8 +483,18 @@ function nav(type, id){
   else if (type==='categoria') location.hash = 'c/'+id;
   else if (type==='artigo') location.hash = 'a/'+id;
   window.scrollTo(0,0);
+  toggleWikiSidebar(false);
 }
 window.nav = nav;
+
+function toggleWikiSidebar(forceState){
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('sidebar-overlay');
+  const active = typeof forceState === 'boolean' ? forceState : !sb.classList.contains('open');
+  sb.classList.toggle('open', active);
+  ov.classList.toggle('open', active);
+}
+window.toggleWikiSidebar = toggleWikiSidebar;
 
 function route(){
   const hash = location.hash.replace(/^#/,'');

@@ -201,6 +201,21 @@
   #hub-gate-card .submit-btn{ width:100%; margin-top:4px; background:var(--blood); color:#fff; border:none; border-radius:4px; font-family:'Oswald',sans-serif; font-size:13px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:10px 0; cursor:pointer; }
   #hub-gate-card .submit-btn:disabled{ opacity:.5; }
   #hub-gate-card .msg{ font-family:'Share Tech Mono',monospace; font-size:11px; margin-top:10px; min-height:14px; color:#ff8a80; }
+  /* ═══════════════════════ RESPONSIVO — TELA ESTREITA ═══════════════════ */
+  @media (max-width: 760px) {
+    .hub-header { flex-wrap: wrap; gap: 8px; padding: 10px 14px; }
+    .hub-title h1 { font-size: 15px !important; }
+    .hub-title p { font-size: 8px !important; }
+    .hub-status { flex-wrap: wrap; gap: 6px; }
+    .hub-body { grid-template-columns: 1fr !important; height: auto !important; }
+    .hub-main { padding: 12px; overflow-y: visible; }
+    .hub-sidebar { border-left: none; border-top: 1px solid var(--border); overflow-y: visible; }
+    .char-row { grid-template-columns: 1fr !important; }
+    #tracker-list { gap: 6px; }
+    .sec { flex-wrap: wrap; gap: 6px; }
+    .act-btn, .session-btn, button { min-height: 30px; }
+    #hub-gate-card { width: 88vw !important; }
+  }
 </style>
 </head>
 <body>

@@ -603,6 +603,78 @@
     #prefs-panel, #side-menu, #side-menu-overlay { display: none !important; }
   }
 
+  /* ═══════════════════════ RESPONSIVO — TELA ESTREITA ═══════════════════ */
+  #mobile-hub-tabs { display: none; }
+  @media (max-width: 700px) {
+    body { font-size: 15px; }
+    .page {
+      width: 100% !important;
+      min-height: auto !important;
+      margin: 0 0 3mm !important;
+      padding: 3mm !important;
+    }
+    .header { grid-template-columns: 1fr !important; text-align: center; row-gap: 2mm; }
+    .header .corner-deco { display: none !important; }
+    .header-title h1 { font-size: 19px !important; }
+
+    /* Identificação: foto em cima, campos embaixo, um por linha */
+    .avatar-wrap { margin: 0 auto 2mm; }
+    #view-identificacao-row, .id-flex-row { flex-direction: column !important; align-items: center !important; }
+    .info-row { grid-template-columns: 1fr !important; }
+    .field input { font-size: 14px !important; height: 26px !important; }
+    .field label { font-size: 9px !important; }
+
+    .stats-row { flex-wrap: wrap !important; justify-content: center; }
+    .stat-box { flex: 1 1 26% !important; min-width: 64px; }
+    .stat-box input { font-size: 19px !important; }
+
+    .pools-row { flex-wrap: wrap !important; }
+    .pool-box { flex: 1 1 46% !important; }
+
+    .progress-nex { justify-content: center; }
+    .nex-pip { min-width: 11mm !important; min-height: 8mm !important; font-size: 9px !important; }
+
+    .status-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .status-item { min-height: 32px; }
+    .dv-grid { grid-template-columns: 1fr !important; }
+
+    /* Tabelas: rolagem horizontal em vez de espremer tudo */
+    table { display: block !important; overflow-x: auto !important; white-space: nowrap !important; -webkit-overflow-scrolling: touch; }
+    .pericias-table, .nex-table { font-size: 11px !important; }
+    .pericias-table td, .pericias-table th { padding: 1.5mm !important; }
+    .trei-input, .input-tiny { min-width: 34px !important; font-size: 12px !important; }
+
+    .sec-label { font-size: 12px !important; }
+
+    /* Alvos maiores pro dedo */
+    .dv-item, .status-item { min-height: 32px; }
+    .char-link, .act-btn, button { min-height: 30px; }
+
+    /* Menu lateral / preferências ocupam mais tela num celular pequeno */
+    #side-menu { width: 82vw !important; max-width: 300px; }
+    #prefs-panel { width: 85vw !important; max-width: 320px; }
+
+    /* Hub do Player: em vez de dividir a tela, vira abas com botão embaixo */
+    #hub-mode-wrap.hub-active { flex-direction: column !important; height: calc(100vh - 26px - 48px) !important; }
+    #hub-mode-wrap.hub-active #ficha-pane,
+    #hub-mode-wrap.hub-active #party-pane { flex: 1 1 auto !important; width: 100% !important; height: auto !important; display: none !important; }
+    #hub-mode-wrap.hub-active.mobile-show-ficha #ficha-pane { display: block !important; }
+    #hub-mode-wrap.hub-active.mobile-show-party #party-pane { display: flex !important; }
+    #hub-divider { display: none !important; }
+    #mobile-hub-tabs.show { display: flex !important; }
+    body.readonly-mode #hub-mode-wrap.hub-active { height: calc(100vh - 60px - 48px) !important; }
+  }
+
+  #mobile-hub-tabs {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 9996;
+    background: #1a1330; border-top: 1px solid #3a2f6a;
+  }
+  #mobile-hub-tabs button {
+    flex: 1; padding: 12px 0; background: none; border: none; color: #999;
+    font-family: 'Oswald', sans-serif; font-size: 11px; letter-spacing: 1px; cursor: pointer;
+  }
+  #mobile-hub-tabs button.active { color: #fff; background: rgba(62,32,220,.3); }
+
   /* ─── TOP BAR (slim, só hambúrguer + nome) ─── */
   #char-tab-bar {
     position: fixed;
@@ -1257,6 +1329,16 @@
   }
   window.updateNexFormaUI = updateNexFormaUI;
 
+  window.setMobilePartyView = function(which) {
+    const wrap = document.getElementById('hub-mode-wrap');
+    if (!wrap) return;
+    wrap.classList.toggle('mobile-show-ficha', which === 'ficha');
+    wrap.classList.toggle('mobile-show-party', which === 'party');
+    document.querySelectorAll('#mobile-hub-tabs button').forEach(b => {
+      b.classList.toggle('active', b.dataset.view === which);
+    });
+  };
+
   window.toggleNexForma = async function() {
     if (window.CHAR_SLOT !== 3) return;
     const fromForma = window.NEX_FORMA;
@@ -1323,9 +1405,13 @@
     wrap.classList.toggle('orient-h', hubOrientation === 'h');
     wrap.style.setProperty('--hub-split', hubSplit + '%');
     if (btn) btn.style.background = active ? 'var(--blood)' : '#3a2a6a';
+    const mobileTabs = document.getElementById('mobile-hub-tabs');
     if (active) {
+      window.setMobilePartyView('ficha');
+      if (mobileTabs) mobileTabs.classList.add('show');
       subscribePartyPane();
     } else {
+      if (mobileTabs) mobileTabs.classList.remove('show');
       if (partyUnsub1) partyUnsub1(); if (partyUnsub2) partyUnsub2();
       if (partyUnsub3) partyUnsub3(); if (partyUnsub4) partyUnsub4();
     }
@@ -1871,7 +1957,7 @@
 
   <!-- IDENTIFICAÇÃO -->
   <div class="sec-label">Identificação</div>
-  <div style="display:flex;gap:3mm;align-items:flex-start;margin-bottom:3mm;">
+  <div class="id-flex-row" style="display:flex;gap:3mm;align-items:flex-start;margin-bottom:3mm;">
 
     <!-- Avatar -->
     <div class="avatar-wrap">
@@ -3143,6 +3229,11 @@ LIMITE CRÉD ░░░░
 </div>
 
 </div><!-- /#hub-mode-wrap -->
+
+<div id="mobile-hub-tabs">
+  <button data-view="ficha" class="active" onclick="window.setMobilePartyView('ficha')">📋 Minha Ficha</button>
+  <button data-view="party" onclick="window.setMobilePartyView('party')">👥 Grupo</button>
+</div>
 
 <script>
   // ── Salvamento imediato para dv-item / status-item ──────────────
