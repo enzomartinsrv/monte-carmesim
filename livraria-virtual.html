@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%93%9A%3C/text%3E%3C/svg%3E"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;850&display=swap" rel="stylesheet">
+<title>Livraria Virtual V5.7</title>
+<style>
+:root{--bg:#0a0d12;--panel:#11161f;--panel2:#171d27;--line:#293241;--text:#eef2f7;--muted:#8f9aaa;--accent:#9d7cff;--accent2:#684fff;--danger:#ff8290;--ok:#77d6a3}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 25% 0,#201832 0,#0a0d12 45%) fixed;color:var(--text);font:14.5px/1.55 'Inter',-apple-system,'Segoe UI',Arial,sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased}::selection{background:#684fff66}::-webkit-scrollbar{width:11px;height:11px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#2b3444;border-radius:20px;border:3px solid var(--bg)}::-webkit-scrollbar-thumb:hover{background:#3a4557}button,input,select,textarea{font:inherit}button{cursor:pointer}.top{height:72px;border-bottom:1px solid var(--line);background:#0d1118ed;backdrop-filter:blur(14px);display:flex;align-items:center;gap:16px;padding:0 22px;position:sticky;top:0;z-index:20}.brand{font-weight:850;letter-spacing:.12em;white-space:nowrap;background:linear-gradient(135deg,#fff,#9d7cff);-webkit-background-clip:text;background-clip:text;color:transparent}.brand small{display:block;color:var(--muted);font-size:10px;letter-spacing:.15em;margin-top:2px}.search{flex:1;max-width:700px;background:#171d27;border:1px solid var(--line);border-radius:12px;padding:11px 14px;color:var(--text);outline:0;transition:.15s border-color,.15s box-shadow}.search:focus{border-color:var(--accent);box-shadow:0 0 0 3px #9d7cff2b}.search::placeholder{color:#6b7688}.btn{border:1px solid var(--line);background:#171d27;color:var(--text);padding:9px 13px;border-radius:10px;transition:.15s border-color,.15s background,.15s transform;font-weight:500}.btn:hover{border-color:#5b6372;background:#1c232f}.btn:active{transform:scale(.97)}.btn.primary{background:linear-gradient(135deg,var(--accent2),var(--accent));border:0;font-weight:700;box-shadow:0 6px 18px #684fff40}.btn.primary:hover{box-shadow:0 8px 22px #684fff5c;filter:brightness(1.06)}.btn.danger{color:#ffb4bd}.btn.danger:hover{border-color:#7a3540;background:#241419}.layout{display:grid;grid-template-columns:245px 1fr;min-height:calc(100vh - 72px)}aside{border-right:1px solid var(--line);padding:17px 13px;background:#0d1117b8}.nav{display:grid;gap:3px}.nav button{border:0;background:transparent;color:var(--muted);text-align:left;padding:10px 12px;border-radius:9px;transition:.12s background,.12s color;font-weight:500}.nav button.active,.nav button:hover{background:#191f29;color:var(--text)}.nav button.active{color:#c9bcff;background:#1e1a33;box-shadow:inset 3px 0 0 var(--accent)}.side-title{font-size:10px;text-transform:uppercase;color:#657083;letter-spacing:.14em;margin:21px 10px 8px}.rootline{display:flex;align-items:center;gap:7px;padding:8px 10px;color:var(--muted);font-size:12px}.rootdot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex:0 0 auto}.main{padding:27px;max-width:1550px;width:100%;margin:auto}.hero{display:flex;justify-content:space-between;align-items:end;gap:18px;margin-bottom:20px}.hero h1{margin:0;font-size:29px;font-weight:800;letter-spacing:-.01em}.hero p{color:var(--muted);margin:6px 0 0;font-size:13.5px}.stats{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px}.stat{background:#121822d9;border:1px solid var(--line);padding:12px 18px;border-radius:12px;min-width:110px;transition:.15s border-color,.15s transform}.stat:hover{border-color:#4c5567;transform:translateY(-2px)}.stat b{font-size:21px;display:block;background:linear-gradient(135deg,#fff,#c9bcff);-webkit-background-clip:text;background-clip:text;color:transparent}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:21px}.toolbar select,.toolbar input{background:#151b24;border:1px solid var(--line);color:var(--text);padding:9px 11px;border-radius:9px;transition:.15s border-color}.toolbar select:hover,.toolbar select:focus,.toolbar input:focus{border-color:#5b6372;outline:0}.shelf{margin:25px 0}.shelf h2{font-size:18px;margin:0 0 13px}.books{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:19px}.book{min-width:0}.cover{aspect-ratio:2/2.8;background:#171d27;border:1px solid #303947;border-radius:10px;overflow:hidden;position:relative;box-shadow:0 10px 24px #0006;cursor:pointer;transition:.18s transform,.18s border-color,.18s box-shadow}.cover img{width:100%;height:100%;object-fit:cover}.fallback{height:100%;display:grid;place-items:center;padding:15px;text-align:center;font-weight:800;background:linear-gradient(155deg,#241a3a,#171227);color:#c9bcff;line-height:1.3}.book:hover .cover{transform:translateY(-4px);border-color:#7a6bb0;box-shadow:0 18px 34px #0009}.star{position:absolute;top:7px;right:7px;border:0;background:#0b0e14dd;color:#fff;border-radius:8px;padding:5px 7px;transition:.12s transform,.12s background}.star:hover{background:#171d27;transform:scale(1.12)}.book-title{font-weight:700;margin-top:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.book-meta{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.book-path{font-size:11px;color:#707b8d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}.progress{height:4px;background:#252c38;border-radius:8px;overflow:hidden;margin-top:7px}.progress span{display:block;height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));width:0}.book-actions{display:flex;gap:5px;margin-top:7px}.book-actions .btn{padding:5px 7px;font-size:11px}.empty{padding:55px;text-align:center;border:1px dashed #384150;border-radius:15px;color:var(--muted);font-size:14px}.empty::before{content:'📚';display:block;font-size:34px;margin-bottom:10px;opacity:.7}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes popIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}.modal{position:fixed;inset:0;background:#000000b3;backdrop-filter:blur(3px);display:none;place-items:center;z-index:50;padding:20px;animation:fadeIn .12s ease}.modal.open{display:grid}.dialog{width:min(760px,100%);max-height:90vh;overflow:auto;background:#11161f;border:1px solid var(--line);border-radius:16px;padding:24px;animation:popIn .15s ease}.dialog h2{margin:0 0 16px;font-size:19px}.form{display:grid;gap:12px}.form label{display:grid;gap:6px;color:var(--muted);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.03em}.form input,.form select,.form textarea{background:#0c1016;border:1px solid var(--line);color:var(--text);padding:10px 11px;border-radius:9px;font-size:13.5px;font-weight:400;text-transform:none;letter-spacing:normal;transition:.15s border-color,.15s box-shadow}.form input:focus,.form select:focus,.form textarea:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px #9d7cff26}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.reader{position:fixed;inset:0;background:#07090d;z-index:60;display:none;grid-template-rows:56px 1fr}.reader.open{display:grid}.readerbar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#11161f;border-bottom:1px solid var(--line)}.readerbar strong{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:4px}.readerGroup{display:flex;align-items:center;gap:6px;padding:0 8px;border-left:1px solid var(--line)}.readerGroup span{min-width:38px;text-align:center;color:var(--muted);font-size:12px}#readerPage{min-width:70px}.readerBody{display:flex;min-height:0;overflow:hidden}.pdfStage{position:relative;flex:1;min-width:0;overflow:auto;display:flex;justify-content:center;align-items:flex-start;padding:24px;background:#07090d}.pdfStage canvas{display:block;background:#fff;box-shadow:0 8px 30px #0008;max-width:none;border-radius:2px}.readerMsg{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);max-width:min(720px,90%);padding:16px 20px;border:1px solid var(--line);background:#11161f;color:var(--muted);border-radius:12px;text-align:center;z-index:2}.readerMsg.error{color:#ffb4bd;border-color:#63313a}.sidePanel{width:0;overflow:hidden;background:#0d1118;border-left:1px solid var(--line);transition:width .18s ease;display:flex;flex-direction:column;flex-shrink:0}.sidePanel.open{width:320px}.sidePanelHead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line);white-space:nowrap}.sidePanelHead strong{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}.sidePanelBody{padding:14px 16px;overflow:auto;flex:1;width:320px}.sidePanelBody label{display:grid;gap:8px;color:var(--muted);font-size:12px}.sidePanelBody textarea{width:100%;background:#0c1016;border:1px solid var(--line);color:var(--text);border-radius:9px;padding:10px;resize:vertical}.bookmarkList{display:grid;gap:8px;margin-top:12px}.bookmarkItem{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#141a23;border:1px solid var(--line);border-radius:9px;padding:9px 11px;cursor:pointer;font-size:13px}.bookmarkItem:hover{border-color:#655b83}.bookmarkItem button{border:0;background:transparent;color:var(--danger);padding:2px 6px;font-size:14px}.toast{position:fixed;right:18px;bottom:18px;background:#181f2a;border:1px solid var(--line);padding:12px 15px;border-radius:10px;display:none;z-index:100;max-width:440px}.toast.show{display:block}.scanbar{position:fixed;top:88px;right:18px;width:300px;background:#141a23;border:1px solid var(--line);border-radius:12px;padding:14px 16px;z-index:110;box-shadow:0 12px 30px #0008;display:none}.scanbar.show{display:block}.scanbar-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);margin-bottom:9px;font-weight:600}.scanTrack{height:6px;background:#232b38;border-radius:6px;overflow:hidden}.scanFill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));width:0%;transition:width .2s ease}.scanFile{margin-top:8px;font-size:11px;color:#8892a3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.btn:disabled,.nav button:disabled{opacity:.45;cursor:not-allowed;pointer-events:none}.listview .books{display:block}.listview .book{display:grid;grid-template-columns:70px minmax(0,1fr) auto;gap:14px;align-items:center;padding:10px;border-bottom:1px solid var(--line)}.listview .cover{width:70px}.listview .book-title{margin:0}.listview .book-meta{white-space:normal}.drop{border:1px dashed #505a6c;padding:16px;border-radius:12px;text-align:center;color:var(--muted)}.notice{padding:12px 14px;border:1px solid #343d4c;background:#141a23;border-radius:11px;color:#aeb7c5}.rootitem{border:1px solid var(--line);background:#141a23;border-radius:11px;padding:10px;margin:7px 0}.rootitem strong{display:block}.rootitem small{color:var(--muted);display:block;margin-top:3px}.status{font-size:11px;padding:3px 7px;border-radius:20px;background:#202734;color:#aeb8c6}.status.ok{color:#9be5bc}.status.missing{color:#ffadb6}@media(max-width:850px){.layout{grid-template-columns:1fr}aside{display:none}.main{padding:16px}.row{grid-template-columns:1fr}.top{padding:0 12px}.brand{font-size:12px}.search{max-width:none}.top>.btn{display:none}}
+</style>
+</head>
+<body>
+<div id="authGate" class="modal open"><div class="dialog" style="max-width:380px;text-align:center"><div style="font-size:40px;margin-bottom:10px">🔒</div><h2>Acesso restrito</h2><p style="color:var(--muted);margin:0 0 18px">Verificando sua sessão...</p><a class="btn primary" href="inicio.html" id="authGateLink" style="display:none;text-decoration:none">Ir para o login</a></div></div>
+<div id="driveGate" class="modal"><div class="dialog" style="max-width:420px;text-align:center"><div style="font-size:40px;margin-bottom:10px">🗄️</div><h2 id="driveGateTitle">Conectar ao Google Drive</h2><p style="color:var(--muted);margin:0 0 18px" id="driveGateMsg">Conecte a conta do Google onde estão seus PDFs de RPG.</p><button class="btn primary" id="connectDriveBtn" style="width:100%">Conectar ao Google Drive</button><div id="driveGateAlt" style="margin-top:12px"></div></div></div>
+<div id="appRoot" style="display:none">
+<header class="top"><div class="brand">RPG LIBRARY<small>V5.7 · DRIVE</small></div><input id="search" class="search" placeholder="Pesquisar livros, sistemas, tags ou pasta..."><span id="whoamiTop" style="color:var(--muted);font-size:12px;white-space:nowrap"></span><button class="btn" id="logoutBtn">Sair</button></header>
+<div class="layout"><aside>
+<div class="nav" id="nav"><button data-view="all" class="active">▦ Biblioteca</button><button data-view="systems">◈ Sistemas</button><button data-view="favorites">★ Favoritos</button><button data-view="continue">◷ Continuar lendo</button><button data-view="homebrew">✦ Homebrew</button></div>
+<div class="side-title">Google Drive</div><div id="roots"></div><div class="nav"><button id="rescan">↻ Atualizar biblioteca</button><button id="changeRootBtn">⇄ Trocar pasta</button></div>
+<div class="side-title">Ferramentas</div><div class="nav"><button id="backupBtn">⇩ Backup</button><button id="resetBtn" class="danger">↺ Resetar biblioteca</button><button id="restoreBtn">⇧ Restaurar</button><button id="settingsBtn">⚙ Configurações</button></div>
+<div class="side-title">Estantes</div><div id="shelves"></div>
+</aside>
+<main class="main"><section class="hero"><div><h1 id="heading">Minha Estante</h1><p id="sub">Uma camada de biblioteca sobre as suas pastas — sem reorganizar seus PDFs.</p></div></section>
+<div class="stats"><div class="stat"><b id="statBooks">0</b>livros</div><div class="stat"><b id="statPages">0</b>páginas</div><div class="stat"><b id="statFav">0</b>favoritos</div><div class="stat"><b id="statSystems">0</b>sistemas</div><div class="stat"><b id="statMissing">0</b>arquivos ausentes</div></div>
+<div class="toolbar"><select id="systemFilter"><option value="">Todos os sistemas</option></select><select id="typeFilter"><option value="">Todos os tipos</option><option>Livro básico</option><option>Suplemento</option><option>Aventura</option><option>Bestiário</option><option>Playtest</option><option>Homebrew</option><option>Outro</option></select><select id="sort"><option value="recent">Mais recentes</option><option value="title">Título</option><option value="progress">Progresso</option><option value="pages">Páginas</option></select><button class="btn" id="viewBtn">▦ Grade</button><button class="btn" id="newShelf">＋ Estante</button></div><div id="content"></div>
+</main></div>
+<div class="modal" id="editModal"><div class="dialog"><h2>Editar livro</h2><form class="form" id="editForm"><div class="row"><label>Título<input id="eTitle" required></label><label>Sistema<input id="eSystem"></label></div><div class="row"><label>Tipo<select id="eType"><option>Livro básico</option><option>Suplemento</option><option>Aventura</option><option>Bestiário</option><option>Playtest</option><option>Homebrew</option><option>Outro</option></select></label><label>Tags<input id="eTags"></label></div><label>Notas<textarea id="eNotes" rows="6"></textarea></label><div class="actions"><button type="button" class="btn" id="editCancel">Cancelar</button><button class="btn primary">Salvar</button></div></form></div></div>
+<div class="modal" id="shelfModal"><div class="dialog"><h2>Nova estante</h2><form class="form" id="shelfForm"><label>Nome<input id="shelfName" required placeholder="Ex.: Para narrar"></label><div class="actions"><button type="button" class="btn" id="shelfCancel">Cancelar</button><button class="btn primary">Criar</button></div></form></div></div>
+<div class="modal" id="settingsModal"><div class="dialog"><h2>Configurações</h2><div class="notice"><b>Modo seguro</b><br>A biblioteca guarda apenas referências aos PDFs da sua pasta do Google Drive. "Remover da biblioteca" só remove a entrada do catálogo — o PDF original no Drive nunca é apagado, movido ou renomeado por aqui.</div><div class="notice" style="margin-top:10px">Favoritos, notas, marcadores e progresso de leitura ficam salvos na sua conta e sincronizam automaticamente entre todos os seus aparelhos.</div><div class="actions"><button class="btn" id="settingsClose">Fechar</button></div></div></div>
+<div class="reader" id="reader"><div class="readerbar"><button class="btn" id="closeReader">← Fechar</button><strong id="readerTitle"></strong><div class="readerGroup"><button class="btn" id="pageBack" title="Página anterior">−</button><span id="readerPage">1</span><button class="btn" id="pageNext" title="Próxima página">＋</button></div><div class="readerGroup"><button class="btn" id="zoomOut" title="Diminuir zoom">－</button><span id="zoomLabel">100%</span><button class="btn" id="zoomIn" title="Aumentar zoom">＋</button></div><button class="btn" id="noteBtn">📝 Notas</button><button class="btn" id="markBtn">🔖 Marcadores</button><button class="btn" id="fullBtn">⛶ Tela cheia</button></div><div class="readerBody"><div class="pdfStage" id="pdfStage"><canvas id="pdfCanvas"></canvas><div class="readerMsg" id="readerMsg" style="display:none"></div></div><aside class="sidePanel" id="sidePanel"><div class="sidePanelHead"><strong id="sidePanelTitle">Notas</strong><button class="btn" id="sidePanelClose">✕</button></div><div class="sidePanelBody"><div id="notesTab"><label>Notas sobre este livro<textarea id="readerNotes" rows="10" placeholder="Escreva aqui suas anotações de leitura..."></textarea></label></div><div id="bookmarksTab" style="display:none"><button class="btn primary" id="addBookmark" style="width:100%">🔖 Marcar página atual</button><div id="bookmarkList" class="bookmarkList"></div></div></div></aside></div></div>
+<div class="scanbar" id="scanBar"><div class="scanbar-row"><span id="scanLabel">Escaneando biblioteca…</span><span id="scanCount">0/0</span></div><div class="scanTrack"><div class="scanFill" id="scanFill" style="width:0%"></div></div><div class="scanFile" id="scanFile"></div></div><div class="toast" id="toast"></div><input id="restoreFile" type="file" accept=".json" hidden>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://accounts.google.com/gsi/client"></script>
+<script src="https://apis.google.com/js/api.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, get, set, update, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const $=id=>document.getElementById(id);
+let books=[],shelves=[],view='all',listMode=false,currentId=null,currentPage=1;
+
+/* ── Firebase (mesmo projeto do login) ───────────────────────────── */
+const firebaseConfig={apiKey:"AIzaSyCSQXdyLvqC4zT2BkSwUKk-uostVn2BmA8",authDomain:"rpg-ficha-monte-carmesim.firebaseapp.com",databaseURL:"https://rpg-ficha-monte-carmesim-default-rtdb.firebaseio.com",projectId:"rpg-ficha-monte-carmesim",storageBucket:"rpg-ficha-monte-carmesim.firebasestorage.app",messagingSenderId:"909026041375",appId:"1:909026041375:web:df06386967dd9181a23f2a"};
+const fbApp=initializeApp(firebaseConfig);
+const fbAuth=getAuth(fbApp);
+const fbDb=getDatabase(fbApp);
+let uid=null;
+function libPath(...parts){return 'library/'+uid+'/'+parts.join('/')}
+async function libGet(path,def){try{const snap=await get(ref(fbDb,libPath(path)));return snap.exists()?snap.val():def}catch(e){console.error('Firebase get falhou',path,e);return def}}
+async function libSet(path,value){return set(ref(fbDb,libPath(path)),value)}
+async function libUpdate(path,value){return update(ref(fbDb,libPath(path)),value)}
+async function libRemove(path){return remove(ref(fbDb,libPath(path)))}
+
+/* ── Google Drive (drive.file + Picker) ──────────────────────────── */
+const GOOGLE_CLIENT_ID='909026041375-vtssgcc2s8savcghmsjojashmqml9ed0.apps.googleusercontent.com';
+const GOOGLE_API_KEY='AIzaSyAO8uyak-Cw4zPMHUK9hQg-U9KsyMAV5mI';
+const DRIVE_SCOPE='https://www.googleapis.com/auth/drive.file';
+let accessToken=null,tokenClient=null,driveRoot=null; // driveRoot={id,name}
+function toast(t){$('toast').textContent=t;$('toast').classList.add('show');clearTimeout(window._toast);window._toast=setTimeout(()=>$('toast').classList.remove('show'),2800)}
+function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function coverDb(){return new Promise((res,rej)=>{const r=indexedDB.open('rpg_library_covers',1);r.onupgradeneeded=()=>{r.result.createObjectStore('covers')};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+async function getCachedCover(fileId){try{const d=await coverDb();return await new Promise(res=>{const r=d.transaction('covers').objectStore('covers').get(fileId);r.onsuccess=()=>res(r.result||null);r.onerror=()=>res(null)})}catch(e){return null}}
+async function setCachedCover(fileId,dataUrl){try{const d=await coverDb();await new Promise(res=>{const r=d.transaction('covers','readwrite').objectStore('covers').put(dataUrl,fileId);r.onsuccess=res;r.onerror=res})}catch(e){}}
+function pct(b){return b.pages?Math.min(100,Math.round((b.page||0)/b.pages*100)):0}
+function sourceLabel(b){return (b.pathDisplay||b.system||'Sem sistema')+' · Google Drive'}
+function coverHTML(b){return b.cover?`<img src="${b.cover}" alt="" loading="lazy" decoding="async">`:`<div class="fallback">${esc(b.title)}</div>`}
+function card(b){let st=b.missing?'<span class="status missing">arquivo ausente</span>':'<span class="status ok">Google Drive</span>';return `<article class="book"><div class="cover" onclick="openBook('${b.id}')">${coverHTML(b)}<button class="star" onclick="event.stopPropagation();toggleFav('${b.id}')">${b.favorite?'★':'☆'}</button></div><div class="book-title" title="${esc(b.title)}">${esc(b.title)}</div><div class="book-meta">${esc(b.system||'Sem sistema')} · ${b.pages||'?'} pág. · ${pct(b)}%</div><div class="book-path" title="${esc(sourceLabel(b))}">${esc(sourceLabel(b))}</div>${st}<div class="progress"><span style="width:${pct(b)}%"></span></div><div class="book-actions"><button class="btn" onclick="event.stopPropagation();editBook('${b.id}')">Editar</button><button class="btn danger" onclick="event.stopPropagation();removeBook('${b.id}')">Remover</button></div></article>`}
+function filtered(){let q=$('search').value.toLowerCase().trim(),sf=$('systemFilter').value,tf=$('typeFilter').value;let a=books.filter(b=>(!q||[b.title,b.system,b.type,(b.tags||[]).join(' '),sourceLabel(b)].join(' ').toLowerCase().includes(q))&&(!sf||b.system===sf)&&(!tf||b.type===tf));if(view==='favorites')a=a.filter(b=>b.favorite);if(view==='continue')a=a.filter(b=>(b.page||0)>0&&pct(b)<100);if(view==='homebrew')a=a.filter(b=>b.type==='Homebrew');if(view==='systems')a=a.filter(b=>b.system);let s=$('sort').value;a.sort((x,y)=>s==='title'?x.title.localeCompare(y.title):s==='pages'?(y.pages||0)-(x.pages||0):s==='progress'?pct(y)-pct(x):(y.added||0)-(x.added||0));return a}
+function render(){let a=filtered();$('statBooks').textContent=books.length;$('statPages').textContent=books.reduce((n,b)=>n+(b.pages||0),0);$('statFav').textContent=books.filter(b=>b.favorite).length;$('statSystems').textContent=new Set(books.map(b=>b.system).filter(Boolean)).size;$('statMissing').textContent=books.filter(b=>b.missing).length;let ss=[...new Set(books.map(b=>b.system).filter(Boolean))].sort();$('systemFilter').innerHTML='<option value="">Todos os sistemas</option>'+ss.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');$('content').className=listMode?'listview':'';if(!a.length){$('content').innerHTML='<div class="empty">Nenhum livro encontrado nesta seção.</div>';return}let groups={};a.forEach(b=>(groups[b.system||'Sem sistema']??=[]).push(b));$('content').innerHTML=Object.entries(groups).map(([s,bs])=>`<section class="shelf"><h2>${esc(s)} <span style="color:#687386;font-size:12px">${bs.length}</span></h2><div class="books">${bs.map(card).join('')}</div></section>`).join('')}
+function renderRootUI(){$('roots').innerHTML=(driveRoot&&driveRoot.name)?`<div class="rootline" title="${esc(driveRoot.name)}"><span class="rootdot"></span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(driveRoot.name)}</span></div>`:'<div style="padding:8px 10px;color:#687386;font-size:12px">Nenhuma pasta conectada.</div>'}
+function renderShelvesUI(){$('shelves').innerHTML=shelves.map(s=>`<button style="width:100%;border:0;background:transparent;color:#929cad;text-align:left;padding:9px 12px;border-radius:9px" onclick="toast('Estante: ${esc(s.name)}')">▰ ${esc(s.name)}</button>`).join('')}
+let scanning=false;
+function showScanUI(){$('scanBar').classList.add('show');$('rescan').disabled=true;$('changeRootBtn').disabled=true;$('rescan').textContent='↻ Atualizando…'}
+function hideScanUI(){$('scanBar').classList.remove('show');$('rescan').disabled=false;$('changeRootBtn').disabled=false;$('rescan').textContent='↻ Atualizar biblioteca'}
+function setScanProgress(done,total,label){$('scanCount').textContent=done+'/'+(total||'?');$('scanFill').style.width=(total?Math.round(done/total*100):0)+'%';$('scanFile').textContent=label||''}
+
+/* ── Drive API ────────────────────────────────────────────────────── */
+async function driveFetch(url){
+  let res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
+  if(res.status===401){
+    await requestToken(false);
+    res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
+  }
+  if(!res.ok)throw Object.assign(new Error('Drive HTTP '+res.status),{status:res.status});
+  return res;
+}
+async function listFolderTree(rootId,rootName){
+  let found=[];
+  let queue=[{id:rootId,chain:[]}];
+  while(queue.length){
+    const {id,chain}=queue.shift();
+    let pageToken;
+    do{
+      const params=new URLSearchParams({q:`'${id}' in parents and trashed=false`,fields:'nextPageToken, files(id,name,mimeType)',pageSize:'1000',spaces:'drive'});
+      if(pageToken)params.set('pageToken',pageToken);
+      const res=await driveFetch('https://www.googleapis.com/drive/v3/files?'+params.toString());
+      const data=await res.json();
+      for(const f of data.files||[]){
+        if(f.mimeType==='application/vnd.google-apps.folder'){queue.push({id:f.id,chain:chain.concat(f.name)})}
+        else if(f.mimeType==='application/pdf'){const system=chain.length?chain[0]:rootName;found.push({id:f.id,name:f.name,system,pathDisplay:(chain.length?chain.join(' / ')+' / ':'')+f.name})}
+      }
+      pageToken=data.nextPageToken;
+    }while(pageToken);
+  }
+  return found;
+}
+async function getFile(b){try{const res=await driveFetch(`https://www.googleapis.com/drive/v3/files/${b.id}?alt=media`);return await res.blob()}catch(e){console.error('Falha ao baixar PDF do Drive',b.id,e);return null}}
+async function coverFromPdf(file){try{if(!window.pdfjsLib)return null;pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';let buf=await file.arrayBuffer(),pdf=await pdfjsLib.getDocument({data:buf}).promise,p=await pdf.getPage(1),base=p.getViewport({scale:1});const MAXDIM=640;let scale=Math.min(1,MAXDIM/Math.max(base.width,base.height));let vp=p.getViewport({scale}),c=document.createElement('canvas');c.width=Math.max(1,Math.round(vp.width));c.height=Math.max(1,Math.round(vp.height));await p.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;return c.toDataURL('image/jpeg',.78)}catch(e){return null}}
+async function inspectPdf(file){try{let pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;return pdf.numPages}catch(e){return 0}}
+
+/* ── Escaneamento: junta o que existe no Drive com o "overlay" salvo no Firebase ── */
+async function loadBooksFromFirebase(found){
+  const overlay=await libGet('books',{});
+  const byId=new Map((found||[]).map(f=>[f.id,f]));
+  const list=[];
+  for(const [id,entry] of Object.entries(overlay)){
+    const meta=byId.get(id);
+    const cover=await getCachedCover(id);
+    list.push({id,title:entry.title,system:entry.system,type:entry.type||'Outro',tags:entry.tags||[],pages:entry.pages||0,page:entry.page||0,favorite:!!entry.favorite,notes:entry.notes||'',bookmarks:entry.bookmarks||[],missing:!!entry.missing,added:entry.addedAt||0,pathDisplay:meta?meta.pathDisplay:(entry.system||''),cover});
+  }
+  books=list;
+}
+async function rescan(){
+  if(scanning){toast('Já tem uma atualização em andamento. Aguarde terminar.');return}
+  if(!driveRoot||!driveRoot.id){toast('Conecte uma pasta do Drive primeiro.');return}
+  scanning=true;showScanUI();setScanProgress(0,0,'Preparando...');
+  try{
+    let found;
+    try{found=await listFolderTree(driveRoot.id,driveRoot.name)}
+    catch(e){console.error(e);toast('Não foi possível acessar sua pasta do Drive. Tente "Trocar pasta" pra reconectar.');return}
+    const overlay=await libGet('books',{});
+    const foundIds=new Set(found.map(f=>f.id));
+    const updates={};
+    let done=0,failed=0;
+    for(const f of found){
+      done++;setScanProgress(done,found.length,f.name);
+      let entry=overlay[f.id]?{...overlay[f.id]}:{};
+      entry.title=entry.title||f.name.replace(/\.pdf$/i,'');
+      entry.system=entry.system||f.system;
+      entry.type=entry.type||'Outro';
+      entry.tags=entry.tags||[];
+      entry.favorite=!!entry.favorite;
+      entry.notes=entry.notes||'';
+      entry.bookmarks=entry.bookmarks||[];
+      entry.page=entry.page||0;
+      entry.addedAt=entry.addedAt||Date.now();
+      entry.missing=false;
+      try{
+        let cachedCover=await getCachedCover(f.id);
+        if(!entry.pages||!cachedCover){
+          const blob=await getFile({id:f.id});
+          if(blob){
+            if(!entry.pages)entry.pages=await inspectPdf(blob);
+            if(!cachedCover){cachedCover=await coverFromPdf(blob);if(cachedCover)await setCachedCover(f.id,cachedCover)}
+          }
+        }
+      }catch(e){console.error('Falha ao processar PDF',f.name,e);failed++}
+      updates[f.id]=entry;
+    }
+    for(const id of Object.keys(overlay)){
+      if(!foundIds.has(id)&&overlay[id]&&!overlay[id].missing){updates[id]={...overlay[id],missing:true}}
+    }
+    if(Object.keys(updates).length)await libUpdate('books',updates);
+    await loadBooksFromFirebase(found);
+    render();
+    toast('Biblioteca atualizada: '+found.length+' PDF(s) encontrados.'+(failed?' · '+failed+' pulado(s) por erro.':''));
+  }finally{
+    scanning=false;hideScanUI();
+  }
+}
+
+/* ── Google OAuth (drive.file) + Picker ──────────────────────────── */
+function initGoogleClient(){
+  if(!window.google||!google.accounts||!google.accounts.oauth2){toast('Não foi possível carregar os serviços do Google. Verifique sua internet e recarregue a página.');return}
+  tokenClient=google.accounts.oauth2.initTokenClient({client_id:GOOGLE_CLIENT_ID,scope:DRIVE_SCOPE,callback:()=>{}});
+}
+function requestTokenOnce(prompt){
+  return new Promise((resolve,reject)=>{
+    if(!tokenClient){reject(new Error('Google não carregado'));return}
+    tokenClient.callback=resp=>{if(resp.error){reject(resp)}else{accessToken=resp.access_token;resolve(resp)}};
+    tokenClient.error_callback=err=>reject(err);
+    try{tokenClient.requestAccessToken({prompt})}catch(e){reject(e)}
+  });
+}
+async function requestToken(interactive){
+  try{return await requestTokenOnce('')}
+  catch(e){if(interactive)return await requestTokenOnce('consent');throw e}
+}
+function openPicker(){
+  if(!window.gapi){toast('Google Picker não carregou. Recarregue a página.');return}
+  gapi.load('picker',()=>{
+    const view=new google.picker.DocsView(google.picker.ViewId.FOLDERS).setSelectFolderEnabled(true).setIncludeFolders(true).setMode(google.picker.DocsViewMode.LIST);
+    const picker=new google.picker.PickerBuilder().setOAuthToken(accessToken).setDeveloperKey(GOOGLE_API_KEY).addView(view).setTitle('Selecione a pasta raiz da sua biblioteca de RPG').setCallback(onPicked).build();
+    picker.setVisible(true);
+  });
+}
+async function onPicked(data){
+  if(data.action===google.picker.Action.PICKED){
+    const folder=data.docs[0];
+    driveRoot={id:folder.id,name:folder.name};
+    await libSet('settings/driveRootId',folder.id);
+    await libSet('settings/driveRootName',folder.name);
+    $('driveGate').classList.remove('open');
+    await startApp();
+  }
+}
+$('connectDriveBtn').onclick=async()=>{
+  $('connectDriveBtn').disabled=true;$('connectDriveBtn').textContent='Conectando...';
+  try{
+    await requestToken(true);
+    if(driveRoot&&driveRoot.id){$('driveGate').classList.remove('open');await startApp()}
+    else openPicker();
+  }catch(e){console.error(e);toast('Não foi possível conectar ao Google Drive.')}
+  finally{$('connectDriveBtn').disabled=false;$('connectDriveBtn').textContent=(driveRoot&&driveRoot.id)?'Reconectar ao Google Drive':'Conectar ao Google Drive'}
+};
+$('changeRootBtn').onclick=async()=>{
+  if(scanning){toast('Aguarde a atualização atual terminar.');return}
+  try{if(!accessToken)await requestToken(true);openPicker()}catch(e){toast('Não foi possível conectar ao Google.')}
+};
+$('logoutBtn').onclick=async()=>{await signOut(fbAuth);location.href='inicio.html'};
+
+async function startApp(){
+  $('appRoot').style.display='';
+  shelves=await libGet('shelves',[]);
+  renderShelvesUI();renderRootUI();
+  await rescan();
+}
+
+/* ── Leitor de PDF (igual à V5.7, salvando no Firebase em vez do IndexedDB) ── */
+let readerPdf=null,currentScale=1,renderToken=0;
+function readerMessage(msg,error=false){$('readerMsg').textContent=msg;$('readerMsg').classList.toggle('error',!!error);$('readerMsg').style.display='block'}
+function hideReaderMessage(){$('readerMsg').style.display='none'}
+async function renderReaderPage(){
+  if(!readerPdf)return;
+  const token=++renderToken;
+  try{
+    const page=await readerPdf.getPage(currentPage);
+    if(token!==renderToken)return;
+    const base=page.getViewport({scale:1});
+    const stage=$('pdfStage');
+    const fit=Math.max(.5,Math.min(2.5,(stage.clientWidth-48)/base.width));
+    const scale=fit*currentScale;
+    const viewport=page.getViewport({scale});
+    const canvas=$('pdfCanvas'),ctx=canvas.getContext('2d',{alpha:false});
+    canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);
+    canvas.style.width=viewport.width+'px';canvas.style.height=viewport.height+'px';
+    await page.render({canvasContext:ctx,viewport}).promise;
+    if(token!==renderToken)return;
+    $('readerPage').textContent=currentPage+'/'+readerPdf.numPages;
+    $('zoomLabel').textContent=Math.round(currentScale*100)+'%';
+    hideReaderMessage();
+  }catch(e){console.error(e);readerMessage('Não foi possível renderizar esta página. O PDF pode estar protegido, corrompido ou usar um recurso incompatível.',true)}
+}
+async function loadPdfInReader(file){
+  if(!window.pdfjsLib)throw new Error('PDF.js não carregou. Verifique sua conexão com a internet.');
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const data=new Uint8Array(await file.arrayBuffer());
+  return await pdfjsLib.getDocument({data,disableAutoFetch:false}).promise;
+}
+window.openBook=async id=>{
+  const b=books.find(x=>x.id===id);if(!b)return;
+  const f=await getFile(b);
+  if(!f){render();toast('Arquivo não encontrado. Use "Atualizar biblioteca" ou verifique se ele ainda está na pasta do Drive.');return}
+  currentId=id;currentPage=Math.max(1,b.page||1);currentScale=1;
+  $('readerTitle').textContent=b.title;$('reader').classList.add('open');readerMessage('Carregando PDF…');
+  closeSidePanel();$('readerNotes').value=b.notes||'';renderBookmarks(b);
+  try{
+    if(readerPdf){await readerPdf.destroy().catch(()=>{})}
+    readerPdf=await loadPdfInReader(f);
+    b.pages=readerPdf.numPages;b.missing=false;await libUpdate('books/'+b.id,{pages:b.pages,missing:false});
+    if(currentPage>readerPdf.numPages)currentPage=readerPdf.numPages;
+    await renderReaderPage();render();
+  }catch(e){console.error(e);readerMessage('Não foi possível abrir este PDF. Tente atualizar a biblioteca.',true);toast('Erro ao abrir PDF: '+(e?.message||'formato não suportado'))}
+};
+$('closeReader').onclick=async()=>{renderToken++;if(readerPdf){await readerPdf.destroy().catch(()=>{});readerPdf=null}$('reader').classList.remove('open');$('pdfCanvas').width=1;$('pdfCanvas').height=1;closeSidePanel();if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})};
+$('pageBack').onclick=async()=>setReaderPage(currentPage-1);$('pageNext').onclick=async()=>setReaderPage(currentPage+1);
+$('zoomOut').onclick=()=>{currentScale=Math.max(.5,currentScale-.1);renderReaderPage()};$('zoomIn').onclick=()=>{currentScale=Math.min(2.5,currentScale+.1);renderReaderPage()};
+function openSidePanel(tab){$('sidePanel').classList.add('open');$('notesTab').style.display=tab==='notes'?'':'none';$('bookmarksTab').style.display=tab==='bookmarks'?'':'none';$('sidePanelTitle').textContent=tab==='notes'?'Notas':'Marcadores'}
+function closeSidePanel(){$('sidePanel').classList.remove('open')}
+function renderBookmarks(b){const list=$('bookmarkList');const marks=(b.bookmarks||[]).slice().sort((x,y)=>x.page-y.page);if(!marks.length){list.innerHTML='<div class="notice">Nenhum marcador ainda. Vá até uma página e clique em "Marcar página atual".</div>';return}list.innerHTML=marks.map(m=>`<div class="bookmarkItem" data-page="${m.page}"><span>📖 Página ${m.page}</span><button data-id="${m.id}" title="Remover marcador">✕</button></div>`).join('');list.querySelectorAll('.bookmarkItem').forEach(el=>el.addEventListener('click',ev=>{if(ev.target.tagName==='BUTTON')return;setReaderPage(parseInt(el.dataset.page,10))}));list.querySelectorAll('button[data-id]').forEach(btn=>btn.addEventListener('click',async ev=>{ev.stopPropagation();const bk=books.find(x=>x.id===currentId);if(!bk)return;bk.bookmarks=(bk.bookmarks||[]).filter(m=>m.id!==btn.dataset.id);await libUpdate('books/'+bk.id,{bookmarks:bk.bookmarks});renderBookmarks(bk);toast('Marcador removido.')}))}
+$('noteBtn').onclick=()=>openSidePanel('notes');$('markBtn').onclick=()=>openSidePanel('bookmarks');$('sidePanelClose').onclick=closeSidePanel;
+$('addBookmark').onclick=async()=>{const b=books.find(x=>x.id===currentId);if(!b)return;b.bookmarks=b.bookmarks||[];b.bookmarks.push({id:crypto.randomUUID(),page:currentPage,addedAt:Date.now()});await libUpdate('books/'+b.id,{bookmarks:b.bookmarks});renderBookmarks(b);toast('Página '+currentPage+' marcada.')};
+let notesSaveTimer=null;$('readerNotes').oninput=()=>{clearTimeout(notesSaveTimer);notesSaveTimer=setTimeout(async()=>{const b=books.find(x=>x.id===currentId);if(!b)return;b.notes=$('readerNotes').value;await libUpdate('books/'+b.id,{notes:b.notes})},450)};
+$('fullBtn').onclick=()=>{if(!document.fullscreenElement)$('reader').requestFullscreen?.().catch(()=>{});else document.exitFullscreen?.().catch(()=>{})};
+document.addEventListener('keydown',e=>{if(!$('reader').classList.contains('open'))return;const tag=document.activeElement&&document.activeElement.tagName;if(tag==='TEXTAREA'||tag==='INPUT')return;if(e.key==='ArrowRight')setReaderPage(currentPage+1);else if(e.key==='ArrowLeft')setReaderPage(currentPage-1);else if(e.key==='Escape'){if($('sidePanel').classList.contains('open'))closeSidePanel();else $('closeReader').click()}});
+async function setReaderPage(p){if(!readerPdf)return;const b=books.find(x=>x.id===currentId);if(!b)return;currentPage=Math.max(1,Math.min(readerPdf.numPages,p));b.page=currentPage;await libUpdate('books/'+b.id,{page:b.page});await renderReaderPage();render()}
+window.addEventListener('resize',()=>{if($('reader').classList.contains('open'))renderReaderPage()});
+window.toggleFav=async id=>{let b=books.find(x=>x.id===id);if(!b)return;b.favorite=!b.favorite;await libUpdate('books/'+b.id,{favorite:b.favorite});render()};
+window.editBook=id=>{let b=books.find(x=>x.id===id);if(!b)return;currentId=id;$('eTitle').value=b.title;$('eSystem').value=b.system||'';$('eType').value=b.type||'Outro';$('eTags').value=(b.tags||[]).join(', ');$('eNotes').value=b.notes||'';$('editModal').classList.add('open')};
+window.removeBook=async id=>{let b=books.find(x=>x.id===id);if(!b)return;if(!confirm('Remover "'+b.title+'" da biblioteca?\n\nIsso APENAS remove a entrada do catálogo. O PDF original no Google Drive não será apagado, movido ou renomeado.'))return;await libRemove('books/'+id);books=books.filter(x=>x.id!==id);render();toast('Removido da biblioteca. Arquivo original preservado no Drive.')};
+$('editCancel').onclick=()=>$('editModal').classList.remove('open');
+$('editForm').onsubmit=async e=>{e.preventDefault();let b=books.find(x=>x.id===currentId);if(!b)return;const patch={title:$('eTitle').value.trim()||b.title,system:$('eSystem').value.trim(),type:$('eType').value,tags:$('eTags').value.split(',').map(x=>x.trim()).filter(Boolean),notes:$('eNotes').value};Object.assign(b,patch);await libUpdate('books/'+b.id,patch);$('editModal').classList.remove('open');render();toast('Livro atualizado.')};
+$('rescan').onclick=rescan;
+async function resetLibrary(){
+  if(!confirm('RESETAR A BIBLIOTECA?\n\nIsso vai remover todos os livros, favoritos, notas, marcadores, progresso, estantes e a conexão com a pasta do Drive salvos na sua conta.\n\nNENHUM PDF no seu Google Drive será apagado, movido ou renomeado.'))return;
+  try{
+    await remove(ref(fbDb,'library/'+uid));
+    books=[];shelves=[];driveRoot=null;
+    if($('reader').classList.contains('open'))$('closeReader').click();
+    renderShelvesUI();renderRootUI();render();
+    $('appRoot').style.display='none';
+    $('driveGateTitle').textContent='Conectar ao Google Drive';$('driveGateMsg').textContent='Conecte novamente a pasta com seus PDFs de RPG.';$('connectDriveBtn').style.display='block';$('connectDriveBtn').textContent='Conectar ao Google Drive';
+    $('driveGate').classList.add('open');
+    toast('Biblioteca resetada. Seus PDFs continuam intactos no Drive.');
+  }catch(e){console.error(e);toast('Não foi possível resetar a biblioteca.')}
+}
+$('resetBtn').onclick=resetLibrary;
+$('backupBtn').onclick=async()=>{const snap=await get(ref(fbDb,'library/'+uid));const data={version:6,exportedAt:new Date().toISOString(),library:snap.exists()?snap.val():{}};let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));a.download='RPG_Library_Backup.json';a.click()};
+$('restoreBtn').onclick=()=>$('restoreFile').click();
+$('restoreFile').onchange=async()=>{let f=$('restoreFile').files[0];if(!f)return;try{let x=JSON.parse(await f.text());await set(ref(fbDb,'library/'+uid),x.library||{});toast('Backup restaurado. Atualizando...');driveRoot={id:await libGet('settings/driveRootId',null),name:await libGet('settings/driveRootName','')};shelves=await libGet('shelves',[]);renderShelvesUI();renderRootUI();if(driveRoot.id){if(!accessToken)await requestToken(true);await rescan()}}catch(e){console.error(e);toast('Backup inválido.')}};
+$('settingsBtn').onclick=()=>$('settingsModal').classList.add('open');$('settingsClose').onclick=()=>$('settingsModal').classList.remove('open');
+$('newShelf').onclick=()=>$('shelfModal').classList.add('open');$('shelfCancel').onclick=()=>$('shelfModal').classList.remove('open');
+$('shelfForm').onsubmit=async e=>{e.preventDefault();shelves.push({id:crypto.randomUUID(),name:$('shelfName').value.trim()});await libSet('shelves',shelves);$('shelfModal').classList.remove('open');e.target.reset();renderShelvesUI();toast('Estante criada.')};
+$('search').oninput=render;$('systemFilter').onchange=render;$('typeFilter').onchange=render;$('sort').onchange=render;
+$('viewBtn').onclick=()=>{listMode=!listMode;$('viewBtn').textContent=listMode?'☷ Lista':'▦ Grade';render()};
+document.querySelectorAll('#nav button').forEach(x=>x.onclick=()=>{document.querySelectorAll('#nav button').forEach(y=>y.classList.remove('active'));x.classList.add('active');view=x.dataset.view;$('heading').textContent={all:'Minha Estante',systems:'Sistemas',favorites:'Favoritos',continue:'Continuar lendo',homebrew:'Homebrew'}[view];render()});
+
+/* ── Portão de entrada: Firebase Auth → Google Drive → App ───────── */
+onAuthStateChanged(fbAuth,async user=>{
+  if(!user){
+    $('authGateLink').style.display='inline-block';
+    $('authGate').querySelector('p').textContent='Faça login para acessar a Livraria Virtual.';
+    return;
+  }
+  uid=user.uid;
+  $('whoamiTop').textContent=user.email||'';
+  $('authGate').classList.remove('open');
+  initGoogleClient();
+  driveRoot={id:await libGet('settings/driveRootId',null),name:await libGet('settings/driveRootName','')};
+  $('driveGate').classList.add('open');
+  if(driveRoot.id){
+    $('driveGateTitle').textContent='Reconectando ao Google Drive…';
+    $('driveGateMsg').textContent='Um instante, restabelecendo o acesso à sua pasta.';
+    $('connectDriveBtn').style.display='none';
+    try{
+      await requestToken(false);
+      $('driveGate').classList.remove('open');
+      await startApp();
+    }catch(e){
+      $('driveGateTitle').textContent='Reconectar ao Google Drive';
+      $('driveGateMsg').textContent='Sua sessão do Google expirou. Clique para reconectar (rapidinho).';
+      $('connectDriveBtn').style.display='block';
+      $('connectDriveBtn').textContent='Reconectar ao Google Drive';
+    }
+  }else{
+    $('driveGateTitle').textContent='Conectar ao Google Drive';
+    $('driveGateMsg').textContent='Conecte a conta do Google onde estão seus PDFs de RPG.';
+    $('connectDriveBtn').style.display='block';
+    $('connectDriveBtn').textContent='Conectar ao Google Drive';
+  }
+});
+</script></body></html>
