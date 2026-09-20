@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monte Carmesim — Arsenal DAP</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Barlow+Condensed:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+
+  :root{
+    --accent1:#3e20dc; --accent2:#2f18c4; --accent3:#1f10ad; --accent4:#100895; --accent5:#00007e;
+    --bone:#f2ede6; --ash:#8f8aa8; --panel:#0e0a1c; --border:#241a4a;
+    --err:#e05555; --ok:#4caf50;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body{
+    background: radial-gradient(ellipse at top, #150c33 0%, #050208 70%);
+    color: var(--bone);
+    font-family:'Barlow Condensed',sans-serif;
+    min-height:100vh;
+    padding: 30px 16px 80px;
+  }
+  a{color:inherit}
+  .back-home{position:fixed;top:14px;left:14px;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--ash);border:1px solid var(--border);border-radius:3px;padding:6px 10px;text-decoration:none;z-index:5}
+  .back-home:hover{color:var(--bone);border-color:var(--accent1)}
+
+  header{text-align:center;margin-bottom:22px}
+  .stamp{display:inline-block;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--bone);opacity:.85;border:1px solid var(--accent4);padding:3px 10px;border-radius:2px;margin-bottom:10px}
+  header h1{font-family:'Oswald',sans-serif;font-size:26px;font-weight:700;letter-spacing:5px;color:var(--accent1);text-transform:uppercase;text-shadow:0 0 18px rgba(62,32,220,.35)}
+  header p{font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;color:var(--ash);margin-top:6px}
+
+  .view{display:none}
+  .view.active{display:block}
+  .gate-note{text-align:center;color:var(--ash);font-family:'Share Tech Mono',monospace;font-size:11px;margin-top:60px;letter-spacing:1px;line-height:1.8}
+  .gate-note a{color:var(--accent1)}
+
+  .toolbar{max-width:1100px;margin:0 auto 20px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+  .loadoutInfo{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent3);border-radius:6px;padding:10px 16px}
+  .loadoutInfo .lbl{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--ash);text-transform:uppercase}
+  .loadoutInfo .count{font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;color:#fff}
+  .loadoutInfo .count.full{color:var(--err)}
+  .filters{display:flex;gap:6px;flex-wrap:wrap}
+  .filters button{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ash);background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:7px 14px;cursor:pointer}
+  .filters button.active{color:#fff;border-color:var(--accent1);background:#1a1140}
+
+  .grid{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;position:relative;transition:border-color .15s}
+  .card.selected{border-color:var(--accent1);box-shadow:0 0 0 1px var(--accent1)}
+  .card .thumb{aspect-ratio:4/3;background:#120a2c center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:30px;color:#332966;border-bottom:1px solid var(--border)}
+  .card .body{padding:12px 14px;display:flex;flex-direction:column;gap:6px;flex:1}
+  .card .type-badge{align-self:flex-start;font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--bone);background:#1a1140;border:1px solid var(--border);border-radius:10px;padding:3px 9px}
+  .card h3{font-family:'Oswald',sans-serif;font-size:15px;font-weight:700;color:#fff}
+  .card .desc{font-size:12.5px;color:var(--ash);line-height:1.4;flex:1}
+  .card .cost{font-family:'Share Tech Mono',monospace;font-size:11px;color:#ffd479}
+  .card .actions{display:flex;gap:6px;margin-top:4px}
+  .btn{flex:1;font-family:'Oswald',sans-serif;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:9px 0;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--bone);cursor:pointer;transition:background .15s,border-color .15s}
+  .btn.primary{background:var(--accent3);border-color:var(--accent3)}
+  .btn.primary:hover{background:var(--accent1)}
+  .btn.ghost:hover{border-color:var(--accent1)}
+  .btn.danger{color:var(--err);border-color:#4a2530}
+  .btn.danger:hover{background:#2a1218}
+  .btn:disabled{opacity:.35;cursor:default}
+  .card .mgrRow{display:flex;gap:6px;padding:0 14px 12px}
+
+  .fab{position:fixed;right:20px;bottom:20px;width:54px;height:54px;border-radius:50%;background:var(--accent1);border:0;color:#fff;font-size:24px;cursor:pointer;box-shadow:0 6px 20px rgba(62,32,220,.5);z-index:10}
+  .modal{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+  .modal.open{display:flex}
+  .dialog{width:100%;max-width:420px;background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent3);border-radius:8px;padding:22px 24px;max-height:90vh;overflow:auto}
+  .dialog h2{font-family:'Oswald',sans-serif;font-size:17px;letter-spacing:1px;color:#fff;margin-bottom:16px}
+  .field{margin-bottom:12px}
+  .field label{display:block;font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--ash);margin-bottom:4px;text-transform:uppercase}
+  .field input,.field textarea,.field select{width:100%;background:#120a2c;border:1px solid #29205a;border-radius:4px;color:var(--bone);font-family:'Barlow Condensed',sans-serif;font-size:14px;padding:9px 11px;outline:none}
+  .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent1)}
+  .field textarea{resize:vertical}
+  .dialog .actions{display:flex;gap:8px;margin-top:16px}
+  .dialog .actions button{flex:1}
+
+  .settingsRow{display:flex;align-items:center;gap:10px;max-width:1100px;margin:0 auto 16px;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:10px 16px}
+  .settingsRow label{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--ash);text-transform:uppercase}
+  .settingsRow input{width:70px;background:#120a2c;border:1px solid #29205a;border-radius:4px;color:#fff;font-family:'Oswald',sans-serif;font-size:15px;padding:6px 10px;text-align:center}
+  .settingsRow button{font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--accent1);background:none;border:1px solid var(--accent4);border-radius:4px;padding:6px 12px;cursor:pointer}
+
+  .rosterSection{max-width:1100px;margin:26px auto 0}
+  .rosterSection h2{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:2px;color:var(--ash);text-transform:uppercase;margin-bottom:10px}
+  .rosterGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+  .rosterCard{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:12px 14px}
+  .rosterCard h4{font-family:'Oswald',sans-serif;font-size:13px;color:#fff;margin-bottom:6px}
+  .rosterCard ul{list-style:none;font-size:12px;color:var(--ash);display:grid;gap:3px}
+  .empty-note{color:var(--ash);font-family:'Share Tech Mono',monospace;font-size:11px;text-align:center;padding:20px}
+
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--accent4);color:var(--bone);font-family:'Barlow Condensed',sans-serif;font-size:13px;padding:10px 18px;border-radius:6px;display:none;z-index:100}
+  .toast.show{display:block}
+
+  @media (max-width:480px){
+    header h1{font-size:19px !important;letter-spacing:3px !important}
+    .stamp{font-size:8px !important}
+    .toolbar{flex-direction:column;align-items:stretch}
+    .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+  }
+</style>
+</head>
+<body>
+
+<a class="back-home" href="inicio.html">← Início</a>
+
+<header>
+  <div class="stamp">DAP · ARSENAL DE MISSÃO</div>
+  <h1>☠ Arsenal — Ordem Paranormal</h1>
+  <p id="headerSub">Verificando sua sessão...</p>
+</header>
+
+<div class="view" id="view-gate">
+  <div class="gate-note">🔒 Faça login pra ver o arsenal.<br><a href="inicio.html">Entrar</a></div>
+</div>
+
+<div class="view" id="view-app">
+  <div class="settingsRow mgr-only" id="mgrSettingsRow">
+    <label>Limite de itens desta missão</label>
+    <input type="number" id="maxItemsInput" min="0" value="5">
+    <button id="saveMaxItems">Salvar limite</button>
+  </div>
+
+  <div class="filters" id="charTabs" style="max-width:1100px;margin:0 auto 16px"></div>
+
+  <div class="toolbar">
+    <div class="loadoutInfo" id="loadoutInfoBox">
+      <span class="lbl">Carga selecionada</span>
+      <span class="count" id="loadoutCount">0/5</span>
+    </div>
+    <div class="filters" id="filters">
+      <button data-type="" class="active">Todos</button>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+  <div class="empty-note" id="emptyNote" style="display:none">Nenhum item cadastrado ainda no arsenal.</div>
+
+  <div class="rosterSection mgr-only" id="rosterSection">
+    <h2>O que cada agente está levando</h2>
+    <div class="rosterGrid" id="rosterGrid"></div>
+  </div>
+</div>
+
+<button class="fab mgr-only" id="addItemFab" title="Adicionar item">＋</button>
+
+<div class="modal" id="itemModal">
+  <div class="dialog">
+    <h2 id="itemModalTitle">Novo item</h2>
+    <form id="itemForm">
+      <div class="field"><label>Nome</label><input id="iName" required></div>
+      <div class="field"><label>Tipo</label>
+        <select id="iType">
+          <option>Arma</option><option>Armadura/Colete</option><option>Munição</option>
+          <option>Equipamento tático</option><option>Item de investigação</option><option>Diversos</option>
+        </select>
+      </div>
+      <div class="field"><label>URL da foto (opcional)</label><input id="iPhoto" placeholder="https://..."></div>
+      <div class="field"><label>Descrição / efeito</label><textarea id="iDesc" rows="3" placeholder="Ex.: +1d6 de dano, ocupa 2 espaços na mochila..."></textarea></div>
+      <div class="actions">
+        <button type="button" class="btn ghost" id="itemCancel">Cancelar</button>
+        <button type="button" class="btn danger" id="itemDelete" style="display:none">Excluir</button>
+        <button class="btn primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, get, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig={apiKey:"AIzaSyCSQXdyLvqC4zT2BkSwUKk-uostVn2BmA8",authDomain:"rpg-ficha-monte-carmesim.firebaseapp.com",databaseURL:"https://rpg-ficha-monte-carmesim-default-rtdb.firebaseio.com",projectId:"rpg-ficha-monte-carmesim",storageBucket:"rpg-ficha-monte-carmesim.firebasestorage.app",messagingSenderId:"909026041375",appId:"1:909026041375:web:df06386967dd9181a23f2a"};
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getDatabase(app);
+
+const $=id=>document.getElementById(id);
+let currentRole=null, currentName=null, isManager=false;
+let items={}, maxItems=5, myLoadout={}, allLoadouts={}, activeFilter='', editingId=null;
+let currentSlot=1, charNames={1:'',2:'',3:''}, unsubLoadout=null;
+
+function toast(t){$('toast').textContent=t;$('toast').classList.add('show');clearTimeout(window._t);window._t=setTimeout(()=>$('toast').classList.remove('show'),2600)}
+function esc(s=''){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function slotSuffix(slot){return slot===1?'':String(slot)}
+
+async function loadCharNames(){
+  await Promise.all([1,2,3].map(async slot=>{
+    try{
+      const snap=await get(ref(db,`players/${currentName}/ficha${slotSuffix(slot)}/inputs/id_nome`));
+      charNames[slot]=snap.exists()&&snap.val()?snap.val().trim():'';
+    }catch(e){charNames[slot]=''}
+  }));
+}
+function renderCharTabs(){
+  if(currentRole!=='player'){$('charTabs').innerHTML='';return}
+  $('charTabs').innerHTML=[1,2,3].map(slot=>{
+    const label=charNames[slot]||('Ficha '+slot);
+    return `<button data-slot="${slot}" class="${slot===currentSlot?'active':''}">${esc(label)}</button>`;
+  }).join('');
+  $('charTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>switchSlot(parseInt(b.dataset.slot,10)));
+}
+function switchSlot(slot){
+  if(slot===currentSlot)return;
+  currentSlot=slot;
+  renderCharTabs();
+  subscribeLoadout();
+}
+function subscribeLoadout(){
+  if(unsubLoadout){unsubLoadout();unsubLoadout=null}
+  unsubLoadout=onValue(ref(db,'arsenal/dap/loadout/'+currentName+'/'+currentSlot), snap=>{myLoadout=snap.val()||{};renderLoadoutCounter();renderGrid()});
+}
+
+function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));$('view-'+id).classList.add('active')}
+
+function itemTypes(){return [...new Set(Object.values(items).map(i=>i.type).filter(Boolean))].sort()}
+
+function renderFilters(){
+  const types=itemTypes();
+  $('filters').innerHTML='<button data-type="" class="'+(activeFilter===''?'active':'')+'">Todos</button>'+
+    types.map(t=>`<button data-type="${esc(t)}" class="${activeFilter===t?'active':''}">${esc(t)}</button>`).join('');
+  $('filters').querySelectorAll('button').forEach(b=>b.onclick=()=>{activeFilter=b.dataset.type;renderFilters();renderGrid()});
+}
+
+function myLoadoutCount(){return Object.keys(myLoadout).filter(k=>myLoadout[k]).length}
+
+function renderLoadoutCounter(){
+  const n=myLoadoutCount();
+  $('loadoutCount').textContent=n+'/'+maxItems;
+  $('loadoutCount').classList.toggle('full', n>=maxItems);
+  if(currentRole!=='player'){$('loadoutInfoBox').style.display='none'}
+}
+
+function renderGrid(){
+  const list=Object.entries(items).filter(([id,it])=>!activeFilter||it.type===activeFilter);
+  $('emptyNote').style.display=list.length?'none':'block';
+  $('grid').innerHTML=list.map(([id,it])=>{
+    const selected=!!myLoadout[id];
+    const photo=it.photo?`style="background-image:url('${esc(it.photo)}')"`:'';
+    const fallback=it.photo?'':'🎒';
+    let actionBtn='';
+    if(currentRole==='player'){
+      const disabled=(!selected && myLoadoutCount()>=maxItems)?'disabled':'';
+      actionBtn=`<button class="btn ${selected?'ghost':'primary'}" data-toggle="${id}" ${disabled}>${selected?'Remover da carga':'Levar na missão'}</button>`;
+    }
+    let mgrRow=isManager?`<div class="mgrRow"><button class="btn ghost" data-edit="${id}">Editar</button></div>`:'';
+    return `<div class="card ${selected?'selected':''}"><div class="thumb" ${photo}>${fallback}</div><div class="body"><span class="type-badge">${esc(it.type||'Diversos')}</span><h3>${esc(it.name)}</h3><div class="desc">${esc(it.description||'')}</div>${it.cost?`<div class="cost">💰 ${esc(it.cost)}</div>`:''}<div class="actions">${actionBtn}</div></div>${mgrRow}</div>`;
+  }).join('');
+  $('grid').querySelectorAll('[data-toggle]').forEach(b=>b.onclick=()=>toggleLoadout(b.dataset.toggle));
+  $('grid').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openEdit(b.dataset.edit));
+}
+
+async function toggleLoadout(id){
+  if(currentRole!=='player')return;
+  const willSelect=!myLoadout[id];
+  if(willSelect && myLoadoutCount()>=maxItems){toast('Limite de '+maxItems+' itens atingido pra essa missão.');return}
+  const base='arsenal/dap/loadout/'+currentName+'/'+currentSlot+'/'+id;
+  try{
+    if(willSelect) await set(ref(db,base), true);
+    else await remove(ref(db,base));
+  }catch(e){console.error(e);toast('Não foi possível salvar. Tenta de novo.')}
+}
+
+async function renderRoster(){
+  if(!isManager)return;
+  const players=Object.entries(allLoadouts);
+  if(!players.length){$('rosterGrid').innerHTML='<div class="empty-note">Ninguém selecionou itens ainda.</div>';return}
+  const cards=[];
+  for(const [player,slots] of players){
+    for(const [slot,picks] of Object.entries(slots||{})){
+      const names=Object.keys(picks||{}).filter(id=>picks[id]&&items[id]).map(id=>items[id].name);
+      if(!names.length)continue;
+      let charLabel='';
+      try{
+        const snap=await get(ref(db,`players/${player}/ficha${slotSuffix(parseInt(slot,10))}/inputs/id_nome`));
+        charLabel=snap.exists()&&snap.val()?snap.val().trim():'';
+      }catch(e){}
+      const title=player+' — '+(charLabel||('Ficha '+slot));
+      cards.push(`<div class="rosterCard"><h4>${esc(title)}</h4><ul>${names.map(n=>`<li>• ${esc(n)}</li>`).join('')}</ul></div>`);
+    }
+  }
+  $('rosterGrid').innerHTML=cards.join('') || '<div class="empty-note">Ninguém selecionou itens ainda.</div>';
+}
+
+function openNew(){editingId=null;$('itemModalTitle').textContent='Novo item';$('iName').value='';$('iType').value='Arma';$('iPhoto').value='';$('iDesc').value='';$('itemDelete').style.display='none';$('itemModal').classList.add('open')}
+function openEdit(id){const it=items[id];if(!it)return;editingId=id;$('itemModalTitle').textContent='Editar item';$('iName').value=it.name||'';$('iType').value=it.type||'Arma';$('iPhoto').value=it.photo||'';$('iDesc').value=it.description||'';$('itemDelete').style.display='block';$('itemModal').classList.add('open')}
+$('addItemFab').onclick=openNew;
+$('itemCancel').onclick=()=>$('itemModal').classList.remove('open');
+$('itemDelete').onclick=async()=>{
+  if(!editingId)return;
+  if(!confirm('Excluir este item do arsenal? Isso remove ele da carga de quem já tinha selecionado.'))return;
+  try{
+    await remove(ref(db,'arsenal/dap/items/'+editingId));
+    $('itemModal').classList.remove('open');
+    toast('Item excluído.');
+  }catch(e){console.error(e);toast('Não foi possível excluir.')}
+};
+$('itemForm').onsubmit=async e=>{
+  e.preventDefault();
+  const data={name:$('iName').value.trim(),type:$('iType').value,photo:$('iPhoto').value.trim(),description:$('iDesc').value.trim()};
+  if(!data.name)return;
+  try{
+    const id=editingId||('item_'+Date.now()+'_'+Math.random().toString(36).slice(2,7));
+    await set(ref(db,'arsenal/dap/items/'+id), data);
+    $('itemModal').classList.remove('open');
+    toast('Item salvo.');
+  }catch(e){console.error(e);toast('Não foi possível salvar o item.')}
+};
+
+$('saveMaxItems').onclick=async()=>{
+  const v=parseInt($('maxItemsInput').value,10)||0;
+  try{await set(ref(db,'arsenal/dap/settings/maxItems'), v);toast('Limite atualizado pra '+v+' itens.')}
+  catch(e){console.error(e);toast('Não foi possível salvar o limite.')}
+};
+
+onAuthStateChanged(auth, async user=>{
+  if(!user){showView('gate');return}
+  const snap=await get(ref(db,'users/'+user.uid));
+  if(!snap.exists()){showView('gate');return}
+  const info=snap.val();
+  currentRole=info.role==='master'?'master':'player';
+  currentName=info.name;
+  isManager=currentRole==='master';
+  document.body.classList.toggle('is-manager', isManager);
+  $('headerSub').textContent=isManager?'Painel do Mestre — gerencie o arsenal e o limite de carga':'Escolha o que vai levar pra missão';
+  showView('app');
+
+  onValue(ref(db,'arsenal/dap/items'), snap=>{items=snap.val()||{};renderFilters();renderGrid();renderRoster()});
+  onValue(ref(db,'arsenal/dap/settings/maxItems'), snap=>{maxItems=snap.exists()?snap.val():5;$('maxItemsInput').value=maxItems;renderLoadoutCounter();renderGrid()});
+  if(currentRole==='player'){
+    await loadCharNames();
+    renderCharTabs();
+    subscribeLoadout();
+  }
+  if(isManager){
+    onValue(ref(db,'arsenal/dap/loadout'), snap=>{allLoadouts=snap.val()||{};renderRoster()});
+  }
+});
+</script>
+<style>
+.mgr-only{display:none}
+body.is-manager .mgr-only{display:block}
+body.is-manager .fab.mgr-only{display:flex;align-items:center;justify-content:center}
+</style>
+</body>
+</html>
