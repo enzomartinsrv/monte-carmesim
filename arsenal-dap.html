@@ -83,9 +83,14 @@
   .rosterSection{max-width:1100px;margin:26px auto 0}
   .rosterSection h2{font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:2px;color:var(--ash);text-transform:uppercase;margin-bottom:10px}
   .rosterGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-  .rosterCard{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:12px 14px}
+  .rosterCard{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:12px 14px;display:flex;gap:10px}
+  .rosterCard .avatarThumb{width:44px;height:44px;border-radius:6px;background:#1a1140 center/cover no-repeat;border:1px solid #332966;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--ash)}
+  .rosterCard .rosterBody{flex:1;min-width:0}
   .rosterCard h4{font-family:'Oswald',sans-serif;font-size:13px;color:#fff;margin-bottom:6px}
   .rosterCard ul{list-style:none;font-size:12px;color:var(--ash);display:grid;gap:3px}
+.rosterCard ul li{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.rmItemBtn{border:0;background:transparent;color:var(--err);cursor:pointer;font-size:13px;padding:2px 4px;line-height:1}
+.rmItemBtn:hover{color:#ff8080}
   .empty-note{color:var(--ash);font-family:'Share Tech Mono',monospace;font-size:11px;text-align:center;padding:20px}
 
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--panel);border:1px solid var(--accent4);color:var(--bone);font-family:'Barlow Condensed',sans-serif;font-size:13px;padding:10px 18px;border-radius:6px;display:none;z-index:100}
@@ -135,7 +140,7 @@
   <div class="grid" id="grid"></div>
   <div class="empty-note" id="emptyNote" style="display:none">Nenhum item cadastrado ainda no arsenal.</div>
 
-  <div class="rosterSection mgr-only" id="rosterSection">
+  <div class="rosterSection" id="rosterSection">
     <h2>O que cada agente está levando</h2>
     <div class="rosterGrid" id="rosterGrid"></div>
   </div>
@@ -277,8 +282,9 @@ async function toggleLoadout(id){
       const invSlot=await findEmptyInvSlot(invFp);
       if(invSlot===null){toast('O inventário da ficha já está com as 14 linhas ocupadas. Libere um espaço antes de levar mais itens.');return}
       const it=items[id];
+      const label=it.description?(it.name+' - '+it.description):it.name;
       await update(ref(db,invFp), {
-        ['inv_'+invSlot+'_nome']: it.name,
+        ['inv_'+invSlot+'_nome']: label,
         ['inv_'+invSlot+'_cat']: CAT_CODES[it.type]||(it.type||'').slice(0,4).toUpperCase()
       });
       await set(ref(db,base), {invSlot});
@@ -295,25 +301,66 @@ async function toggleLoadout(id){
   }catch(e){console.error(e);toast('Não foi possível salvar. Tenta de novo.')}
 }
 
+function avatarFieldName(slotNum,formaAlta){return 'avatar'+slotSuffix(slotNum)+((slotNum===3&&formaAlta)?'_alt':'')}
+async function getAvatarUrl(player,slotNum){
+  try{
+    let formaAlta=false;
+    if(slotNum===3){
+      const fSnap=await get(ref(db,`players/${player}/ficha3/formaAtiva`));
+      formaAlta=fSnap.exists()&&fSnap.val()==='alta';
+    }
+    const field=avatarFieldName(slotNum,formaAlta);
+    const snap=await get(ref(db,`players/${player}/${field}`));
+    return snap.exists()&&snap.val()?snap.val():null;
+  }catch(e){return null}
+}
+
 async function renderRoster(){
-  if(!isManager)return;
   const players=Object.entries(allLoadouts);
   if(!players.length){$('rosterGrid').innerHTML='<div class="empty-note">Ninguém selecionou itens ainda.</div>';return}
   const cards=[];
   for(const [player,slots] of players){
     for(const [slot,picks] of Object.entries(slots||{})){
-      const names=Object.keys(picks||{}).filter(id=>picks[id]&&items[id]).map(id=>items[id].name);
-      if(!names.length)continue;
+      const entries=Object.entries(picks||{}).filter(([id])=>items[id]);
+      if(!entries.length)continue;
+      const slotNum=parseInt(slot,10);
       let charLabel='';
       try{
-        const snap=await get(ref(db,`players/${player}/ficha${slotSuffix(parseInt(slot,10))}/inputs/id_nome`));
+        const snap=await get(ref(db,`players/${player}/ficha${slotSuffix(slotNum)}/inputs/id_nome`));
         charLabel=snap.exists()&&snap.val()?snap.val().trim():'';
       }catch(e){}
+      const avatarUrl=await getAvatarUrl(player,slotNum);
       const title=player+' — '+(charLabel||('Ficha '+slot));
-      cards.push(`<div class="rosterCard"><h4>${esc(title)}</h4><ul>${names.map(n=>`<li>• ${esc(n)}</li>`).join('')}</ul></div>`);
+      const rows=entries.map(([id])=>{
+        const btn=isManager?`<button class="rmItemBtn" data-player="${esc(player)}" data-slot="${esc(slot)}" data-item="${esc(id)}" title="Remover da carga">✕</button>`:'';
+        return `<li>• ${esc(items[id].name)}${btn}</li>`;
+      }).join('');
+      const thumb=avatarUrl?`style="background-image:url('${esc(avatarUrl)}')"`:'';
+      const fallback=avatarUrl?'':'☠';
+      cards.push(`<div class="rosterCard"><div class="avatarThumb" ${thumb}>${fallback}</div><div class="rosterBody"><h4>${esc(title)}</h4><ul>${rows}</ul></div></div>`);
     }
   }
   $('rosterGrid').innerHTML=cards.join('') || '<div class="empty-note">Ninguém selecionou itens ainda.</div>';
+  $('rosterGrid').querySelectorAll('.rmItemBtn').forEach(b=>b.onclick=()=>masterRemoveItem(b.dataset.player,b.dataset.slot,b.dataset.item));
+}
+
+async function masterRemoveItem(player,slotNum,itemId){
+  if(!isManager)return;
+  if(!confirm('Remover este item da carga de '+player+'? Ele também some do inventário da ficha.'))return;
+  const loadoutPath='arsenal/dap/loadout/'+player+'/'+slotNum+'/'+itemId;
+  try{
+    const entrySnap=await get(ref(db,loadoutPath));
+    const entry=entrySnap.exists()?entrySnap.val():null;
+    if(entry && typeof entry==='object' && entry.invSlot!=null){
+      const invFp='players/'+player+'/ficha'+slotSuffix(parseInt(slotNum,10))+'/inputs';
+      await update(ref(db,invFp), {
+        ['inv_'+entry.invSlot+'_nome']: '',
+        ['inv_'+entry.invSlot+'_cat']: ''
+      });
+    }
+    await remove(ref(db,loadoutPath));
+    toast('Item removido da carga de '+player+'.');
+  }catch(e){console.error(e);toast('Não foi possível remover.')}
 }
 
 function openNew(){editingId=null;$('itemModalTitle').textContent='Novo item';$('iName').value='';$('iType').value='Arma';$('iPhoto').value='';$('iDesc').value='';$('itemDelete').style.display='none';$('itemModal').classList.add('open')}
@@ -361,13 +408,11 @@ onAuthStateChanged(auth, async user=>{
 
   onValue(ref(db,'arsenal/dap/items'), snap=>{items=snap.val()||{};renderFilters();renderGrid();renderRoster()});
   onValue(ref(db,'arsenal/dap/settings/maxItems'), snap=>{maxItems=snap.exists()?snap.val():5;$('maxItemsInput').value=maxItems;renderLoadoutCounter();renderGrid()});
+  onValue(ref(db,'arsenal/dap/loadout'), snap=>{allLoadouts=snap.val()||{};renderRoster()});
   if(currentRole==='player'){
     await loadCharNames();
     renderCharTabs();
     subscribeLoadout();
-  }
-  if(isManager){
-    onValue(ref(db,'arsenal/dap/loadout'), snap=>{allLoadouts=snap.val()||{};renderRoster()});
   }
 });
 </script>
