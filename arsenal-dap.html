@@ -46,6 +46,8 @@
   .grid{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
   .card{background:var(--panel);border:1px solid var(--border);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;position:relative;transition:border-color .15s}
   .card.selected{border-color:var(--accent1);box-shadow:0 0 0 1px var(--accent1)}
+  .card.locked{opacity:.5}
+  .lockBanner{position:absolute;top:44%;left:50%;transform:translate(-50%,-50%) rotate(-8deg);background:#000000d9;color:#fff;font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border:1px solid var(--err);border-radius:4px;z-index:2;white-space:nowrap}
   .card .thumb{aspect-ratio:4/3;background:#120a2c center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:30px;color:#332966;border-bottom:1px solid var(--border)}
   .card .body{padding:12px 14px;display:flex;flex-direction:column;gap:6px;flex:1}
   .card .type-badge{align-self:flex-start;font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--bone);background:#1a1140;border:1px solid var(--border);border-radius:10px;padding:3px 9px}
@@ -89,6 +91,9 @@
   .rosterCard h4{font-family:'Oswald',sans-serif;font-size:13px;color:#fff;margin-bottom:6px}
   .rosterCard ul{list-style:none;font-size:12px;color:var(--ash);display:grid;gap:3px}
 .rosterCard ul li{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.rosterCard .itemRow{display:flex;align-items:center;gap:6px;overflow:hidden}
+.itemThumb{width:22px;height:22px;border-radius:4px;object-fit:cover;flex-shrink:0}
+.itemThumb.fallback{display:flex;align-items:center;justify-content:center;background:#1a1140;font-size:11px}
 .rmItemBtn{border:0;background:transparent;color:var(--err);cursor:pointer;font-size:13px;padding:2px 4px;line-height:1}
 .rmItemBtn:hover{color:#ff8080}
   .empty-note{color:var(--ash);font-family:'Share Tech Mono',monospace;font-size:11px;text-align:center;padding:20px}
@@ -238,20 +243,37 @@ function renderLoadoutCounter(){
   if(currentRole!=='player'){$('loadoutInfoBox').style.display='none'}
 }
 
+function itemLockInfo(id){
+  for(const [player,slots] of Object.entries(allLoadouts||{})){
+    for(const [slot,picks] of Object.entries(slots||{})){
+      if(picks && picks[id]) return {player, slot:parseInt(slot,10)};
+    }
+  }
+  return null;
+}
+
 function renderGrid(){
   const list=Object.entries(items).filter(([id,it])=>!activeFilter||it.type===activeFilter);
   $('emptyNote').style.display=list.length?'none':'block';
   $('grid').innerHTML=list.map(([id,it])=>{
-    const selected=!!myLoadout[id];
+    const lock=itemLockInfo(id);
+    const isMine=lock && currentRole==='player' && lock.player===currentName && lock.slot===currentSlot;
+    const lockedByOther=lock && !isMine;
+    const selected=!!isMine;
     const photo=it.photo?`style="background-image:url('${esc(it.photo)}')"`:'';
     const fallback=it.photo?'':'🎒';
     let actionBtn='';
     if(currentRole==='player'){
-      const disabled=(!selected && myLoadoutCount()>=maxItems)?'disabled':'';
-      actionBtn=`<button class="btn ${selected?'ghost':'primary'}" data-toggle="${id}" ${disabled}>${selected?'Remover da carga':'Levar na missão'}</button>`;
+      if(lockedByOther){
+        actionBtn=`<button class="btn ghost" disabled>Indisponível</button>`;
+      }else{
+        const disabled=(!selected && myLoadoutCount()>=maxItems)?'disabled':'';
+        actionBtn=`<button class="btn ${selected?'ghost':'primary'}" data-toggle="${id}" ${disabled}>${selected?'Remover da carga':'Levar na missão'}</button>`;
+      }
     }
     let mgrRow=isManager?`<div class="mgrRow"><button class="btn ghost" data-edit="${id}">Editar</button></div>`:'';
-    return `<div class="card ${selected?'selected':''}"><div class="thumb" ${photo}>${fallback}</div><div class="body"><span class="type-badge">${esc(it.type||'Diversos')}</span><h3>${esc(it.name)}</h3><div class="desc">${esc(it.description||'')}</div>${it.cost?`<div class="cost">💰 ${esc(it.cost)}</div>`:''}<div class="actions">${actionBtn}</div></div>${mgrRow}</div>`;
+    const lockBanner=lockedByOther?`<div class="lockBanner">Já selecionado</div>`:'';
+    return `<div class="card ${selected?'selected':''} ${lockedByOther?'locked':''}">${lockBanner}<div class="thumb" ${photo}>${fallback}</div><div class="body"><span class="type-badge">${esc(it.type||'Diversos')}</span><h3>${esc(it.name)}</h3><div class="desc">${esc(it.description||'')}</div>${it.cost?`<div class="cost">💰 ${esc(it.cost)}</div>`:''}<div class="actions">${actionBtn}</div></div>${mgrRow}</div>`;
   }).join('');
   $('grid').querySelectorAll('[data-toggle]').forEach(b=>b.onclick=()=>toggleLoadout(b.dataset.toggle));
   $('grid').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openEdit(b.dataset.edit));
@@ -333,7 +355,9 @@ async function renderRoster(){
       const title=player+' — '+(charLabel||('Ficha '+slot));
       const rows=entries.map(([id])=>{
         const btn=isManager?`<button class="rmItemBtn" data-player="${esc(player)}" data-slot="${esc(slot)}" data-item="${esc(id)}" title="Remover da carga">✕</button>`:'';
-        return `<li>• ${esc(items[id].name)}${btn}</li>`;
+        const it=items[id];
+        const thumb=it.photo?`<img class="itemThumb" src="${esc(it.photo)}">`:`<span class="itemThumb fallback">🎒</span>`;
+        return `<li><span class="itemRow">${thumb}${esc(it.name)}</span>${btn}</li>`;
       }).join('');
       const thumb=avatarUrl?`style="background-image:url('${esc(avatarUrl)}')"`:'';
       const fallback=avatarUrl?'':'☠';
@@ -408,7 +432,7 @@ onAuthStateChanged(auth, async user=>{
 
   onValue(ref(db,'arsenal/dap/items'), snap=>{items=snap.val()||{};renderFilters();renderGrid();renderRoster()});
   onValue(ref(db,'arsenal/dap/settings/maxItems'), snap=>{maxItems=snap.exists()?snap.val():5;$('maxItemsInput').value=maxItems;renderLoadoutCounter();renderGrid()});
-  onValue(ref(db,'arsenal/dap/loadout'), snap=>{allLoadouts=snap.val()||{};renderRoster()});
+  onValue(ref(db,'arsenal/dap/loadout'), snap=>{allLoadouts=snap.val()||{};renderRoster();renderGrid()});
   if(currentRole==='player'){
     await loadCharNames();
     renderCharTabs();
