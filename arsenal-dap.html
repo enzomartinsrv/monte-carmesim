@@ -252,14 +252,46 @@ function renderGrid(){
   $('grid').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openEdit(b.dataset.edit));
 }
 
+const CAT_CODES={'Arma':'ARM','Armadura/Colete':'ARMD','Munição':'MUN','Equipamento tático':'EQP','Item de investigação':'INV','Diversos':'DIV'};
+
+async function findEmptyInvSlot(fp){
+  const snap=await get(ref(db,fp));
+  const inputs=snap.exists()?snap.val():{};
+  const occupied=new Set();
+  Object.values(myLoadout).forEach(v=>{if(v&&typeof v==='object'&&v.invSlot!=null)occupied.add(v.invSlot)});
+  for(let i=0;i<14;i++){
+    const val=inputs['inv_'+i+'_nome'];
+    if((!val||!String(val).trim())&&!occupied.has(i))return i;
+  }
+  return null;
+}
+
 async function toggleLoadout(id){
   if(currentRole!=='player')return;
   const willSelect=!myLoadout[id];
   if(willSelect && myLoadoutCount()>=maxItems){toast('Limite de '+maxItems+' itens atingido pra essa missão.');return}
   const base='arsenal/dap/loadout/'+currentName+'/'+currentSlot+'/'+id;
+  const invFp='players/'+currentName+'/ficha'+slotSuffix(currentSlot)+'/inputs';
   try{
-    if(willSelect) await set(ref(db,base), true);
-    else await remove(ref(db,base));
+    if(willSelect){
+      const invSlot=await findEmptyInvSlot(invFp);
+      if(invSlot===null){toast('O inventário da ficha já está com as 14 linhas ocupadas. Libere um espaço antes de levar mais itens.');return}
+      const it=items[id];
+      await update(ref(db,invFp), {
+        ['inv_'+invSlot+'_nome']: it.name,
+        ['inv_'+invSlot+'_cat']: CAT_CODES[it.type]||(it.type||'').slice(0,4).toUpperCase()
+      });
+      await set(ref(db,base), {invSlot});
+    }else{
+      const prev=myLoadout[id];
+      if(prev && typeof prev==='object' && prev.invSlot!=null){
+        await update(ref(db,invFp), {
+          ['inv_'+prev.invSlot+'_nome']: '',
+          ['inv_'+prev.invSlot+'_cat']: ''
+        });
+      }
+      await remove(ref(db,base));
+    }
   }catch(e){console.error(e);toast('Não foi possível salvar. Tenta de novo.')}
 }
 
