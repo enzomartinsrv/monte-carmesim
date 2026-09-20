@@ -151,22 +151,16 @@
       <div class="pick-title">Ordem Paranormal</div>
       <div class="pick-desc">Sobrevivendo ao Horror</div>
     </div>
-    <div class="pick-card disabled">
-      <div class="pick-icon">➕</div>
-      <div class="pick-title">Outros sistemas</div>
-      <div class="pick-desc">Em breve</div>
+    <div class="pick-card" onclick="selectSistema('invencivel')">
+      <div class="pick-icon">🦸</div>
+      <div class="pick-title">Invencível</div>
+      <div class="pick-desc">Ficha de super-heróis</div>
     </div>
   </div>
 </div>
 
 <div class="view" id="view-campanha">
-  <div class="pick-grid">
-    <div class="pick-card" onclick="selectCampanha('dap')">
-      <div class="pick-icon">🎭</div>
-      <div class="pick-title">Campanha DAP</div>
-      <div class="pick-desc">Riverside · Monte Carmesim · Runas do Vazio</div>
-    </div>
-  </div>
+  <div class="pick-grid" id="campanha-grid"></div>
 </div>
 
 <div class="view" id="view-personagens">
@@ -194,10 +188,23 @@
   const authInst = getAuth(app);
 
   const ALL_PLAYERS = ['Lucas', 'Gabi', 'Joao', 'Karina', 'Ana'];
-  const SHEET_URL = 'ficha-monte-carmesim.html';
+
+  // ── Sistemas e campanhas disponíveis ─────────────────────────────────────
+  // richPreview: true = busca classe/NEX/foto no Firebase (só Ordem Paranormal
+  // tem esses dados hoje). false = só mostra links "Ficha 1/2", sem dados
+  // (Invencível ainda não salva no banco).
+  const SISTEMAS_CAMPANHAS = {
+    'ordem-paranormal': [
+      { id: 'dap', icon: '🎭', title: 'Campanha DAP', desc: 'Riverside · Monte Carmesim · Runas do Vazio', sheetUrl: 'ficha-monte-carmesim.html', slots: 3, richPreview: true },
+    ],
+    'invencivel': [
+      { id: 'preco-do-amanha', icon: '🦸', title: 'O Preço do Amanhã', desc: 'Campanha de heróis', sheetUrl: 'ficha-invencivel.html', slots: 2, richPreview: false },
+    ],
+  };
 
   let currentRole = null;   // 'master' | 'player'
   let currentName = null;   // nome do player logado (se role==='player')
+  let campanhaAtual = null; // objeto da campanha escolhida
 
   // ── Navegação Sistema > Campanha > Personagens ─────────────────────────
   function showView(id) {
@@ -213,17 +220,27 @@
   }
   window.goToStep = (step) => {
     if (step === 'campanha' && !window._sistemaEscolhido) return;
-    if (step === 'personagens' && !window._campanhaEscolhida) return;
+    if (step === 'personagens' && !campanhaAtual) return;
     updateCrumbs(step);
     showView(step);
   };
   window.selectSistema = (id) => {
     window._sistemaEscolhido = id;
+    const grid = document.getElementById('campanha-grid');
+    grid.innerHTML = (SISTEMAS_CAMPANHAS[id] || []).map(c => `
+      <div class="pick-card" onclick='selectCampanha(${JSON.stringify(JSON.stringify(c))})'>
+        <div class="pick-icon">${c.icon}</div>
+        <div class="pick-title">${c.title}</div>
+        <div class="pick-desc">${c.desc}</div>
+      </div>`).join('') || '<div class="loading-note">Nenhuma campanha cadastrada ainda.</div>';
     updateCrumbs('campanha');
     showView('campanha');
   };
-  window.selectCampanha = (id) => {
-    window._campanhaEscolhida = id;
+  window.selectCampanha = (campanhaJson) => {
+    campanhaAtual = JSON.parse(campanhaJson);
+    document.getElementById('players').innerHTML = '';
+    document.getElementById('loading-note').style.display = 'block';
+    personagensLoaded = false;
     updateCrumbs('personagens');
     showView('personagens');
     loadPersonagens();
@@ -264,20 +281,27 @@
     card.appendChild(list);
     container.appendChild(card);
 
-    for (let slot = 1; slot <= 3; slot++) {
-      const [nome, classe, nex, estagio, isSob, avatar] = await Promise.all([
-        safeGet(nomePath(player, slot)), safeGet(classePath(player, slot)),
-        safeGet(nexPath(player, slot)), safeGet(estagioPath(player, slot)),
-        safeGet(isSobPath(player, slot)), safeGet(avatarPath(player, slot)),
-      ]);
-      const nomeTrim = (nome || '').trim();
-      const tag = classeTag(classe, nex, estagio, isSob);
+    const slots = campanhaAtual.slots || 3;
+    for (let slot = 1; slot <= slots; slot++) {
+      let nomeTrim = '', tag = '', avatar = null;
+
+      if (campanhaAtual.richPreview) {
+        const [nome, classe, nex, estagio, isSob, av] = await Promise.all([
+          safeGet(nomePath(player, slot)), safeGet(classePath(player, slot)),
+          safeGet(nexPath(player, slot)), safeGet(estagioPath(player, slot)),
+          safeGet(isSobPath(player, slot)), safeGet(avatarPath(player, slot)),
+        ]);
+        nomeTrim = (nome || '').trim();
+        tag = classeTag(classe, nex, estagio, isSob);
+        avatar = av;
+      }
+
       const a = document.createElement('a');
       a.className = 'char-link';
-      a.href = `${SHEET_URL}?player=${encodeURIComponent(player)}&char=${slot}`;
+      a.href = `${campanhaAtual.sheetUrl}?player=${encodeURIComponent(player)}&char=${slot}`;
       const photo = document.createElement('div');
       photo.className = 'char-photo';
-      if (avatar) { photo.style.backgroundImage = `url(${avatar})`; } else { photo.textContent = '☠'; }
+      if (avatar) { photo.style.backgroundImage = `url(${avatar})`; } else { photo.textContent = campanhaAtual.icon || '☠'; }
       a.appendChild(photo);
       const info = document.createElement('div');
       info.className = 'char-info';

@@ -278,6 +278,10 @@
   <div class="hub-title">
     <h1>☠ Monte Carmesim</h1>
     <p>PAINEL DO MESTRE · ORDEM PARANORMAL RPG</p>
+    <select id="sistema-select" onchange="window.switchSistema(this.value)" style="margin-top:4px;font-family:'Oswald',sans-serif;font-size:9px;letter-spacing:1px;background:var(--card);color:var(--bone);border:1px solid var(--border);border-radius:3px;padding:3px 6px;">
+      <option value="ordem-paranormal">☠ Ordem Paranormal</option>
+      <option value="invencivel">🦸 Invencível</option>
+    </select>
   </div>
   <div class="hub-status">
     <div class="online-count">● <span id="online-count">0</span> online</div>
@@ -286,7 +290,13 @@
   </div>
 </div>
 
-<div class="hub-body">
+<div id="sistema-em-construcao" style="display:none;padding:60px 24px;text-align:center;">
+  <div style="font-size:34px;margin-bottom:14px;">🚧</div>
+  <div style="font-family:'Oswald',sans-serif;font-size:16px;color:var(--bone);margin-bottom:8px;">Painel do Invencível ainda em construção</div>
+  <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--ash);max-width:420px;margin:0 auto;line-height:1.6;">Assim que a integração com o banco de dados for feita, o controle dos heróis de "O Preço do Amanhã" aparece aqui.</div>
+</div>
+
+<div class="hub-body" id="hub-body-op">
   <div class="hub-main">
     <!-- TRACKER DE INICIATIVA -->
     <div style="margin-bottom:20px;">
@@ -643,6 +653,17 @@ onAuthStateChanged(authInst, async (user) => {
 
 window._pd = {};
 window._ovis = {};
+
+window.switchSistema = (sistema) => {
+  const opWrap = document.getElementById('hub-body-op');
+  const placeholder = document.getElementById('sistema-em-construcao');
+  const isOp = sistema === 'ordem-paranormal';
+  opWrap.style.display = isOp ? 'grid' : 'none';
+  placeholder.style.display = isOp ? 'none' : 'block';
+  document.querySelector('.hub-title p').textContent = isOp
+    ? 'PAINEL DO MESTRE · ORDEM PARANORMAL RPG'
+    : 'PAINEL DO MESTRE · INVENCÍVEL — O PREÇO DO AMANHÃ';
+};
 
 onValue(ref(db,'players'), snap => {
   window._pd = snap.val()||{};
