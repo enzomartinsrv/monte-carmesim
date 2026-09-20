@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INVENCÍVEL — Ficha Interativa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --azul:#1447a8;
+    --azul-esc:#0b2c66;
+    --amarelo:#ffd400;
+    --vermelho:#e2231a;
+    --vermelho-esc:#a3160f;
+    --tinta:#12141a;
+    --papel:#fdf8ec;
+    --cinza:#6b7280;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 6px 6px, rgba(255,255,255,.08) 1.6px, transparent 1.6px) 0 0/16px 16px,
+      linear-gradient(160deg,var(--azul-esc),var(--azul) 55%,#0d3a8f);
+    font-family:'Rubik',sans-serif;
+    color:var(--tinta);
+    min-height:100vh;
+    padding:20px 12px 60px;
+  }
+  .wrap{max-width:1000px;margin:0 auto;}
+  h1.title{
+    font-family:'Bangers',cursive;
+    letter-spacing:2px;
+    font-size:clamp(38px,8vw,70px);
+    color:var(--amarelo);
+    -webkit-text-stroke:3px var(--tinta);
+    text-shadow:5px 5px 0 var(--vermelho-esc);
+    text-align:center;
+    margin:6px 0 2px;
+    transform:rotate(-1.5deg);
+  }
+  .subtitle{
+    text-align:center;color:var(--amarelo);font-weight:700;letter-spacing:3px;
+    font-size:13px;margin-bottom:18px;opacity:.9;
+  }
+  .panel{
+    background:var(--papel);border:4px solid var(--tinta);border-radius:10px;
+    box-shadow:8px 8px 0 rgba(0,0,0,.35);padding:18px 20px;margin-bottom:20px;position:relative;
+  }
+  .panel h2{
+    font-family:'Bangers',cursive;letter-spacing:1px;font-size:26px;color:var(--vermelho);
+    -webkit-text-stroke:1px var(--tinta);margin:0 0 12px;transform:rotate(-.4deg);
+  }
+  .hint{font-size:12.5px;color:var(--cinza);margin-top:-8px;margin-bottom:10px;}
+  .grid{display:grid;gap:12px;}
+  .grid.cols2{grid-template-columns:1fr 1fr;}
+  .grid.cols3{grid-template-columns:repeat(3,1fr);}
+  .grid.cols4{grid-template-columns:repeat(4,1fr);}
+  @media(max-width:700px){ .grid.cols2, .grid.cols3, .grid.cols4{grid-template-columns:1fr 1fr;} }
+  label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--azul-esc);display:block;margin-bottom:3px;}
+  input[type=text], input[type=number], select, textarea{
+    width:100%;font-family:'Rubik',sans-serif;font-size:15px;padding:8px 9px;
+    border:2px solid var(--tinta);border-radius:6px;background:#fff;color:var(--tinta);
+  }
+  textarea{resize:vertical;min-height:48px;}
+  .field{margin-bottom:2px;}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
+  button{
+    font-family:'Rubik',sans-serif;font-weight:700;cursor:pointer;border:2.5px solid var(--tinta);
+    border-radius:7px;padding:9px 16px;background:var(--amarelo);color:var(--tinta);
+    box-shadow:3px 3px 0 var(--tinta);transition:transform .06s;font-size:14px;
+  }
+  button:hover{transform:translate(-1px,-1px);}
+  button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--tinta);}
+  button.secundario{background:#fff;}
+  button.vermelho{background:var(--vermelho);color:#fff;}
+  button.azul{background:var(--azul);color:#fff;}
+  button:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;transform:none;}
+  .badge{display:inline-block;background:var(--azul);color:#fff;font-weight:700;border-radius:20px;padding:3px 12px;font-size:12px;margin-right:6px;}
+  .cat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+  @media(max-width:700px){.cat-cards{grid-template-columns:1fr 1fr;}}
+  .cat-card{border:2.5px solid var(--tinta);border-radius:8px;padding:10px;cursor:pointer;background:#fff;text-align:center;font-size:13px;font-weight:700;}
+  .cat-card.ativo{background:var(--amarelo);box-shadow:3px 3px 0 var(--tinta);}
+  .cat-card small{display:block;font-weight:500;color:var(--cinza);margin-top:4px;font-size:11px;}
+  .attr-block{border:2px solid var(--tinta);border-radius:8px;padding:10px;background:#fff;}
+  .attr-name{font-family:'Bangers',cursive;font-size:19px;letter-spacing:1px;color:var(--azul-esc);}
+  .attr-value-row{display:flex;align-items:center;gap:8px;margin-top:4px;}
+  .stepper{display:flex;align-items:center;gap:6px;}
+  .stepper button{padding:3px 10px;font-size:16px;box-shadow:2px 2px 0 var(--tinta);}
+  .attr-num{width:46px;text-align:center;font-size:20px;font-weight:900;padding:5px;}
+  .attr-desc{font-size:11px;color:var(--cinza);margin-top:2px;}
+  .rollbtn{margin-top:8px;width:100%;padding:6px;font-size:13px;}
+  .pts-remaining{font-size:15px;font-weight:900;}
+  .pts-remaining.negativo{color:var(--vermelho);}
+  .stat-box{border:2.5px solid var(--tinta);border-radius:8px;padding:10px;text-align:center;background:#fff;}
+  .stat-box .num{font-family:'Bangers',cursive;font-size:34px;color:var(--vermelho);-webkit-text-stroke:1px var(--tinta);}
+  .stat-box .lbl{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--azul-esc);}
+  .track{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+  .pip{width:26px;height:26px;border:2px solid var(--tinta);border-radius:4px;cursor:pointer;background:#fff;}
+  .pip.marcado{background:var(--vermelho);}
+  .dice-area{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0;min-height:50px;}
+  .die{width:46px;height:46px;border:3px solid var(--tinta);border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;background:#e9e9e9;}
+  .die.sucesso{background:var(--amarelo);color:var(--tinta);}
+  .die.falha{background:var(--vermelho);color:#fff;}
+  .resultado{font-size:15px;font-weight:700;margin-top:4px;}
+  .resultado b{color:var(--vermelho);}
+  table.ref{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px;}
+  table.ref th,table.ref td{border:1.5px solid var(--tinta);padding:5px 8px;text-align:left;}
+  table.ref th{background:var(--azul);color:#fff;}
+  table.ref tr:nth-child(even) td{background:#f3efe0;}
+  details{margin-top:8px;}
+  details summary{cursor:pointer;font-weight:700;color:var(--azul-esc);padding:6px 0;}
+  .lista-itens{list-style:none;padding:0;margin:8px 0;}
+  .lista-itens li{background:#fff;border:2px solid var(--tinta);border-radius:6px;padding:6px 10px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;}
+  .lista-itens li button{padding:2px 9px;font-size:12px;box-shadow:none;}
+  .add-row{display:flex;gap:8px;margin-top:6px;}
+  .add-row input{flex:1;}
+  .foot-note{color:var(--amarelo);text-align:center;font-size:12px;opacity:.85;margin-top:6px;}
+  .save-indicator{position:fixed;bottom:14px;right:14px;background:var(--tinta);color:var(--amarelo);font-size:12px;font-weight:700;padding:6px 12px;border-radius:20px;opacity:0;transition:opacity .3s;pointer-events:none;}
+  .save-indicator.show{opacity:.92;}
+  .arch-card{border:2px solid var(--tinta);border-radius:7px;padding:10px 12px;background:#fff;font-size:13px;margin-bottom:8px;}
+  .arch-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;}
+  .arch-top b{font-family:'Bangers',cursive;font-size:17px;letter-spacing:.5px;color:var(--vermelho-esc);}
+  .arch-top span{color:var(--cinza);font-size:11px;}
+  .arch-btns{display:flex;gap:6px;}
+  .arch-btns button{padding:5px 12px;font-size:12px;}
+  .arch-detail{margin-top:10px;padding-top:8px;border-top:1.5px dashed var(--cinza);font-size:12.5px;line-height:1.5;display:none;}
+  .arch-detail.aberto{display:block;}
+  .arch-detail dt{font-weight:700;color:var(--azul-esc);margin-top:6px;}
+  .arch-detail dd{margin:0 0 0 0;color:var(--tinta);}
+  .cat-desc{font-size:12.5px;color:var(--cinza);margin-top:6px;min-height:18px;font-style:italic;}
+
+  /* ═══════════ CHROME DA PLATAFORMA (menu, preferências, hub do grupo) ═══════════ */
+  body { padding-top: 30px !important; }
+  #role-banner-inv{
+    display:none; position:fixed; top:30px; left:0; right:0; z-index:9996;
+    align-items:center; justify-content:center; gap:8px;
+    background:#3a0a0a; color:#ffb3b3; border-bottom:2px solid var(--vermelho);
+    font-family:'Rubik',sans-serif; font-weight:700; font-size:12px; letter-spacing:.5px;
+    padding:8px 12px; text-align:center;
+  }
+  body.readonly-mode-inv { padding-top: 64px !important; }
+  body.readonly-mode-inv #hub-mode-wrap { pointer-events:none; opacity:.9; }
+  body.readonly-mode-inv #top-bar, body.readonly-mode-inv #side-menu, body.readonly-mode-inv #side-menu-overlay { pointer-events:auto; opacity:1; }
+  #top-bar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 9997;
+    display: flex; align-items: center; gap: 10px;
+    background: var(--tinta); padding: 5px 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.4);
+  }
+  #menu-toggle-btn { background: none; border: none; color: #fff; font-size: 17px; line-height: 1; cursor: pointer; padding: 2px 4px; }
+  #topbar-label { font-family: 'Rubik', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--amarelo); }
+
+  #side-menu-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 9998; }
+  #side-menu-overlay.open { display: block; }
+  #side-menu {
+    position: fixed; top: 0; left: -290px; bottom: 0; width: 270px; z-index: 9999;
+    background: var(--tinta); color: #eee; box-shadow: 2px 0 16px rgba(0,0,0,.45);
+    transition: left .2s ease; display: flex; flex-direction: column; overflow-y: auto;
+  }
+  #side-menu.open { left: 0; }
+  .sm-header {
+    display: flex; align-items: center; justify-content: space-between; padding: 14px 16px;
+    border-bottom: 1px solid #333; font-family: 'Bangers', cursive; font-size: 16px;
+    letter-spacing: 1px; color: var(--amarelo);
+  }
+  .sm-close { background: none; border: none; color: #999; font-size: 17px; cursor: pointer; }
+  .sm-close:hover { color: #fff; }
+  .sm-section-label { font-family: 'Rubik', sans-serif; font-size: 9px; letter-spacing: 2px; color: #888; text-transform: uppercase; padding: 12px 16px 4px; }
+  .sm-item {
+    display: block; width: 100%; text-align: left; background: none; border: none; color: #ddd;
+    font-family: 'Rubik', sans-serif; font-weight: 700; font-size: 12.5px; letter-spacing: .3px;
+    padding: 11px 16px; cursor: pointer; text-decoration: none; box-sizing: border-box;
+  }
+  .sm-item:hover { background: #2a2a2a; }
+  .sm-item.active { background: var(--azul); color: #fff; }
+  .sm-divider { height: 1px; background: #333; margin: 6px 0; }
+  .sm-note { margin: 4px 16px 10px; padding: 9px 11px; background: #241a05; border-left: 3px solid var(--amarelo); border-radius: 4px; font-size: 10.5px; line-height: 1.5; color: #ddd; }
+
+  /* Preferências */
+  #prefs-panel {
+    display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); z-index: 10000;
+    width: 270px; background: var(--papel); border: 3px solid var(--tinta); border-radius: 8px;
+    padding: 16px 18px; box-shadow: 0 12px 36px rgba(0,0,0,.5); font-family: 'Rubik', sans-serif;
+  }
+  #prefs-panel.open { display: block; }
+  #prefs-panel h4 { font-family: 'Bangers', cursive; font-size: 16px; color: var(--vermelho); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+  .prefs-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #e5ddc8; font-size: 12.5px; }
+  .prefs-row:last-child { border-bottom: none; }
+  .prefs-toggle { position: relative; width: 34px; height: 18px; flex-shrink: 0; }
+  .prefs-toggle input { opacity: 0; width: 0; height: 0; }
+  .prefs-toggle .slider { position: absolute; inset: 0; background: #ccc; border-radius: 18px; cursor: pointer; transition: .15s; }
+  .prefs-toggle .slider::before { content: ''; position: absolute; width: 14px; height: 14px; left: 2px; top: 2px; background: #fff; border-radius: 50%; transition: .15s; }
+  .prefs-toggle input:checked + .slider { background: var(--azul); }
+  .prefs-toggle input:checked + .slider::before { transform: translateX(16px); }
+  body.dark-mode #ficha-pane { filter: invert(0.9) hue-rotate(180deg); }
+  body.dyslexic-mode, body.dyslexic-mode * { font-family: 'OpenDyslexic', 'Rubik', sans-serif !important; }
+  body.performance-mode * { animation: none !important; transition: none !important; box-shadow: none !important; }
+  @font-face {
+    font-family: 'OpenDyslexic';
+    src: url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/open-dyslexic-regular.woff') format('woff');
+    font-weight: normal; font-style: normal; font-display: swap;
+  }
+
+  /* Hub do Player */
+  #hub-mode-wrap.hub-active { display: flex; height: calc(100vh - 30px); overflow: hidden; }
+  #hub-mode-wrap.hub-active #ficha-pane { flex: 1 1 65%; overflow-y: auto; }
+  #hub-divider { display: none; }
+  #hub-mode-wrap.hub-active #hub-divider { display: flex; align-items: center; justify-content: center; flex: 0 0 10px; background: var(--azul-esc); cursor: col-resize; }
+  #hub-divider span { width: 3px; height: 34px; background: var(--amarelo); border-radius: 2px; }
+  #party-pane { display: none; }
+  #hub-mode-wrap.hub-active #party-pane {
+    display: flex; flex-direction: column; flex: 1 1 35%; background: var(--azul-esc); color: #fff;
+    overflow-y: auto; font-family: 'Rubik', sans-serif;
+  }
+  #party-pane-header {
+    display: flex; align-items: center; justify-content: space-between; padding: 12px 14px;
+    font-family: 'Bangers', cursive; font-size: 16px; color: var(--amarelo); border-bottom: 1px solid #1a4a8f;
+  }
+  .pp-close { background: none; border: none; color: #fff; font-size: 15px; cursor: pointer; }
+  .pp-placeholder { margin: 16px; padding: 18px 14px; border: 1px dashed var(--amarelo); border-radius: 6px; text-align: center; font-size: 12px; line-height: 1.6; color: #ffe9a0; }
+
+  @media (max-width: 700px) {
+    #hub-mode-wrap.hub-active { flex-direction: column; height: calc(100vh - 30px - 48px); }
+    #hub-mode-wrap.hub-active #ficha-pane, #hub-mode-wrap.hub-active #party-pane { flex: 1 1 auto; width: 100%; display: none; }
+    #hub-mode-wrap.hub-active.mobile-show-ficha #ficha-pane { display: block; }
+    #hub-mode-wrap.hub-active.mobile-show-party #party-pane { display: flex; }
+    #hub-divider { display: none !important; }
+    #mobile-hub-tabs.show { display: flex !important; }
+    #side-menu { width: 82vw; max-width: 290px; }
+    #prefs-panel { width: 85vw; max-width: 300px; }
+    .wrap { padding: 0 4px; }
+  }
+  #mobile-hub-tabs { display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 9996; background: var(--tinta); border-top: 1px solid var(--amarelo); }
+  #mobile-hub-tabs button { flex: 1; padding: 12px 0; background: none; border: none; color: #999; font-family: 'Rubik', sans-serif; font-weight: 700; font-size: 11px; cursor: pointer; }
+  #mobile-hub-tabs button.active { color: var(--amarelo); background: rgba(255,255,255,.08); }
+</style>
+</head>
+<body>
+
+<div id="role-banner-inv"></div>
+
+<script>
+  // ── Firebase (carregado dinamicamente, funciona em script clássico) ────────
+  window._fbModules = (async () => {
+    const appMod  = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
+    const dbMod   = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
+    const authMod = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
+    const app = appMod.initializeApp({
+      apiKey:"AIzaSyCSQXdyLvqC4zT2BkSwUKk-uostVn2BmA8",
+      authDomain:"rpg-ficha-monte-carmesim.firebaseapp.com",
+      databaseURL:"https://rpg-ficha-monte-carmesim-default-rtdb.firebaseio.com",
+      projectId:"rpg-ficha-monte-carmesim",
+      storageBucket:"rpg-ficha-monte-carmesim.firebasestorage.app",
+      messagingSenderId:"909026041375",
+      appId:"1:909026041375:web:df06386967dd9181a23f2a"
+    });
+    const db = dbMod.getDatabase(app);
+    const authInst = authMod.getAuth(app);
+    return { appMod, dbMod, authMod, app, db, authInst };
+  })();
+
+  // ── Identifica o player/personagem pela URL (mesmo padrão de sempre) ───────
+  const ALLOWED_INV = ['Lucas','Gabi','Joao','Karina','Ana'];
+  (function(){
+    const params = new URLSearchParams(location.search);
+    window.PLAYER_NAME = params.get('player') || '';
+    window.CHAR_SLOT = [1,2].includes(parseInt(params.get('char'))) ? parseInt(params.get('char')) : 1;
+  })();
+
+  function invSuf(){ return window.CHAR_SLOT === 1 ? '' : String(window.CHAR_SLOT); }
+  function invFichaPath(){ return `invencivel/players/${window.PLAYER_NAME}/ficha${invSuf()}`; }
+  function invAvatarPath(){ return `invencivel/players/${window.PLAYER_NAME}/avatar${invSuf()}`; }
+
+  // ── Ler/gravar a ficha (chamadas pelas salvar()/carregar() já existentes) ──
+  window.dbGet = async function(){
+    const { dbMod, db } = await window._fbModules;
+    const snap = await dbMod.get(dbMod.ref(db, invFichaPath()));
+    return snap.exists() ? snap.val() : null;
+  };
+  window.dbSet = async function(data){
+    const { dbMod, db } = await window._fbModules;
+    dbMod.set(dbMod.ref(db, invFichaPath()), data).then(()=>{
+      const ind=document.getElementById('saveIndicator');
+      if (ind) { ind.classList.add('show'); setTimeout(()=>ind.classList.remove('show'),900); }
+    }).catch(()=>{});
+  };
+  window.dbGetAvatar = async function(){
+    const { dbMod, db } = await window._fbModules;
+    const snap = await dbMod.get(dbMod.ref(db, invAvatarPath()));
+    return snap.exists() ? snap.val() : null;
+  };
+  window.dbSetAvatar = async function(b64){
+    const { dbMod, db } = await window._fbModules;
+    dbMod.set(dbMod.ref(db, invAvatarPath()), b64);
+  };
+
+  window.updateAvatarPreviewInv = function(b64){
+    const prev = document.getElementById('inv-avatar-preview');
+    if (!prev) return;
+    prev.innerHTML = b64 ? `<img src="${b64}" style="width:100%;height:100%;object-fit:cover;">` : '🦸';
+  };
+  window.handleInvAvatar = function(input){
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const size = Math.min(img.width, img.height);
+        const sx = (img.width - size) / 2, sy = (img.height - size) / 2;
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = 160;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, sx, sy, size, size, 0, 0, 160, 160);
+        const b64 = canvas.toDataURL('image/jpeg', 0.85);
+        window.updateAvatarPreviewInv(b64);
+        window.dbSetAvatar(b64);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
+  };
+
+  // ── Troca de Personagem 1/2 — agora salva/carrega de verdade ──────────────
+  window.switchCharSlotReal = async function(slot){
+    if (slot === window.CHAR_SLOT) return;
+    if (typeof salvar === 'function') salvar();
+    window.CHAR_SLOT = slot;
+    document.querySelectorAll('#side-menu .char-tab').forEach((btn,i)=>btn.classList.toggle('active', i===slot-1));
+    const dados = await window.dbGet();
+    if (dados) {
+      estado = Object.assign({
+        nomeHeroi:'', nomeCivil:'', papel:'Disparador', fontePoder:'', aparencia:'',
+        categoria:'guardiao',
+        atributos:{LUTA:1,AGILIDADE:1,FORCA:1,INTELECTO:1,INTUICAO:1,PRESENCA:1},
+        ajustes:{talentos:0,desvantagens:0,fontes:0,poderesSacrificados:0,poderesExtras:0},
+        reputacao:0, carma:0, recursos:1,
+        vidaDano:0, detEstresse:0,
+        ocupacao:'', personalidade:'', motivacao:'', defeito:'', relacionamentos:'',
+        poderes:[], talentos:[], equipamento:[],
+        arquetiposAbertos:{},
+      }, dados);
+      render();
+    } else if (typeof resetTudo === 'function') {
+      resetTudo();
+    }
+    if (typeof updateAvatarPreviewInv === 'function') {
+      const av = await window.dbGetAvatar();
+      updateAvatarPreviewInv(av);
+    }
+  };
+
+  // ── Login / papel (dono edita, mestre edita tudo, outro só vê) ─────────────
+  function applyRoleInv(role){
+    window.CURRENT_ROLE = role;
+    const banner = document.getElementById('role-banner-inv');
+    if (role === 'other' || role === 'guest') {
+      document.body.classList.add('readonly-mode-inv');
+      if (banner) {
+        banner.style.display = 'flex';
+        banner.innerHTML = role === 'guest'
+          ? '🔒 Faça login pra editar — <a href="inicio.html" style="color:#ffdede;text-decoration:underline;">entrar</a>'
+          : `🔒 Você está vendo a ficha de ${window.PLAYER_NAME} — somente leitura`;
+      }
+    } else {
+      document.body.classList.remove('readonly-mode-inv');
+      if (banner) banner.style.display = 'none';
+    }
+  }
+  window.addEventListener('DOMContentLoaded', async () => {
+    if (!window.PLAYER_NAME || !ALLOWED_INV.includes(window.PLAYER_NAME)) {
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#12141a;color:#fff;font-family:sans-serif;font-size:16px;text-align:center;padding:20px;">🔒 Acesso negado — link inválido.</div>';
+      return;
+    }
+    const { authMod, authInst, dbMod, db } = await window._fbModules;
+    authMod.onAuthStateChanged(authInst, async (user) => {
+      if (!user) { applyRoleInv('guest'); return; }
+      const snap = await dbMod.get(dbMod.ref(db, 'users/'+user.uid));
+      if (!snap.exists()) { applyRoleInv('guest'); return; }
+      const info = snap.val();
+      if (info.role === 'master') applyRoleInv('master');
+      else if (info.name === window.PLAYER_NAME) applyRoleInv('owner');
+      else applyRoleInv('other');
+    });
+  });
+</script>
+
+<div id="top-bar">
+  <button id="menu-toggle-btn" onclick="toggleSideMenu()" title="Menu">☰</button>
+  <span id="topbar-label">INVENCÍVEL · O PREÇO DO AMANHÃ</span>
+</div>
+
+<div id="side-menu-overlay" onclick="toggleSideMenu(false)"></div>
+<div id="side-menu">
+  <div class="sm-header"><span>Menu</span><button class="sm-close" onclick="toggleSideMenu(false)">✕</button></div>
+
+  <div class="sm-section-label">Personagens</div>
+  <button class="sm-item char-tab active" id="char-tab-1" onclick="switchCharSlot(1)">Personagem 1</button>
+  <button class="sm-item char-tab" id="char-tab-2" onclick="switchCharSlot(2)">Personagem 2</button>
+  <div class="sm-note">✓ Cada personagem salva separado automaticamente.</div>
+
+  <div class="sm-divider"></div>
+  <button class="sm-item" onclick="togglePrefsPanel();toggleSideMenu(false);">⚙️ Preferências</button>
+  <button class="sm-item" onclick="toggleHubMode();toggleSideMenu(false);">👥 Hub do Grupo</button>
+
+  <div class="sm-divider"></div>
+  <a class="sm-item" href="inicio.html">← Voltar ao início</a>
+</div>
+
+<div id="prefs-panel">
+  <h4>⚙️ Preferências <span onclick="togglePrefsPanel(false)" style="cursor:pointer;color:var(--cinza);font-size:14px;">✕</span></h4>
+  <div class="prefs-row"><span>🌙 Tema escuro</span><label class="prefs-toggle"><input type="checkbox" id="pref-dark" onchange="applyPrefs()"><span class="slider"></span></label></div>
+  <div class="prefs-row"><span>🔤 Fonte OpenDyslexic</span><label class="prefs-toggle"><input type="checkbox" id="pref-dyslexic" onchange="applyPrefs()"><span class="slider"></span></label></div>
+  <div class="prefs-row"><span>⚡ Modo desempenho</span><label class="prefs-toggle"><input type="checkbox" id="pref-performance" onchange="applyPrefs()"><span class="slider"></span></label></div>
+</div>
+
+<div id="hub-mode-wrap">
+<div id="ficha-pane">
+<div class="wrap">
+  <h1 class="title">INVENCÍVEL</h1>
+  <div class="subtitle">FICHA INTERATIVA · CÁLCULOS AUTOMÁTICOS · ROLADOR DE DADOS</div>
+
+  <div class="panel">
+    <h2>Identidade</h2>
+    <div class="grid cols2" style="align-items:flex-start;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div id="inv-avatar-preview" onclick="document.getElementById('inv-avatar-input').click()" style="width:64px;height:64px;flex-shrink:0;border-radius:8px;border:2px dashed var(--azul);background:#eee;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;font-size:22px;color:var(--cinza);">🦸</div>
+        <div>
+          <label style="display:block;margin-bottom:4px;">Foto do Herói</label>
+          <button type="button" class="azul" onclick="document.getElementById('inv-avatar-input').click()" style="font-size:11px;padding:6px 10px;">Escolher foto</button>
+          <input type="file" id="inv-avatar-input" accept="image/*" style="display:none;" onchange="handleInvAvatar(this)">
+        </div>
+      </div>
+      <div class="field"><label>Nome de Herói</label><input type="text" id="nomeHeroi" placeholder="Ex: Reduto"></div>
+    </div>
+    <div class="grid cols2" style="margin-top:10px;">
+      <div class="field"><label>Nome Civil</label><input type="text" id="nomeCivil" placeholder="Ex: Enzo Ventura"></div>
+      <div class="field">
+        <label>Papel</label>
+        <select id="papel">
+          <option>Disparador</option><option>Estrategista</option><option>Brutamontes</option>
+          <option>Controlador</option><option>Defensor</option><option>Líder</option>
+          <option>Combatente</option><option>Curinga</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid cols2" style="margin-top:10px;">
+      <div class="field"><label>Fonte de Poder</label><input type="text" id="fontePoder" placeholder="Ex: Fisiologia Alterada"></div>
+    </div>
+    <div class="field" style="margin-top:10px;"><label>Aparência / Conceito</label><textarea id="aparencia" placeholder="Como seu herói se parece e age..."></textarea></div>
+  </div>
+
+  <div class="panel">
+    <h2>Categoria de Herói</h2>
+    <div class="cat-cards" id="catCards"></div>
+    <div class="row" style="margin-top:12px;">
+      <span class="badge" id="badgePts">Pontos: 0</span>
+      <span class="badge" id="badgeMax">Máx. atributo: 0</span>
+      <span class="badge" id="badgePoderes">Poderes iniciais: 0</span>
+      <span class="badge" id="badgeRep">Reputação inicial: 0</span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Arquétipos</h2>
+    <p class="hint">Clique em "Usar" para sortear e aplicar tudo (papel, atributos já ajustados à sua categoria, poderes, fonte de poder, talento, desvantagens, ocupação, personalidade, motivação, defeito e nome de herói). Depois é só ajustar o que quiser nos campos abaixo. "Ver sugestões" mostra todas as opções originais do livro para você escolher manualmente.</p>
+    <div id="archList"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Atributos</h2>
+    <div class="row" style="margin-bottom:10px;">
+      <div>Pontos para distribuir: <span class="pts-remaining" id="ptsPool">0</span></div>
+      <div>Restantes: <span class="pts-remaining" id="ptsRestantes">0</span></div>
+    </div>
+    <div class="grid cols3" id="attrGrid"></div>
+    <details>
+      <summary>Ajustes de pontos (talentos extras, desvantagens, fontes de poder, permuta de poderes)</summary>
+      <div class="grid cols4" style="margin-top:8px;">
+        <div class="field"><label>Talentos extras (−1 pt cada)</label><input type="number" id="ajTalentos" value="0" min="0"></div>
+        <div class="field"><label>Desvantagens iniciais (+1 pt cada, máx 2)</label><input type="number" id="ajDesvantagens" value="0" min="0" max="2"></div>
+        <div class="field"><label>Fontes de poder extras (−1 pt cada)</label><input type="number" id="ajFontes" value="0" min="0"></div>
+        <div class="field"><label>Poderes sacrificados (+2 pts cada)</label><input type="number" id="ajPoderesSacrificados" value="0" min="0"></div>
+      </div>
+      <p style="font-size:12px;color:var(--cinza);margin-top:6px;">Poderes iniciais atuais: <b id="poderesAtuais">0</b>.</p>
+      <div class="field"><label>Poderes adquiridos extras (−2 pts cada)</label><input type="number" id="ajPoderesExtras" value="0" min="0"></div>
+    </details>
+  </div>
+
+  <div class="panel">
+    <h2>Coisas Pessoais</h2>
+    <div class="grid cols2">
+      <div class="field">
+        <label>Ocupação</label>
+        <select id="ocupacao" onchange="mudarOcupacao(this.value)"></select>
+      </div>
+      <div class="field"><label>Personalidade</label><input type="text" id="personalidade" placeholder="Ex: calmo, estiloso"></div>
+    </div>
+    <div class="grid cols2" style="margin-top:10px;">
+      <div class="field"><label>Motivação</label><input type="text" id="motivacao" placeholder="O que move seu herói"></div>
+      <div class="field"><label>Defeito</label><input type="text" id="defeito" placeholder="A falha do seu herói"></div>
+    </div>
+    <div class="field" style="margin-top:10px;"><label>Relacionamentos Principais</label><textarea id="relacionamentos" placeholder="Pessoas importantes na vida do seu herói..."></textarea></div>
+  </div>
+
+  <div class="panel">
+    <h2>Vida, Determinação e Dano</h2>
+    <div class="grid cols4">
+      <div class="stat-box"><div class="num" id="vidaMax">0</div><div class="lbl">Vida máxima</div></div>
+      <div class="stat-box"><div class="num" id="detMax">0</div><div class="lbl">Determinação máx.</div></div>
+      <div class="stat-box"><div class="num" id="danoPancadaria">0</div><div class="lbl">Dano de Pancadaria</div></div>
+      <div class="stat-box"><div class="num" id="superforca">—</div><div class="lbl">Superforça (levanta)</div></div>
+    </div>
+    <div class="grid cols2" style="margin-top:14px;">
+      <div><label>Vida atual — clique nas caixas para marcar dano</label><div class="track" id="trackVida"></div></div>
+      <div><label>Determinação atual — clique nas caixas para marcar estresse</label><div class="track" id="trackDeterminacao"></div></div>
+    </div>
+    <div class="row" style="margin-top:12px;">
+      <button class="secundario" onclick="resetTrack('vida')">Curar Vida (descanso)</button>
+      <button class="secundario" onclick="resetTrack('determinacao')">Recuperar Determinação (cena social)</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Reputação, Carma &amp; Recursos</h2>
+    <div class="grid cols3">
+      <div><label>Reputação</label><div class="stepper"><button onclick="step('reputacao',-1)">−</button><input type="number" id="reputacao" class="attr-num" value="0"><button onclick="step('reputacao',1)">+</button></div></div>
+      <div><label>Carma</label><div class="stepper"><button onclick="step('carma',-1)">−</button><input type="number" id="carma" class="attr-num" value="0"><button onclick="step('carma',1)">+</button></div></div>
+      <div><label>Recursos</label><div class="stepper"><button onclick="step('recursos',-1)">−</button><input type="number" id="recursos" class="attr-num" value="1" min="1" max="8"><button onclick="step('recursos',1)">+</button></div></div>
+    </div>
+    <p class="hint" id="padraoDeVida" style="margin-top:10px;"></p>
+    <details><summary>Ver tabela completa de Padrão de Vida</summary>
+      <table class="ref"><thead><tr><th>Recursos</th><th>Padrão de Vida</th></tr></thead><tbody id="tabelaRecursos"></tbody></table>
+    </details>
+  </div>
+
+  <div class="panel">
+    <h2>Rolador de Dados</h2>
+    <div class="row">
+      <div class="field" style="min-width:180px;">
+        <label>Atributo ou pool</label>
+        <select id="atributoRolar">
+          <option value="LUTA">LUTA</option><option value="AGILIDADE">AGILIDADE</option>
+          <option value="FORCA">FORÇA</option><option value="INTELECTO">INTELECTO</option>
+          <option value="INTUICAO">INTUIÇÃO</option><option value="PRESENCA">PRESENÇA</option>
+          <option value="LIVRE">Pool livre (definir abaixo)</option>
+        </select>
+      </div>
+      <div class="field" style="width:110px;"><label>Modificador</label><input type="number" id="modDados" value="0"></div>
+      <div class="field" style="width:110px;"><label>Pool livre</label><input type="number" id="poolLivre" value="6" min="1"></div>
+      <button onclick="rolarDados()">🎲 Rolar</button>
+      <button class="vermelho" id="btnForcar" onclick="forcarTeste()" disabled>Forçar Teste</button>
+    </div>
+    <div class="dice-area" id="diceArea"></div>
+    <div class="resultado" id="resultadoDados"></div>
+    <details>
+      <summary>Façanhas disponíveis (o que fazer com sucessos extras)</summary>
+      <div class="grid cols2" style="margin-top:6px;">
+        <div>
+          <b>Façanhas de Pancadaria</b>
+          <table class="ref"><tbody id="tabelaFacanhasPancadaria"></tbody></table>
+        </div>
+        <div>
+          <b>Façanhas de Disparo</b>
+          <table class="ref"><tbody id="tabelaFacanhasDisparo"></tbody></table>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <div class="panel">
+
+    <h2>Lesão Crítica</h2>
+    <p class="hint">Quando a Vida chega a zero (ou em um Acerto Mortal), role 1D6 e some o dano causado no ataque (até +6) para consultar a tabela.</p>
+    <div class="row">
+      <div class="field" style="width:140px;"><label>Dano causado (até +6)</label><input type="number" id="danoLesao" value="0" min="0" max="6"></div>
+      <button onclick="rolarLesao()">🎲 Rolar Lesão</button>
+    </div>
+    <div class="resultado" id="resultadoLesao"></div>
+    <details><summary>Ver tabela completa</summary>
+      <table class="ref"><thead><tr><th>Rolagem</th><th>Lesão</th></tr></thead><tbody id="tabelaLesoes"></tbody></table>
+    </details>
+  </div>
+
+  <div class="panel">
+    <h2>Poderes</h2>
+    <ul class="lista-itens" id="listaPoderes"></ul>
+    <label>Escolher da lista do livro</label>
+    <div class="row">
+      <div class="field" style="flex:1;min-width:220px;"><select id="catalogoPoder" onchange="mostrarDescCatalogo('poder')"></select></div>
+      <button onclick="addFromCatalog('poder')">Adicionar</button>
+    </div>
+    <div class="cat-desc" id="descPoder"></div>
+    <details><summary>ou digite um poder personalizado</summary>
+      <div class="add-row"><input type="text" id="novoPoder" placeholder="Nome do poder (ex: VOO, RAJADA maior)"><button onclick="addItem('poderes')">Adicionar</button></div>
+    </details>
+  </div>
+  <div class="panel">
+    <h2>Talentos &amp; Desvantagens</h2>
+    <ul class="lista-itens" id="listaTalentos"></ul>
+    <label>Escolher Talento da lista do livro</label>
+    <div class="row">
+      <div class="field" style="flex:1;min-width:220px;"><select id="catalogoTalento" onchange="mostrarDescCatalogo('talento')"></select></div>
+      <button onclick="addFromCatalog('talento')">Adicionar</button>
+    </div>
+    <div class="cat-desc" id="descTalento"></div>
+    <label style="margin-top:10px;">Escolher Desvantagem da lista do livro</label>
+    <div class="row">
+      <div class="field" style="flex:1;min-width:220px;"><select id="catalogoDesvantagem" onchange="mostrarDescCatalogo('desvantagem')"></select></div>
+      <button onclick="addFromCatalog('desvantagem')">Adicionar</button>
+    </div>
+    <div class="cat-desc" id="descDesvantagem"></div>
+    <details><summary>ou digite manualmente</summary>
+      <div class="add-row"><input type="text" id="novoTalento" placeholder="Ex: Talento: Coordenado / Desvantagem: Marcado"><button onclick="addItem('talentos')">Adicionar</button></div>
+    </details>
+  </div>
+  <div class="panel">
+    <h2>Equipamento &amp; Recursos</h2>
+    <ul class="lista-itens" id="listaEquipamento"></ul>
+    <div class="add-row"><input type="text" id="novoEquipamento" placeholder="Ex: Traje blindado, Comunicador"><button onclick="addItem('equipamento')">Adicionar</button></div>
+  </div>
+
+  <div class="panel">
+    <h2>Referência Rápida</h2>
+    <details open>
+      <summary>Destruindo Zonas</summary>
+      <table class="ref"><thead><tr><th>Terreno da Zona</th><th>FORÇA Mínima</th><th>Bônus de Ataque</th></tr></thead>
+        <tbody>
+          <tr><td>Interior de escritório</td><td>4</td><td>+1</td></tr>
+          <tr><td>Interior de armazém</td><td>5</td><td>+2</td></tr>
+          <tr><td>Rua da cidade</td><td>6</td><td>+3</td></tr>
+          <tr><td>Mata</td><td>7</td><td>+4</td></tr>
+          <tr><td>Edifício</td><td>8</td><td>+5</td></tr>
+          <tr><td>Penhascos</td><td>9</td><td>+6</td></tr>
+        </tbody></table>
+    </details>
+    <details>
+      <summary>Recuperação</summary>
+      <table class="ref"><thead><tr><th>Período</th><th>Vida</th><th>Determinação</th></tr></thead>
+        <tbody>
+          <tr><td>Rodada de ação</td><td>Não</td><td>Teste de PRESENÇA (1 por sucesso)</td></tr>
+          <tr><td>Alguns minutos</td><td>Valor de FORÇA</td><td>Valor de PRESENÇA (cena social)</td></tr>
+          <tr><td>Algumas horas</td><td>Tudo (descanso)</td><td>Tudo (cena social)</td></tr>
+        </tbody></table>
+    </details>
+    <details>
+      <summary>Ações Completas / Ações Rápidas</summary>
+      <div class="grid cols2">
+        <table class="ref"><thead><tr><th>Ação Completa</th><th>Atributo</th></tr></thead>
+          <tbody>
+            <tr><td>Ataque de pancadaria</td><td>LUTA</td></tr>
+            <tr><td>Ataque de investida</td><td>FORÇA</td></tr>
+            <tr><td>Ataque de disparo</td><td>AGILIDADE</td></tr>
+            <tr><td>Usar um poder</td><td>Varia</td></tr>
+            <tr><td>Quebrar ou erguer algo</td><td>FORÇA</td></tr>
+            <tr><td>Interagir com tecnologia</td><td>INTELECTO</td></tr>
+            <tr><td>Dar ordens</td><td>PRESENÇA</td></tr>
+            <tr><td>Persuadir alguém</td><td>PRESENÇA</td></tr>
+          </tbody></table>
+        <table class="ref"><thead><tr><th>Ação Rápida</th><th>Atributo</th></tr></thead>
+          <tbody>
+            <tr><td>Mover para zona adjacente</td><td>—</td></tr>
+            <tr><td>Bloquear ataque de pancadaria</td><td>LUTA</td></tr>
+            <tr><td>Esquivar de disparo</td><td>AGILIDADE</td></tr>
+            <tr><td>Examinar área</td><td>INTUIÇÃO</td></tr>
+            <tr><td>Provocação de combate</td><td>PRESENÇA</td></tr>
+            <tr><td>Conduzir veículo</td><td>AGILIDADE</td></tr>
+          </tbody></table>
+      </div>
+    </details>
+  </div>
+
+  <div class="row" style="justify-content:center;margin-top:6px;">
+    <button class="azul" onclick="copiarResumo()">📋 Copiar resumo da ficha</button>
+    <button class="vermelho" onclick="if(confirm('Apagar toda a ficha?'))resetTudo()">Apagar ficha</button>
+  </div>
+  <div class="foot-note">Sua ficha é salva automaticamente neste artefato.</div>
+</div>
+</div><!-- /#ficha-pane -->
+
+<div id="hub-divider" title="Arraste para redimensionar"><span></span></div>
+
+<div id="party-pane">
+  <div id="party-pane-header">
+    <span>👥 Grupo</span>
+    <button class="pp-close" onclick="toggleHubMode(false)">✕</button>
+  </div>
+  <div class="pp-placeholder">🚧 Status dos outros heróis aparece aqui assim que a integração com o banco de dados estiver pronta.</div>
+</div>
+
+</div><!-- /#hub-mode-wrap -->
+
+<div id="mobile-hub-tabs">
+  <button data-view="ficha" class="active" onclick="setMobilePartyView('ficha')">🦸 Minha Ficha</button>
+  <button data-view="party" onclick="setMobilePartyView('party')">👥 Grupo</button>
+</div>
+
+<div class="save-indicator" id="saveIndicator">Salvo</div>
+
+<script>
+const ATRIBUTOS = ['LUTA','AGILIDADE','FORCA','INTELECTO','INTUICAO','PRESENCA'];
+const NOMES_ATRIBUTOS = {LUTA:'LUTA',AGILIDADE:'AGILIDADE',FORCA:'FORÇA',INTELECTO:'INTELECTO',INTUICAO:'INTUIÇÃO',PRESENCA:'PRESENÇA'};
+const DESC_ATRIBUTO = {1:'Ruim',2:'Comum',3:'Bom',4:'Excelente',5:'Extraordinário',6:'Incrível',7:'Sensacional',8:'Espetacular',9:'Fenomenal',10:'Fantástico',11:'Formidável',12:'Invencível'};
+
+const CATEGORIAS = {
+  jovem:    {label:'Jovem Novato',    pts:20, max:6,  poderes:2, rep:0},
+  defensor: {label:'Defensor Urbano', pts:26, max:8,  poderes:3, rep:1},
+  guardiao: {label:'Guardião Global', pts:32, max:10, poderes:4, rep:2},
+  campeao:  {label:'Campeão Cósmico', pts:38, max:12, poderes:5, rep:3},
+};
+
+const SUPERFORCA = {1:'25 kg',2:'50 kg',3:'100 kg',4:'200 kg',5:'400 kg',6:'1 tonelada',7:'3 toneladas',8:'10 toneladas',9:'30 toneladas',10:'100 toneladas',11:'300 toneladas',12:'1.000 toneladas'};
+
+const ARQUETIPOS = [
+{nome:'O Atirador de Elite',papel:'Disparador',attrs:[7,9,4,3,6,3],
+ poderes:['RAJADA (melhoria: RAJADA MORTAL)','PROTEÇÃO','EQUIPAMENTO EMBLEMÁTICO'],
+ fonte:['Sintonia Vibracional','Arsenal de Armas','Gun Fu'],
+ talento:['Coordenado','Reflexos Rápidos','Matador','Disparo Rápido','Franco-Atirador','Furtivo'],
+ desvantagens:['Dependente de Equipamento','Maus Bocados','Superconfiante','Perda de Poder','Supertraje','Marcado'],
+ ocupacao:['Atleta','Especialista','Soldado'],
+ personalidade:['calmo','pragmático','clínico','sociável','reservado','estiloso'],
+ motivacao:[{t:'Redenção',d:'Você precisa corrigir os erros que cometeu.'},{t:'Precisão',d:'Você quer eliminar falhas para garantir que nunca erre.'},{t:'Pertencimento',d:'Você quer encontrar o tipo de família que nunca teve.'}],
+ defeito:[{t:'Exibido',d:'Você sempre quer ser o centro das atenções.'},{t:'Inconformista',d:'Você não gosta de estruturas nem de regras.'},{t:'Nômade',d:'Você é inquieto e quer estar sempre em movimento.'}],
+ nomeHeroi:['Mira Travada','Epílogo','Capuz Prateado']},
+
+{nome:'O Casca-Grossa',papel:'Brutamontes',attrs:[8,4,10,2,4,4],
+ poderes:['SALTO MAIOR','PROTEÇÃO MAIOR'],
+ fonte:['Fisiologia Mutante','Ossos Infundidos com Energia Quântica','Dádiva Mítica'],
+ talento:['Quanto Maior','Irrefreável','Resistente','Golpe Pesado','Inabalável','Poderoso'],
+ desvantagens:['Forma Alternativa','Sede de Sangue','Aterrador','Obcecado','Fóbico','Dependente'],
+ ocupacao:['Atleta','Colarinho Azul','Estrangeiro'],
+ personalidade:['Esforçado','Engraçado','Engenhoso','Teimoso','Prático','Leal'],
+ motivacao:[{t:'Proteção',d:'Você quer proteger aqueles que não podem proteger a si mesmos.'},{t:'Amizade',d:'Você sonha em encontrar um amigo verdadeiro.'},{t:'Persistência',d:'Você não deixa nenhum obstáculo impedir o seu avanço.'}],
+ defeito:[{t:'Grosseiro',d:'Sua falta de modos ofende todos ao seu redor.'},{t:'Destrutivo',d:'Você sempre quer quebrar as coisas, mesmo quando não deveria.'},{t:'Guloso',d:'Você aproveita qualquer oportunidade para comer alguma coisa saborosa.'}],
+ nomeHeroi:['Peso-Pesado','Panca-Dona','Alicerce']},
+
+{nome:'O Farol',papel:'Líder',attrs:[6,5,6,4,4,9],
+ poderes:['TENACIDADE','ORIENTAÇÃO','PROTEÇÃO'],
+ fonte:['Soro Experimental','Equipamento Especializado','Treinamento Militar'],
+ talento:['Comandante','Cativante','Determinado','Inspiração','Líder','Fôlego Extra'],
+ desvantagens:['Maus Bocados','Dependente de Equipamento','Perda de Poder','Dependente','Supertraje','Marcado'],
+ ocupacao:['Aventureiro','Agente da Lei','Soldado'],
+ personalidade:['Dedicado','Rígido','Altruísta','Patriota','Modesto','Paciente'],
+ motivacao:[{t:'Altruísmo',d:'Você quer fazer o bem, não importa o custo.'},{t:'Idealismo',d:'Você defende uma causa pela qual daria a própria vida.'},{t:'Mentoria',d:'Você se esforça para transmitir aos outros o que aprendeu sobre ser um herói.'}],
+ defeito:[{t:'Imprudente',d:'Você sempre é o primeiro a entrar em situações perigosas.'},{t:'Inseguro',d:'Você nunca acredita em si mesmo.'},{t:'Autoritário',d:'Você sempre diz aos outros o que fazer.'}],
+ nomeHeroi:['Preâmbulo','Senhor Empolgante','Destaque']},
+
+{nome:'O Guerreiro',papel:'Combatente',attrs:[10,5,6,3,4,4],
+ poderes:['SALTO','PROTEÇÃO','EQUIPAMENTO EMBLEMÁTICO','GOLPE'],
+ fonte:['Fisiologia Amazona','Domínio de Armas','Artefato Lendário'],
+ talento:['Quanto Maior','Veterano de Combate','Encontrar Fraqueza','Formidável','Impiedoso','Apoio Tático'],
+ desvantagens:['Sede de Sangue','Amaldiçoado','Maus Bocados','Superconfiante','Forasteiro','Vulnerável'],
+ ocupacao:['Aventureiro','Estrangeiro','Soldado'],
+ personalidade:['Honrado','Desconfiado','Estável','Idealista','Esgotado','Ambicioso'],
+ motivacao:[{t:'Glória',d:'Você quer que seus feitos ecoem pelos salões da eternidade.'},{t:'Vitória',d:'Você pretende derrotar um adversário poderoso em combate.'},{t:'Maestria',d:'Você busca aperfeiçoar sua habilidade por meio de disciplina e provações.'}],
+ defeito:[{t:'Dogmático',d:'Você nunca muda de opinião.'},{t:'Fanfarrão',d:'Você sempre exagera suas conquistas.'},{t:'Inflexível',d:'Você nunca trabalha com o inimigo.'}],
+ nomeHeroi:['Rubicão','Escaramuçador','Estandarte']},
+
+{nome:'O Ícone',papel:'Defensor',attrs:[8,5,8,3,3,5],
+ poderes:['VOO','PROTEÇÃO MAIOR','RAPIDEZ'],
+ fonte:['Anatomia Alterada','Fisiologia Viltrumita','Centelha Divina'],
+ talento:['Irrefreável','Defensivo','Guardião','Poderoso','Renomado','Fôlego Extra'],
+ desvantagens:['Amaldiçoado','Maus Bocados','Obcecado','Perda de Poder','Marcado','Vulnerável'],
+ ocupacao:['Artista','Soldado','Estudante'],
+ personalidade:['Coração Puro','Pé no Chão','Estoico','Compulsivo','Entusiasmado','Transparente'],
+ motivacao:[{t:'Legado',d:'Você quer honrar o que aqueles que vieram antes deixaram para trás.'},{t:'Destino',d:'Você está destinado a um propósito maior.'},{t:'Responsabilidade',d:'Você possui dons que sente a obrigação de usar para o bem.'}],
+ defeito:[{t:'Assombrado',d:'Você é atormentado pelas lembranças de todos que não conseguiu salvar.'},{t:'Ingênuo',d:'Você sempre confia com muita facilidade.'},{t:'Imprudente',d:'Você sempre assume grandes riscos sem pensar nas consequências.'}],
+ nomeHeroi:['Sustentáculo','Capitão Meta','Roubacena']},
+
+{nome:'O Inventor',papel:'Controlador',attrs:[4,5,3,8,4,4],
+ poderes:['RAJADA','DETECÇÃO','VOO','PROTEÇÃO','ARMADILHA','CONTROLAR TECNOLOGIA'],
+ fonte:['Dispositivos Especializados','Cibernética Integrada','Corpo de Androide'],
+ talento:['Astuto','Discrição','Instruído (Tecnologia)','Médico','Resiliência','Solidário'],
+ desvantagens:['Dependente de Equipamento','Obcecado','Superconfiante','Perda de Poder','Supertraje','Marcado'],
+ ocupacao:['Agente Secreto','Técnico','Colarinho Branco'],
+ personalidade:['Vibrante','Preciso','Grosso','Multitarefa','Desiludido','Sarcástico'],
+ motivacao:[{t:'Vigilância',d:'Você precisa ficar atento e estar sempre preparado para enfrentar ameaças.'},{t:'Invenção',d:'Seu objetivo é criar tecnologias capazes de mudar o mundo.'},{t:'Reconhecimento',d:'Você vai mostrar a todos que consegue se destacar como herói.'}],
+ defeito:[{t:'Exigente',d:'Você espera demais dos outros.'},{t:'Frívolo',d:'Você nunca leva nada a sério.'},{t:'Mandão',d:'Você sempre precisa estar no comando.'}],
+ nomeHeroi:['Senha','Garça Azul','Metajogador']},
+
+{nome:'O Metamorfo',papel:'Curinga',attrs:[6,5,5,4,6,4],
+ poderes:['ALONGAMENTO (melhorias: PLASTICIDADE, PASSO ALONGADO)','METAMORFOSE','ALTERAÇÃO DE TAMANHO'],
+ fonte:['Partículas Proteanas','Fisiologia Marciana','Alquimia Polimórfica'],
+ talento:['Cativante','Jogo de Cintura','Resistente','Instruído','Solitário','Sabedoria Inusitada'],
+ desvantagens:['Forma Alternativa','Sede de Sangue','Amaldiçoado','Maus Bocados','Fóbico','Perda de Poder'],
+ ocupacao:['Devoto','Estrangeiro','Cientista'],
+ personalidade:['Sereno','Atrapalhado','Cínico','Empático','Desapegado','Sábio'],
+ motivacao:[{t:'Paixão',d:'Você vai em busca do que ama e inspira outros ao longo do caminho.'},{t:'Deslumbramento',d:'Cada nova forma que você assume ou lugar que vai é uma oportunidade de crescimento.'},{t:'Manifestação',d:'Você quer descobrir sua forma perfeita.'}],
+ defeito:[{t:'Complacente',d:'Você sempre espera os outros agirem primeiro.'},{t:'Ingênuo',d:'Você acredita em tudo o que dizem.'},{t:'Desonesto',d:'Você sempre distorce a verdade.'}],
+ nomeHeroi:['Fulano','Srta. Miríade','Cidadão']},
+
+{nome:'O Moldador',papel:'Controlador',attrs:[4,7,3,4,5,7],
+ poderes:['BARREIRA','RAJADA','VOO','CONTROLAR MATÉRIA','TRANSFORMAÇÃO'],
+ fonte:['Fisiologia Bioprojetada','Domínio da Magia','Amuleto Verde'],
+ talento:['Determinado','Discrição','Evasivo','Instruído','Resiliência','Solidário'],
+ desvantagens:['Forma Alternativa','Amaldiçoado','Maus Bocados','Obcecado','Fóbico','Perda de Poder'],
+ ocupacao:['Artista','Devoto','Técnico'],
+ personalidade:['Extrovertido','Equilibrado','Pedante','Eloquente','Obstinado','Cauteloso'],
+ motivacao:[{t:'Esperança',d:'Você mostrará a todos que é possível acreditar em um futuro melhor.'},{t:'Harmonia',d:'Você quer trazer união e equilíbrio ao mundo.'},{t:'Descoberta',d:'Você quer fazer o mundo ser um lugar melhor encontrando as respostas certas.'}],
+ defeito:[{t:'Absorto',d:'Você está sempre distraído.'},{t:'Maquinador',d:'Você acha que a vida é um tabuleiro e que todas as outras pessoas são peças de xadrez.'},{t:'Inquisitivo',d:'A busca pelo conhecimento é mais importante do que qualquer outra coisa.'}],
+ nomeHeroi:['O Compositor','Progresso','Pivô']},
+
+{nome:'O Monstro',papel:'Brutamontes',attrs:[8,5,9,2,5,3],
+ poderes:['SALTO','PROTEÇÃO','REGENERAÇÃO','GOLPE'],
+ fonte:['Fisiologia Irradiada','Transformação Amaldiçoada','Licantropia'],
+ talento:['Quanto Maior','Inabalável','Matador','Intimidador','Poderoso','Fôlego Extra'],
+ desvantagens:['Forma Alternativa','Sede de Sangue','Amaldiçoado','Aterrador','Obcecado','Forasteiro'],
+ ocupacao:['Acadêmico','Estrangeiro','Privilegiado'],
+ personalidade:['Autossuficiente','Autêntico','Introspectivo',"Peixe fora d'água",'Desconfiado','Agressivo'],
+ motivacao:[{t:'Controle',d:'Você quer fazer o bem sem perder o controle do seu lado monstruoso.'},{t:'Aceitação',d:'Você quer ser aceito e visto como um herói.'},{t:'Conexão',d:'Você busca pessoas que o vejam como mais do que um monstro.'}],
+ defeito:[{t:'Violento',d:'Você recorre à violência para resolver tudo.'},{t:'Estorvo',d:'Você se sente um fardo para os outros.'},{t:'Recluso',d:'Você nunca aceita ajuda ou quer ter companhia.'}],
+ nomeHeroi:['Tufão','Silas Morticínio','Capitão Sertão']},
+
+{nome:'O Orquestrador',papel:'Líder',attrs:[3,3,3,9,5,7],
+ poderes:['PLANO DE AÇÃO','ORIENTAÇÃO','ANULAÇÃO','CONVOCAÇÃO','TELETRANSPORTE'],
+ fonte:['Hiperinteligência','Nanocircuitos Integrados','Segredos Arcanos'],
+ talento:['Comandante','Cativante','Inspiração','Líder','Apoio Tático','Grito de Alerta'],
+ desvantagens:['Dependente de Equipamento','Obcecado','Superconfiante','Fóbico','Dependente','Marcado'],
+ ocupacao:['Criminoso','Privilegiado','Técnico'],
+ personalidade:['Assertivo','Calculista','Distante','Profissional','Organizado','Enigmático'],
+ motivacao:[{t:'Renovação',d:'Você quer curar aquilo que aflige o mundo.'},{t:'Contentamento',d:'Você busca finalmente encontrar satisfação e realização.'},{t:'Preparação',d:'Você quer que seus planos de contingência tenham outros planos de contingência.'}],
+ defeito:[{t:'Exigente',d:'Você não tolera erros.'},{t:'Ganancioso',d:'Você nunca está satisfeito com o que tem.'},{t:'Soberbo',d:'Você menospreza todos que conhece.'}],
+ nomeHeroi:['Resultado','Doutor Legado','Parábola']},
+
+{nome:'O Piadista',papel:'Curinga',attrs:[7,6,4,4,4,7],
+ poderes:['TENACIDADE','DESGASTE','GOLPE','BALANÇO'],
+ fonte:['Experimento Governamental','Sagacidade Mordaz','Magia da Irritação'],
+ talento:['Cativante','Determinado','Motivador','Língua Afiada','Apoio Tático','Grito de Alerta'],
+ desvantagens:['Dependente de Equipamento','Maus Bocados','Superconfiante','Fóbico','Dependente','Marcado'],
+ ocupacao:['Aventureiro','Atleta','Agente Secreto'],
+ personalidade:['Inseguro','Coração de Ouro','Solucionador','Independente','Amigável','Safo'],
+ motivacao:[{t:'Liberdade',d:'Você não responde a ninguém além de si mesmo.'},{t:'Reconhecimento',d:'Você quer conquistar o respeito que merece.'},{t:'Garra',d:'Você provará seu valor contra qualquer pessoa ou coisa.'}],
+ defeito:[{t:'Tagarela',d:'Você nunca sabe a hora de parar de falar.'},{t:'Preguiçoso',d:'Você aproveita toda oportunidade para descansar.'},{t:'Cleptomaníaco',d:'Você não consegue se impedir de roubar objetos de valor.'}],
+ nomeHeroi:['Ousadia','Galhofa','Malandro']},
+
+{nome:'O Psíquico',papel:'Estrategista',attrs:[3,4,2,4,8,9],
+ poderes:['TENACIDADE','ILUSÃO','CONTROLAR MENTE','TELECINESE','TELEPATIA'],
+ fonte:['Iluminação Espiritual','Mente Hiperdesenvolvida','Entidade Extraterrena'],
+ talento:['Astuto','Investigador','Instruído','Manipulador','Língua Afiada','Solidário'],
+ desvantagens:['Amaldiçoado','Obcecado','Fóbico','Perda de Poder','Forasteiro','Vulnerável'],
+ ocupacao:['Especialista','Estrangeiro','Cientista'],
+ personalidade:['Visionário','Cativante','Reflexivo','Curioso','Detalhista','Argumentativo'],
+ motivacao:[{t:'Iluminação',d:'Você quer compreender plenamente a si mesmo e o mundo.'},{t:'Superioridade',d:'Você pretende ser o melhor e exercer sua influência sobre os outros.'},{t:'Paz de Espírito',d:'Você quer se libertar dos demônios interiores — e do ruído.'}],
+ defeito:[{t:'Acanhado',d:'Você sempre fica na parte de trás do grupo.'},{t:'Intrusivo',d:'Você nunca cuida da própria vida.'},{t:'Sensível',d:'Você não suporta ver sangue.'}],
+ nomeHeroi:['Noção','Tecideia','Aflito']},
+
+{nome:'A Supernova',papel:'Disparador',attrs:[6,9,3,3,3,4],
+ poderes:['EMANAÇÃO','VOO','IMUNIDADE (fogo)','RAJADA MAIOR (melhoria: EFEITO DE EXPLOSÃO)'],
+ fonte:['Fisiologia Biocinética','Bateria de Energia','Domínio Elemental'],
+ talento:['Coordenado','Evasivo','Solitário','Disparo Rápido','Resiliência','Franco-Atirador'],
+ desvantagens:['Dependente de Equipamento','Maus Bocados','Superconfiante','Perda de Poder','Dependente','Forasteiro'],
+ ocupacao:['Aventureiro','Devoto','Socorrista'],
+ personalidade:['Disciplinado','Autoconfiante','Competitivo','Pavio Curto','Entusiasmado','Rude'],
+ motivacao:[{t:'Família',d:'Você faria qualquer coisa por aqueles que ama.'},{t:'Fama',d:'Você quer que seus feitos sejam conhecidos no mundo inteiro.'},{t:'Potencial',d:'Você busca descobrir os limites máximos das suas habilidades.'}],
+ defeito:[{t:'Sórdido',d:'Você sempre cede às tentações.'},{t:'Cabeça-Quente',d:'Você nunca recusa um desafio.'},{t:'Desiludido',d:'Você nunca confia nos outros e nem no sistema.'}],
+ nomeHeroi:['Solário','N-ésimo Grau','Fornalha']},
+
+{nome:'O Traje de Combate',papel:'Defensor',attrs:[5,6,6,4,5,4],
+ poderes:['RAJADA','DETECÇÃO','VOO','PROTEÇÃO MAIOR'],
+ fonte:['Armadura Energizada','Traje Tecnológico Avançado','Peitoral Encantado'],
+ talento:['Defensivo','Resistente','Reflexos Rápidos','Guardião','Instruído (Tecnologia)','Disparo Rápido'],
+ desvantagens:['Obcecado','Superconfiante','Fóbico','Dependente','Supertraje','Marcado'],
+ ocupacao:['Privilegiado','Soldado','Técnico'],
+ personalidade:['Otimista','Perspicaz','Impiedoso','Cabeça fria','Dividido','Contido'],
+ motivacao:[{t:'Proteção',d:'Você será uma armadura para o mundo inteiro.'},{t:'Inovação',d:'Você quer trazer mudanças para aquilo que já está estabelecido.'},{t:'Sucesso',d:'Você não suporta perder e fará qualquer coisa para vencer.'}],
+ defeito:[{t:'Irreverente',d:'Você sempre age de forma atrevida e provocadora.'},{t:'Vaidoso',d:'Ajuda qualquer um que enaltecer ou elogiar você.'},{t:'Pensamento Excessivo',d:'Você analisa demais cada ação que toma.'}],
+ nomeHeroi:['Reduto','Prototanque','Almotolia']},
+
+{nome:'O Velocista',papel:'Combatente',attrs:[6,10,3,4,3,4],
+ poderes:['RAPIDEZ','SUPERVELOCIDADE (melhoria: TAREFAS RÁPIDAS)','GOLPE (melhoria: GOLPE SÚBITO)'],
+ fonte:['Hipermetabolismo','Traje-Foguete','Velocidade de Traje-Hermes'],
+ talento:['Coordenado','Reflexos Rápidos','Encontrar Fraqueza','Formidável','Artes Marciais','Resiliência'],
+ desvantagens:['Forma Alternativa','Obcecado','Superconfiante','Forasteiro','Supertraje','Vulnerável'],
+ ocupacao:['Colarinho Azul','Agente da Lei','Técnico'],
+ personalidade:['Ousado','Espírito Livre','Energético','Impulsivo','Persistente','Tolerante'],
+ motivacao:[{t:'Audácia',d:'Você triunfará, não importa as chances.'},{t:'Reflexão',d:'Você sabe que precisa desacelerar e apreciar a vida.'},{t:'Engajamento',d:'Você precisa de estímulo constante.'}],
+ defeito:[{t:'Impaciente',d:'Tudo (e todos) é lento demais.'},{t:'Extremo',d:'Você nunca sabe a hora de parar.'},{t:'Irritante',d:'Você irrita todo mundo.'}],
+ nomeHeroi:['Vertigem','Veloci-Tati','Disparada']},
+
+{nome:'O Vigilante',papel:'Estrategista',attrs:[8,6,5,4,5,4],
+ poderes:['PROTEÇÃO','ARMADILHA','GOLPE','BALANÇO'],
+ fonte:['Ninjutsu','Cinto de Utilidades','Possessão por Espírito Vingativo'],
+ talento:['Golpe Pesado','Investigador','Artista Marcial','Furtivo','Manha das Ruas','Subjugar'],
+ desvantagens:['Sede de Sangue','Dependente de Equipamento','Obcecado','Dependente','Supertraje','Marcado'],
+ ocupacao:['Investigador','Agente da Lei','Colarinho Branco'],
+ personalidade:['Alerta','Sinistro','Comprometido','Despreocupado','Austero','Caridoso'],
+ motivacao:[{t:'Justiça',d:'Você quer proteger os inocentes e punir os culpados.'},{t:'Vingança',d:'Você busca vingança. Nada o impedirá de conseguir.'},{t:'Adrenalina',d:'Você precisa correr grandes riscos para se sentir vivo.'}],
+ defeito:[{t:'Cético',d:'Você não confia em nada que não veja com os próprios olhos.'},{t:'Pessimista',d:'Você sempre acha que tudo terminará da pior forma possível.'},{t:'Obsessivo',d:'Quando fixa a atenção em algo, não consegue parar.'}],
+ nomeHeroi:['Defensor','Surra','Caça-Emoções']},
+];
+
+const POWER_CATALOG = {
+  'Ataque': [
+    {n:'Aflição', d:'Ataque à distância que não causa dano direto: se penetrar a armadura, impõe −3 dados em todos os testes do alvo até ele se livrar do efeito.'},
+    {n:'Armadilha', d:'Ataque à distância que imobiliza o alvo, impedindo-o de agir fisicamente até se libertar com um teste de FORÇA.'},
+    {n:'Atordoamento', d:'Ataque à distância que, se penetrar a armadura, faz o alvo perder o próximo turno e não poder usar ações de interrupção.'},
+    {n:'Desgaste', d:'Ataque à distância cujo dano é convertido em estresse (mental) em vez de dano físico.'},
+    {n:'Emanação', d:'Envolve você em uma aura que aumenta seu Dano de Pancadaria e machuca quem tocar em você.'},
+    {n:'Golpe', d:'Aumenta seu Dano de Pancadaria corpo a corpo, podendo ignorar parte da armadura do alvo ao custo de estresse.'},
+    {n:'Rajada', d:'Ataque básico à distância — a base dos poderes ofensivos de longo alcance.'},
+  ],
+  'Controle': [
+    {n:'Anulação', d:'Encerra ou impede o uso de poderes de outro personagem com um teste de PRESENÇA.'},
+    {n:'Controlar Água', d:'Move e manipula qualquer líquido na área, podendo usá-lo para atacar ou empurrar oponentes.'},
+    {n:'Controlar Animal', d:'Assume o controle das ações de um animal próximo.'},
+    {n:'Controlar Clima', d:'Altera o clima local, podendo criar tempestades que atrapalham movimento e causam dano.'},
+    {n:'Controlar Eletricidade', d:'Manipula correntes elétricas para desligar aparelhos ou atacar, com bônus contra alvos metálicos.'},
+    {n:'Controlar Escuridão', d:'Cria escuridão total numa área, dificultando ataques e a fuga de quem está dentro dela.'},
+    {n:'Controlar Fogo', d:'Manipula e apaga chamas, pode incendiar alvos e é imune a dano de fogo.'},
+    {n:'Controlar Frio', d:'Congela áreas e cria gelo, podendo imobilizar alvos ou criar barreiras defensivas.'},
+    {n:'Controlar Gravidade', d:'Aumenta ou reduz a gravidade de uma zona, fazendo objetos flutuarem ou ficarem muito mais pesados.'},
+    {n:'Controlar Luz', d:'Manipula luz visível, podendo cegar temporariamente um oponente.'},
+    {n:'Controlar Magnetismo', d:'Move e manipula metais magnéticos à distância, inclusive como ataque ou defesa.'},
+    {n:'Controlar Matéria', d:'Manipula matéria física não viva na área, movendo-a ou usando-a em ataques.'},
+    {n:'Controlar Mente', d:'Assume o controle das ações de uma criatura consciente por um turno (em combate) ou minutos (fora dele).'},
+    {n:'Controlar Plantas', d:'Controla e anima plantas na área, podendo usá-las para atacar ou imobilizar.'},
+    {n:'Controlar Som', d:'Manipula energia sonora, podendo criar uma explosão que atordoa o alvo.'},
+    {n:'Controlar Sorte', d:'Concede ou retira dados de um teste alheio, ou força a rerrolagem de uma lesão crítica.'},
+    {n:'Controlar Tecnologia', d:'Interage, liga, desliga ou opera qualquer tecnologia ou maquinário à distância.'},
+    {n:'Convocação', d:'Invoca até três aliados temporários para lutar ao seu lado.'},
+    {n:'Feitiçaria', d:'Duplica temporariamente os efeitos de qualquer outro poder à sua escolha.'},
+    {n:'Ilusão', d:'Faz um alvo ver, ouvir ou deixar de perceber algo que não é real.'},
+    {n:'Mimetismo', d:'Copia temporariamente um atributo ou poder de outro personagem próximo.'},
+    {n:'Orientação', d:'Concede a aliados uma ação bônus extra no turno deles.'},
+    {n:'Plano de Ação', d:'Concede bônus de dados a toda a equipe em ataque, defesa ou testes gerais por um turno.'},
+    {n:'Telecinese', d:'Move e manipula objetos e pessoas à distância com o poder da mente.'},
+    {n:'Terremoto', d:'Causa um terremoto localizado que danifica a zona e todos que estão nela.'},
+    {n:'Viagem Dimensional', d:'Viaja instantaneamente para outra dimensão.'},
+  ],
+  'Defesa': [
+    {n:'Adaptação', d:'Adapta seu corpo para sobreviver em um ambiente hostil específico.'},
+    {n:'Barreira', d:'Cria um escudo protetor (Armadura) para si ou um aliado.'},
+    {n:'Imortalidade', d:'Não envelhece e retorna à vida após a morte, sob condições definidas.'},
+    {n:'Imunidade', d:'Torna você imune a um tipo de dano não físico (fogo, veneno, eletricidade etc.).'},
+    {n:'Proteção', d:'Concede Armadura contra todos os ataques físicos.'},
+    {n:'Regeneração', d:'Cura Vida automaticamente a cada turno e recupera-se de lesões críticas mais rápido.'},
+    {n:'Tenacidade', d:'Protege sua mente, funcionando como armadura contra estresse e poderes mentais.'},
+  ],
+  'Modificação': [
+    {n:'Aderência', d:'Permite grudar e escalar superfícies como paredes e tetos.'},
+    {n:'Alongamento', d:'Estica seu corpo para alcançar itens e atacar em zonas adjacentes sem se mover.'},
+    {n:'Alteração de Tamanho', d:'Cresce ou encolhe, trocando FORÇA por AGILIDADE ou vice-versa.'},
+    {n:'Camuflagem', d:'Mistura-se ao ambiente, dificultando que o notem ou ataquem de surpresa.'},
+    {n:'Cura', d:'Restaura Vida perdida de si mesmo ou de um alvo tocado.'},
+    {n:'Duplicação', d:'Cria cópias de si mesmo que ajudam em ataques e testes.'},
+    {n:'Equipamento Emblemático', d:'Um item essencial que concede bônus de dados num atributo escolhido.'},
+    {n:'Intangibilidade', d:'Torna-se incorpóreo, atravessando paredes e evitando dano físico.'},
+    {n:'Membros Extras', d:'Braços, tentáculos ou apêndices extras que ajudam a agarrar oponentes.'},
+    {n:'Metamorfose', d:'Assume a forma de outra criatura ou objeto.'},
+    {n:'Rapidez', d:'Concede uma ação extra por rodada ao custo de estresse.'},
+    {n:'Suporte de Vida', d:'Permite ignorar necessidades físicas (respirar, comer, dormir) em ambientes hostis.'},
+    {n:'Transformação', d:'Transforma permanentemente matéria física não viva em outro tipo de matéria.'},
+  ],
+  'Movimento': [
+    {n:'Balanço', d:'Balança-se usando corda, teia ou cabo entre zonas elevadas.'},
+    {n:'Escavação', d:'Cava pelo subterrâneo, ignorando paredes e portas.'},
+    {n:'Natação', d:'Nada rapidamente na água e permanece submerso por longos períodos.'},
+    {n:'Salto', d:'Salta grandes distâncias entre zonas.'},
+    {n:'Supervelocidade', d:'Corre em velocidade sobre-humana entre zonas.'},
+    {n:'Teletransporte', d:'Teleporta-se instantaneamente entre zonas.'},
+    {n:'Voo', d:'Voa entre zonas, inclusive verticalmente.'},
+  ],
+  'Sensoriais': [
+    {n:'Clarividência', d:'Projeta sua visão remotamente para observar outro lugar.'},
+    {n:'Detecção', d:'Percebe automaticamente energias invisíveis (radiação, magia, campos etc.) na área.'},
+    {n:'Empatia', d:'Percebe e pode influenciar o estado emocional de um alvo.'},
+    {n:'Invisibilidade', d:'Fica invisível por alguns minutos, dificultando que o vejam ou ataquem.'},
+    {n:'Precognição', d:'Faz perguntas sobre o futuro ou tem visões proféticas breves.'},
+    {n:'Retrocognição', d:'Vê eventos que aconteceram no passado num local ou objeto.'},
+    {n:'Sentidos Aprimorados', d:'Percebe detalhes distantes com extrema precisão, mesmo através de escuridão ou fumaça.'},
+    {n:'Sentido de Perigo', d:'Nunca pode ser pego de surpresa; detecta ameaças ocultas automaticamente.'},
+    {n:'Telepatia', d:'Lê mentes e projeta mensagens telepáticas para outras pessoas.'},
+  ],
+};
+
+const TALENT_CATALOG = [
+  {n:'Análise', d:'Teste de INTELECTO para obter informações extras sobre algo estudado.'},
+  {n:'Apoio Tático', d:'Concede dados bônus a um aliado ao obter façanhas extras.'},
+  {n:'Artes Marciais', d:'Ataque de pancadaria desarmado como ação rápida (com −2 dados).'},
+  {n:'Astuto', d:'Pode forçar testes de INTELECTO duas vezes.'},
+  {n:'Cativante', d:'Pode forçar testes de PRESENÇA duas vezes.'},
+  {n:'Comandante', d:'Dar ordens em combate como ação rápida em vez de completa.'},
+  {n:'Coordenado', d:'Pode forçar testes de AGILIDADE duas vezes.'},
+  {n:'Defensivo', d:'Bloqueia ou esquiva sem gastar ação, ao custo de estresse.'},
+  {n:'Deflexão', d:'Pode bloquear ataques de disparo, não só de pancadaria.'},
+  {n:'Determinado', d:'Aumenta sua Determinação máxima em 2 (pode ser escolhido várias vezes).'},
+  {n:'Discrição', d:'Redireciona um ataque para um aliado na mesma zona.'},
+  {n:'Disparo Rápido', d:'Ataque de disparo como ação rápida (com −2 dados).'},
+  {n:'Encontrar Fraqueza', d:'Reduz a Armadura do oponente pela metade ao gastar uma façanha.'},
+  {n:'Evasivo', d:'+2 dados em testes de AGILIDADE para esquivar.'},
+  {n:'Formidável', d:'Pode forçar testes de LUTA duas vezes.'},
+  {n:'Franco-Atirador', d:'+2 dados ao mirar antes de um ataque de disparo.'},
+  {n:'Furtivo', d:'Reduz a percepção de inimigos em ataques surpresa.'},
+  {n:'Fôlego Extra', d:'Usa FORÇA em vez de PRESENÇA para se recuperar quando incapacitado, com bônus.'},
+  {n:'Golpe de Sorte', d:'Pode rerrolar uma lesão crítica sofrida.'},
+  {n:'Golpe Pesado', d:'+2 dados em pancadaria ao sacrificar sua ação rápida.'},
+  {n:'Grito de Alerta', d:'Ajuda um aliado a bloquear/esquivar de graça, com bônus.'},
+  {n:'Guardião', d:'Pode se jogar na frente de um golpe destinado a um aliado.'},
+  {n:'Impiedoso', d:'Recupera Determinação ao incapacitar um inimigo.'},
+  {n:'Inabalável', d:'Uma vez por sessão, ignora falhas ao forçar um teste.'},
+  {n:'Inspiração', d:'Restaura Determinação de um aliado ao custo do seu próprio estresse.'},
+  {n:'Instruído', d:'+3 dados em INTELECTO sobre um assunto específico de conhecimento.'},
+  {n:'Intimidador', d:'Usa FORÇA em vez de PRESENÇA para intimidar, com bônus.'},
+  {n:'Investigador', d:'Obtém informações extras ao investigar uma área.'},
+  {n:'Irrefreável', d:'+2 dados em ataques de investida.'},
+  {n:'Jogo de Cintura', d:'Pode esquivar também de ataques de pancadaria.'},
+  {n:'Líder', d:'Recupera Determinação de toda a equipe de uma vez.'},
+  {n:'Língua Afiada', d:'+2 dados em provocação de combate.'},
+  {n:'Manha das Ruas', d:'+2 dados para obter informações de rua e perceber emboscadas.'},
+  {n:'Manipulador', d:'+2 dados para coagir, enganar ou ludibriar alguém.'},
+  {n:'Matador', d:'Rerrola lesões críticas causadas e escolhe o melhor resultado.'},
+  {n:'Medicina', d:'+2 dados para estabilizar lesões críticas e recuperar aliados com INTELECTO.'},
+  {n:'Motivador', d:'Recupera outro personagem incapacitado como ação rápida.'},
+  {n:'Perspicaz', d:'Pode forçar testes de INTUIÇÃO duas vezes.'},
+  {n:'Piloto', d:'+2 dados em AGILIDADE ao pilotar ou dirigir veículos.'},
+  {n:'Poderoso', d:'Pode forçar testes de FORÇA duas vezes.'},
+  {n:'Quanto Maior', d:'+2 dados em pancadaria contra criaturas enormes.'},
+  {n:'Reflexos Rápidos', d:'Compra duas cartas de iniciativa e escolhe a melhor.'},
+  {n:'Renomado', d:'Aumenta sua Reputação em 3.'},
+  {n:'Resiliência', d:'Converte dano em estresse, protegendo sua Vida.'},
+  {n:'Resistente', d:'Aumenta sua Vida máxima em 2 (pode ser escolhido várias vezes).'},
+  {n:'Sabedoria Inusitada', d:'Obtém informações úteis sobre inimigos ao encontrá-los.'},
+  {n:'Solidário', d:'Concede +2 dados (em vez de +1) ao ajudar alguém.'},
+  {n:'Solitário', d:'Recupera Determinação sem precisar de uma cena social.'},
+  {n:'Sorte Grande', d:'Aumenta seus Recursos em 2 (pode ser escolhido várias vezes).'},
+  {n:'Subjugar', d:'+2 dados para agarrar ou resistir a tentativas de fuga.'},
+  {n:'Veterano de Combate', d:'Mantém sua carta de iniciativa da rodada anterior, ao custo de estresse.'},
+];
+
+const DISADV_CATALOG = [
+  {n:'Amaldiçoado', d:'Uma maldição ou destino sombrio traz penalidades específicas, definidas com o mestre.'},
+  {n:'Aterrador', d:'Sua aparência assusta desconhecidos, causando −3 dados em PRESENÇA contra eles.'},
+  {n:'Dependente', d:'Tem uma necessidade compulsória; não satisfazê-la traz penalidades crescentes.'},
+  {n:'Dependente de Equipamento', d:'Perde acesso a poderes se o equipamento daquela fonte for perdido.'},
+  {n:'Fóbico', d:'Tem medo de algo específico; precisa de um teste de PRESENÇA para não perder o turno perto dele.'},
+  {n:'Forasteiro', d:'Vem de outro lugar ou mundo e sofre −3 dados em PRESENÇA com quem não o conhece.'},
+  {n:'Forma Alternativa', d:'Precisa se transformar para acessar uma fonte de poder; fora dela, atributos são reduzidos.'},
+  {n:'Marcado', d:'Chamou a atenção de um inimigo ou organização perigosa que o persegue.'},
+  {n:'Maus Bocados', d:'Reduz seus Recursos em 2 (pode ser escolhido várias vezes).'},
+  {n:'Obcecado', d:'Consumido por uma obsessão que atrapalha sua atenção e testes.'},
+  {n:'Perda de Poder', d:'Perde acesso a uma fonte de poder sob certas condições.'},
+  {n:'Sede de Sangue', d:'Precisa continuar lutando até não haver mais inimigos capazes de continuar.'},
+  {n:'Superconfiante', d:'Não pode forçar testes enquanto tiver mais da metade da Vida.'},
+  {n:'Supertraje', d:'Depende de um traje avançado; sem ele, perde poderes e seus atributos físicos são reduzidos.'},
+  {n:'Vulnerável', d:'Tem uma fraqueza específica que dobra o dano sofrido e ignora armadura.'},
+];
+
+const RECURSOS_TABLE = {
+  1:'Destituído. Você depende completamente dos outros para seu bem-estar e sobrevivência.',
+  2:'Pobre. Você vive de forma muito simples, com o básico para se virar.',
+  3:'Apertado. Você tem onde morar e renda fixa; consegue pagar as contas, mas não tem economias.',
+  4:'Estável. Renda estável e algumas economias; não se preocupa com contas ou empréstimos.',
+  5:'Classe Média. Vive bem, com boa renda, economias e fácil acesso a crédito.',
+  6:'Próspero. Tem tudo que precisa e mais um pouco, com múltiplas fontes de renda.',
+  7:'Rico. Grandes quantias de dinheiro; pode pagar praticamente qualquer coisa.',
+  8:'Opulento. Está entre as pessoas mais ricas do planeta.',
+};
+
+const OCUPACOES = [
+  {n:'Acadêmico', r:5}, {n:'Agente da Lei', r:4}, {n:'Agente Secreto', r:5},
+  {n:'Artista', r:3}, {n:'Atleta', r:4}, {n:'Aventureiro', r:3},
+  {n:'Colarinho Azul', r:3}, {n:'Colarinho Branco', r:5}, {n:'Cientista', r:4},
+  {n:'Celebridade', r:6}, {n:'Criminoso', r:3}, {n:'Devoto', r:2},
+  {n:'Especialista', r:5}, {n:'Estrangeiro', r:2}, {n:'Estudante', r:3},
+  {n:'Investigador', r:3}, {n:'Profissional de Saúde', r:5}, {n:'Privilegiado', r:6},
+  {n:'Servidor Público', r:3}, {n:'Soldado', r:4}, {n:'Socorrista', r:4}, {n:'Técnico', r:4},
+];
+
+const FACANHAS_PANCADARIA = [
+  {n:'Dano Dobrado', d:'Dobra o dano do ataque antes da Armadura.'},
+  {n:'Repulsão', d:'Empurra o alvo para trás, causando dano extra se bater em uma barreira.'},
+  {n:'Atordoamento', d:'O alvo perde o próximo turno e não pode usar ações de interrupção.'},
+  {n:'Bater Cabeças', d:'Joga o alvo contra outro oponente na mesma zona, causando dano nele também.'},
+  {n:'Prender', d:'Imobiliza o alvo sob escombros ou estrutura até ele escapar.'},
+  {n:'Desarmar', d:'Arranca um item das mãos do oponente.'},
+  {n:'Acerto Mortal', d:'Causa uma lesão crítica mesmo sem incapacitar o alvo (exige dano incisivo).'},
+];
+const FACANHAS_DISPARO = [
+  {n:'Dano Dobrado', d:'Dobra o dano do ataque antes da Armadura.'},
+  {n:'Suprimido', d:'O alvo perde o próximo turno e não pode usar ações de interrupção.'},
+  {n:'Tiro de Efeito', d:'O ataque atinge um oponente adicional na mesma zona.'},
+  {n:'Desarmar', d:'Atira no item que o oponente segura, derrubando-o.'},
+  {n:'Acerto Mortal', d:'Causa uma lesão crítica mesmo sem incapacitar o alvo (exige dano incisivo).'},
+];
+
+const LESOES = [
+  {n:1,titulo:'Traje rasgado!',desc:'Você está bem, mas seu traje foi reduzido a farrapos.'},
+  {n:2,titulo:'Machucado!',desc:'−2 dados em LUTA, AGILIDADE e FORÇA até curar.'},
+  {n:3,titulo:'Ensanguentado!',desc:'−2 dados em INTELECTO, INTUIÇÃO e PRESENÇA até curar.'},
+  {n:4,titulo:'Espancado!',desc:'−2 dados em LUTA, AGILIDADE e FORÇA até curar.'},
+  {n:5,titulo:'Concussão!',desc:'−2 dados em INTELECTO, INTUIÇÃO e PRESENÇA até curar.'},
+  {n:6,titulo:'Surrado!',desc:'−2 dados em LUTA, AGILIDADE e FORÇA até curar.'},
+  {n:7,titulo:'Braço esmagado!',desc:'Não pode usar o braço; −2 dados em LUTA, AGILIDADE e FORÇA até curar.'},
+  {n:8,titulo:'Perna esmagada!',desc:'Movimento vira ação completa; −1 dado em LUTA, AGILIDADE e FORÇA.'},
+  {n:9,titulo:'Crânio fraturado!',desc:'Inconsciente por dias; depois −2 dados em INTELECTO, INTUIÇÃO e PRESENÇA.'},
+  {n:10,titulo:'Esmagado!',desc:'Morre se não for estabilizado em horas; se sobreviver, imobilizado por semanas.'},
+  {n:11,titulo:'Empalado!',desc:'Morre se não for estabilizado em minutos; se sobreviver, coma por semanas.'},
+  {n:12,titulo:'Cabeça esmagada!',desc:'Você morreu.'},
+  {n:13,titulo:'Dilacerado!',desc:'Seu corpo foi completamente destruído. Acabou para você.'},
+];
+
+let estado = {
+  nomeHeroi:'', nomeCivil:'', papel:'Disparador', fontePoder:'', aparencia:'',
+  categoria:'guardiao',
+  atributos:{LUTA:1,AGILIDADE:1,FORCA:1,INTELECTO:1,INTUICAO:1,PRESENCA:1},
+  ajustes:{talentos:0,desvantagens:0,fontes:0,poderesSacrificados:0,poderesExtras:0},
+  reputacao:0, carma:0, recursos:1,
+  vidaDano:0, detEstresse:0,
+  ocupacao:'', personalidade:'', motivacao:'', defeito:'', relacionamentos:'',
+  poderes:[], talentos:[], equipamento:[],
+  arquetiposAbertos:{},
+};
+
+let ultimoTeste = null;
+
+function salvar(){
+  try{
+    if (window.dbSet) window.dbSet(estado);
+  }catch(e){}
+}
+
+async function carregar(){
+  try{
+    if (window.dbGet) {
+      const dados = await window.dbGet();
+      if (dados) estado = Object.assign(estado, dados);
+    }
+    if (window.dbGetAvatar) {
+      const av = await window.dbGetAvatar();
+      if (window.updateAvatarPreviewInv) window.updateAvatarPreviewInv(av);
+    }
+  }catch(e){}
+  render();
+}
+
+function pontosBase(){ return CATEGORIAS[estado.categoria].pts; }
+function pontosAjustados(){
+  const a = estado.ajustes;
+  return pontosBase() - a.talentos + a.desvantagens - a.fontes + (a.poderesSacrificados*2) - (a.poderesExtras*2);
+}
+function pontosGastos(){ return ATRIBUTOS.reduce((s,k)=>s+estado.atributos[k],0); }
+function maxAtributo(){ return CATEGORIAS[estado.categoria].max; }
+function poderesIniciais(){
+  return CATEGORIAS[estado.categoria].poderes - estado.ajustes.poderesSacrificados + estado.ajustes.poderesExtras;
+}
+function vidaMax(){ return Math.ceil((estado.atributos.LUTA + estado.atributos.AGILIDADE + estado.atributos.FORCA)/2); }
+function detMax(){ return Math.ceil((estado.atributos.INTELECTO + estado.atributos.INTUICAO + estado.atributos.PRESENCA)/2); }
+function danoPancadaria(){ return Math.ceil(estado.atributos.FORCA/2); }
+
+function escolha(lista){ return lista[Math.floor(Math.random()*lista.length)]; }
+function escolhaDupla(lista){
+  const p1 = escolha(lista);
+  let p2 = escolha(lista);
+  let tentativas = 0;
+  while(p2===p1 && lista.length>1 && tentativas<10){ p2 = escolha(lista); tentativas++; }
+  return [p1,p2];
+}
+
+function escalarAtributos(base){
+  const cat = CATEGORIAS[estado.categoria];
+  const total = base.reduce((s,v)=>s+v,0);
+  const target = cat.pts;
+  const max = cat.max;
+  let scaled = base.map(v=> Math.max(1, Math.min(max, Math.round(v*target/total))) );
+  let diff = target - scaled.reduce((s,v)=>s+v,0);
+  let order = base.map((v,i)=>i).sort((a,b)=>base[b]-base[a]);
+  let guard=0;
+  while(diff!==0 && guard<300){
+    guard++;
+    let moveu=false;
+    for(const i of order){
+      if(diff===0) break;
+      if(diff>0 && scaled[i]<max){ scaled[i]++; diff--; moveu=true; }
+      else if(diff<0 && scaled[i]>1){ scaled[i]--; diff++; moveu=true; }
+    }
+    if(!moveu) break;
+  }
+  return {LUTA:scaled[0],AGILIDADE:scaled[1],FORCA:scaled[2],INTELECTO:scaled[3],INTUICAO:scaled[4],PRESENCA:scaled[5]};
+}
+
+function aplicarArquetipo(idx){
+  const a = ARQUETIPOS[idx];
+  estado.papel = a.papel;
+  estado.atributos = escalarAtributos(a.attrs);
+  estado.poderes = a.poderes.slice();
+  estado.fontePoder = escolha(a.fonte);
+  const [d1,d2] = escolhaDupla(a.desvantagens);
+  estado.talentos = [ 'Talento: ' + escolha(a.talento), 'Desvantagem: ' + d1, 'Desvantagem: ' + d2 ];
+  estado.ocupacao = escolha(a.ocupacao);
+  const ocInfo = OCUPACOES.find(o=>o.n===estado.ocupacao);
+  if(ocInfo) estado.recursos = ocInfo.r;
+  const [p1,p2] = escolhaDupla(a.personalidade);
+  estado.personalidade = p1 + ', ' + p2;
+  const mot = escolha(a.motivacao);
+  estado.motivacao = mot.t + '. ' + mot.d;
+  const def = escolha(a.defeito);
+  estado.defeito = def.t + '. ' + def.d;
+  estado.nomeHeroi = escolha(a.nomeHeroi);
+  render(); salvar();
+}
+
+function toggleArquetipo(idx){
+  estado.arquetiposAbertos[idx] = !estado.arquetiposAbertos[idx];
+  render();
+}
+
+function renderCategorias(){
+  const el = document.getElementById('catCards');
+  el.innerHTML='';
+  Object.keys(CATEGORIAS).forEach(key=>{
+    const c = CATEGORIAS[key];
+    const div = document.createElement('div');
+    div.className = 'cat-card' + (estado.categoria===key?' ativo':'');
+    div.innerHTML = `${c.label}<small>${c.pts} pts · máx ${c.max} · ${c.poderes} poderes</small>`;
+    div.onclick = ()=>{ estado.categoria = key; render(); salvar(); };
+    el.appendChild(div);
+  });
+  document.getElementById('badgePts').textContent = `Pontos: ${pontosAjustados()}`;
+  document.getElementById('badgeMax').textContent = `Máx. atributo: ${maxAtributo()}`;
+  document.getElementById('badgePoderes').textContent = `Poderes iniciais: ${poderesIniciais()}`;
+  document.getElementById('badgeRep').textContent = `Reputação inicial: ${CATEGORIAS[estado.categoria].rep}`;
+}
+
+function renderArquetipos(){
+  const el = document.getElementById('archList');
+  el.innerHTML='';
+  ARQUETIPOS.forEach((a,idx)=>{
+    const div = document.createElement('div');
+    div.className='arch-card';
+    const aberto = !!estado.arquetiposAbertos[idx];
+    div.innerHTML = `
+      <div class="arch-top">
+        <div><b>${a.nome}</b> <span>— Papel: ${a.papel}</span></div>
+        <div class="arch-btns">
+          <button data-usar="${idx}">🎲 Usar</button>
+          <button class="secundario" data-ver="${idx}">${aberto?'Ocultar':'Ver sugestões'}</button>
+        </div>
+      </div>
+      <div class="arch-detail ${aberto?'aberto':''}">
+        <dt>Atributos sugeridos (livro)</dt><dd>LUTA ${a.attrs[0]}, AGILIDADE ${a.attrs[1]}, FORÇA ${a.attrs[2]}, INTELECTO ${a.attrs[3]}, INTUIÇÃO ${a.attrs[4]}, PRESENÇA ${a.attrs[5]}</dd>
+        <dt>Poderes sugeridos</dt><dd>${a.poderes.join(', ')}</dd>
+        <dt>Fonte de Poder (D3)</dt><dd>${a.fonte.join(' · ')}</dd>
+        <dt>Talento de Herói (D6)</dt><dd>${a.talento.join(' · ')}</dd>
+        <dt>Desvantagens (D6, até duas)</dt><dd>${a.desvantagens.join(' · ')}</dd>
+        <dt>Ocupação (D3)</dt><dd>${a.ocupacao.join(' · ')}</dd>
+        <dt>Personalidade (D6, duas vezes)</dt><dd>${a.personalidade.join(' · ')}</dd>
+        <dt>Motivação (D3)</dt><dd>${a.motivacao.map(m=>`<b>${m.t}</b>: ${m.d}`).join('<br>')}</dd>
+        <dt>Defeito (D3)</dt><dd>${a.defeito.map(m=>`<b>${m.t}</b>: ${m.d}`).join('<br>')}</dd>
+        <dt>Nome de Herói (D3)</dt><dd>${a.nomeHeroi.join(' · ')}</dd>
+      </div>
+    `;
+    el.appendChild(div);
+  });
+  el.querySelectorAll('[data-usar]').forEach(b=> b.onclick = ()=> aplicarArquetipo(parseInt(b.dataset.usar)) );
+  el.querySelectorAll('[data-ver]').forEach(b=> b.onclick = ()=> toggleArquetipo(parseInt(b.dataset.ver)) );
+}
+
+function renderAtributos(){
+  const el = document.getElementById('attrGrid');
+  el.innerHTML='';
+  ATRIBUTOS.forEach(a=>{
+    const div = document.createElement('div');
+    div.className='attr-block';
+    const val = estado.atributos[a];
+    div.innerHTML = `
+      <div class="attr-name">${NOMES_ATRIBUTOS[a]}</div>
+      <div class="attr-value-row">
+        <div class="stepper">
+          <button onclick="attrStep('${a}',-1)">−</button>
+          <input type="number" class="attr-num" value="${val}" min="1" max="${maxAtributo()}" onchange="attrSet('${a}',this.value)">
+          <button onclick="attrStep('${a}',1)">+</button>
+        </div>
+      </div>
+      <div class="attr-desc">${DESC_ATRIBUTO[val]||''}</div>
+      <button class="rollbtn secundario" onclick="rolarAtributoDireto('${a}')">Rolar ${NOMES_ATRIBUTOS[a]}</button>
+    `;
+    el.appendChild(div);
+  });
+  document.getElementById('ptsPool').textContent = pontosAjustados();
+  const restantes = pontosAjustados() - pontosGastos();
+  const elR = document.getElementById('ptsRestantes');
+  elR.textContent = restantes;
+  elR.className = 'pts-remaining' + (restantes<0?' negativo':'');
+}
+
+function attrStep(a,delta){
+  const novo = estado.atributos[a] + delta;
+  if(novo<1 || novo>maxAtributo()) return;
+  estado.atributos[a] = novo;
+  render(); salvar();
+}
+function attrSet(a,v){
+  let n = parseInt(v)||1;
+  n = Math.max(1, Math.min(maxAtributo(), n));
+  estado.atributos[a] = n;
+  render(); salvar();
+}
+function step(campo,delta){
+  let novo = (estado[campo]||0) + delta;
+  if(campo==='recursos') novo = Math.max(1, Math.min(8, novo));
+  else novo = Math.max(0, novo);
+  estado[campo] = novo;
+  render(); salvar();
+}
+
+function mudarOcupacao(nome){
+  estado.ocupacao = nome;
+  const oc = OCUPACOES.find(o=>o.n===nome);
+  if(oc){ estado.recursos = oc.r; }
+  render(); salvar();
+}
+
+function montarListasEstaticas(){
+  const selOc = document.getElementById('ocupacao');
+  if(selOc.options.length===0){
+    const optVazio = document.createElement('option');
+    optVazio.value=''; optVazio.textContent='(escolha ou personalize)';
+    selOc.appendChild(optVazio);
+    OCUPACOES.forEach(o=>{
+      const opt = document.createElement('option');
+      opt.value = o.n; opt.textContent = `${o.n} (Recursos ${o.r})`;
+      selOc.appendChild(opt);
+    });
+  }
+  const tr = document.getElementById('tabelaRecursos');
+  if(tr.children.length===0){
+    Object.keys(RECURSOS_TABLE).forEach(k=>{
+      const tr2 = document.createElement('tr');
+      tr2.innerHTML = `<td>${k}</td><td>${RECURSOS_TABLE[k]}</td>`;
+      tr.appendChild(tr2);
+    });
+  }
+  const tp = document.getElementById('tabelaFacanhasPancadaria');
+  if(tp.children.length===0){
+    FACANHAS_PANCADARIA.forEach(f=>{
+      const tr2 = document.createElement('tr');
+      tr2.innerHTML = `<td><b>${f.n}</b><br><span style="color:var(--cinza);font-size:11px;">${f.d}</span></td>`;
+      tp.appendChild(tr2);
+    });
+  }
+  const td2 = document.getElementById('tabelaFacanhasDisparo');
+  if(td2.children.length===0){
+    FACANHAS_DISPARO.forEach(f=>{
+      const tr2 = document.createElement('tr');
+      tr2.innerHTML = `<td><b>${f.n}</b><br><span style="color:var(--cinza);font-size:11px;">${f.d}</span></td>`;
+      td2.appendChild(tr2);
+    });
+  }
+}
+
+function renderRecursos(){
+  document.getElementById('recursos').value = estado.recursos;
+  document.getElementById('padraoDeVida').textContent = RECURSOS_TABLE[estado.recursos] || '';
+}
+
+function renderDerivados(){
+  document.getElementById('vidaMax').textContent = vidaMax();
+  document.getElementById('detMax').textContent = detMax();
+  document.getElementById('danoPancadaria').textContent = danoPancadaria();
+  document.getElementById('superforca').textContent = SUPERFORCA[estado.atributos.FORCA] || '—';
+  document.getElementById('reputacao').value = estado.reputacao;
+  document.getElementById('carma').value = estado.carma;
+}
+
+function renderTracks(){
+  const vMax = vidaMax();
+  const dMax = detMax();
+  if(estado.vidaDano > vMax) estado.vidaDano = vMax;
+  if(estado.detEstresse > dMax) estado.detEstresse = dMax;
+  const tv = document.getElementById('trackVida');
+  tv.innerHTML='';
+  for(let i=0;i<vMax;i++){
+    const p = document.createElement('div');
+    p.className = 'pip' + (i<estado.vidaDano?' marcado':'');
+    p.onclick = ()=>{ estado.vidaDano = (i<estado.vidaDano) ? i : i+1; render(); salvar(); };
+    tv.appendChild(p);
+  }
+  const td = document.getElementById('trackDeterminacao');
+  td.innerHTML='';
+  for(let i=0;i<dMax;i++){
+    const p = document.createElement('div');
+    p.className = 'pip' + (i<estado.detEstresse?' marcado':'');
+    p.onclick = ()=>{ estado.detEstresse = (i<estado.detEstresse) ? i : i+1; render(); salvar(); };
+    td.appendChild(p);
+  }
+}
+function resetTrack(qual){
+  if(qual==='vida') estado.vidaDano = 0;
+  else estado.detEstresse = 0;
+  render(); salvar();
+}
+
+function renderAjustes(){
+  document.getElementById('ajTalentos').value = estado.ajustes.talentos;
+  document.getElementById('ajDesvantagens').value = estado.ajustes.desvantagens;
+  document.getElementById('ajFontes').value = estado.ajustes.fontes;
+  document.getElementById('ajPoderesSacrificados').value = estado.ajustes.poderesSacrificados;
+  document.getElementById('ajPoderesExtras').value = estado.ajustes.poderesExtras;
+  document.getElementById('poderesAtuais').textContent = poderesIniciais();
+}
+
+function rolarDados(){
+  const attrSel = document.getElementById('atributoRolar').value;
+  const mod = parseInt(document.getElementById('modDados').value)||0;
+  let n;
+  if(attrSel==='LIVRE'){ n = parseInt(document.getElementById('poolLivre').value)||1; }
+  else { n = estado.atributos[attrSel]; }
+  n = Math.max(1, n+mod);
+  const dados = [];
+  for(let i=0;i<n;i++) dados.push(1+Math.floor(Math.random()*6));
+  ultimoTeste = {dados, jaForcado:false};
+  mostrarResultado();
+}
+function rolarAtributoDireto(a){
+  document.getElementById('atributoRolar').value = a;
+  document.getElementById('modDados').value = 0;
+  rolarDados();
+}
+function mostrarResultado(){
+  const area = document.getElementById('diceArea');
+  area.innerHTML='';
+  ultimoTeste.dados.forEach(v=>{
+    const d = document.createElement('div');
+    d.className = 'die' + (v===6?' sucesso':(v===1?' falha':''));
+    d.textContent = v;
+    area.appendChild(d);
+  });
+  const sucessos = ultimoTeste.dados.filter(v=>v===6).length;
+  const facanhas = Math.max(0, sucessos-1);
+  let texto = sucessos>0
+    ? `<b>${sucessos} sucesso${sucessos>1?'s':''}</b> — teste bem-sucedido.` + (facanhas>0?` Você pode usar <b>${facanhas} façanha${facanhas>1?'s':''}</b>.`:'')
+    : `<b>Falha.</b> Nenhum 6 obtido.`;
+  document.getElementById('resultadoDados').innerHTML = texto;
+  document.getElementById('btnForcar').disabled = ultimoTeste.jaForcado;
+}
+function forcarTeste(){
+  if(!ultimoTeste || ultimoTeste.jaForcado) return;
+  ultimoTeste.dados = ultimoTeste.dados.map(v=> (v===1||v===6) ? v : (1+Math.floor(Math.random()*6)) );
+  ultimoTeste.jaForcado = true;
+  const estresseNovo = ultimoTeste.dados.filter(v=>v===1).length;
+  estado.detEstresse = Math.min(detMax(), estado.detEstresse + estresseNovo);
+  mostrarResultado();
+  document.getElementById('resultadoDados').innerHTML += ` <br>Teste forçado: <b>${estresseNovo} ponto${estresseNovo!==1?'s':''} de estresse</b> sofrido${estresseNovo!==1?'s':''}.`;
+  renderTracks();
+  salvar();
+}
+
+function rolarLesao(){
+  const dano = Math.max(0, Math.min(6, parseInt(document.getElementById('danoLesao').value)||0));
+  const d6 = 1+Math.floor(Math.random()*6);
+  let total = d6 + dano;
+  if(total>13) total=13;
+  const lesao = LESOES.find(l=>l.n===total) || LESOES[LESOES.length-1];
+  document.getElementById('resultadoLesao').innerHTML = `1D6 = ${d6} + ${dano} de dano = <b>${total}</b> → <b>${lesao.titulo}</b> ${lesao.desc}`;
+}
+function renderTabelaLesoes(){
+  const tb = document.getElementById('tabelaLesoes');
+  tb.innerHTML='';
+  LESOES.forEach(l=>{
+    const tr = document.createElement('tr');
+    const rot = l.n===13 ? '13+' : l.n;
+    tr.innerHTML = `<td>${rot}</td><td><b>${l.titulo}</b> ${l.desc}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+let catalogosMontados = false;
+function montarCatalogos(){
+  if(catalogosMontados) return;
+  catalogosMontados = true;
+  const selPoder = document.getElementById('catalogoPoder');
+  Object.keys(POWER_CATALOG).forEach(cat=>{
+    const og = document.createElement('optgroup');
+    og.label = cat;
+    POWER_CATALOG[cat].forEach(p=>{
+      const opt = document.createElement('option');
+      opt.value = p.n; opt.textContent = p.n;
+      og.appendChild(opt);
+    });
+    selPoder.appendChild(og);
+  });
+  const selTalento = document.getElementById('catalogoTalento');
+  TALENT_CATALOG.forEach(t=>{
+    const opt = document.createElement('option');
+    opt.value = t.n; opt.textContent = t.n;
+    selTalento.appendChild(opt);
+  });
+  const selDesv = document.getElementById('catalogoDesvantagem');
+  DISADV_CATALOG.forEach(t=>{
+    const opt = document.createElement('option');
+    opt.value = t.n; opt.textContent = t.n;
+    selDesv.appendChild(opt);
+  });
+  mostrarDescCatalogo('poder');
+  mostrarDescCatalogo('talento');
+  mostrarDescCatalogo('desvantagem');
+}
+
+function buscarNoCatalogo(tipo, nome){
+  if(tipo==='poder'){
+    for(const cat of Object.keys(POWER_CATALOG)){
+      const achou = POWER_CATALOG[cat].find(p=>p.n===nome);
+      if(achou) return achou;
+    }
+    return null;
+  }
+  if(tipo==='talento') return TALENT_CATALOG.find(t=>t.n===nome) || null;
+  if(tipo==='desvantagem') return DISADV_CATALOG.find(t=>t.n===nome) || null;
+}
+
+function mostrarDescCatalogo(tipo){
+  const selId = tipo==='poder' ? 'catalogoPoder' : (tipo==='talento' ? 'catalogoTalento' : 'catalogoDesvantagem');
+  const descId = tipo==='poder' ? 'descPoder' : (tipo==='talento' ? 'descTalento' : 'descDesvantagem');
+  const nome = document.getElementById(selId).value;
+  const item = buscarNoCatalogo(tipo, nome);
+  document.getElementById(descId).textContent = item ? item.d : '';
+}
+
+function addFromCatalog(tipo){
+  const selId = tipo==='poder' ? 'catalogoPoder' : (tipo==='talento' ? 'catalogoTalento' : 'catalogoDesvantagem');
+  const nome = document.getElementById(selId).value;
+  if(!nome) return;
+  if(tipo==='poder'){
+    estado.poderes.push(nome);
+  } else if(tipo==='talento'){
+    estado.talentos.push('Talento: ' + nome);
+  } else {
+    estado.talentos.push('Desvantagem: ' + nome);
+  }
+  render(); salvar();
+}
+
+function addItem(tipo){
+  const inputId = tipo==='poderes' ? 'novoPoder' : (tipo==='talentos' ? 'novoTalento' : 'novoEquipamento');
+  const input = document.getElementById(inputId);
+  const val = input.value.trim();
+  if(!val) return;
+  estado[tipo].push(val);
+  input.value='';
+  render(); salvar();
+}
+function removeItem(tipo,idx){
+  estado[tipo].splice(idx,1);
+  render(); salvar();
+}
+function renderListas(){
+  const map = {poderes:'listaPoderes', talentos:'listaTalentos', equipamento:'listaEquipamento'};
+  Object.keys(map).forEach(tipo=>{
+    const ul = document.getElementById(map[tipo]);
+    ul.innerHTML='';
+    estado[tipo].forEach((item,idx)=>{
+      const li = document.createElement('li');
+      li.innerHTML = `<span>${item}</span>`;
+      const btn = document.createElement('button');
+      btn.textContent='remover';
+      btn.className='secundario';
+      btn.onclick = ()=>removeItem(tipo,idx);
+      li.appendChild(btn);
+      ul.appendChild(li);
+    });
+  });
+}
+
+function copiarResumo(){
+  const a = estado.atributos;
+  const texto = `${estado.nomeHeroi||'(sem nome)'} — ${estado.nomeCivil||''}
+Categoria: ${CATEGORIAS[estado.categoria].label} · Papel: ${estado.papel} · Fonte de Poder: ${estado.fontePoder||'—'}
+LUTA ${a.LUTA} · AGILIDADE ${a.AGILIDADE} · FORÇA ${a.FORCA} · INTELECTO ${a.INTELECTO} · INTUIÇÃO ${a.INTUICAO} · PRESENÇA ${a.PRESENCA}
+Vida ${vidaMax()-estado.vidaDano}/${vidaMax()} · Determinação ${detMax()-estado.detEstresse}/${detMax()} · Dano de Pancadaria ${danoPancadaria()} · Superforça: ${SUPERFORCA[a.FORCA]}
+Ocupação: ${estado.ocupacao||'—'} · Personalidade: ${estado.personalidade||'—'}
+Motivação: ${estado.motivacao||'—'}
+Defeito: ${estado.defeito||'—'}
+Relacionamentos: ${estado.relacionamentos||'—'}
+Reputação ${estado.reputacao} · Carma ${estado.carma} · Recursos ${estado.recursos} (${RECURSOS_TABLE[estado.recursos]||''})
+Poderes: ${estado.poderes.join(', ')||'—'}
+Talentos/Desvantagens: ${estado.talentos.join(', ')||'—'}
+Equipamento: ${estado.equipamento.join(', ')||'—'}`;
+  navigator.clipboard.writeText(texto).then(()=>{ alert('Resumo copiado!'); }).catch(()=>{ alert(texto); });
+}
+
+function resetTudo(){
+  estado = {
+    nomeHeroi:'', nomeCivil:'', papel:'Disparador', fontePoder:'', aparencia:'',
+    categoria:'guardiao',
+    atributos:{LUTA:1,AGILIDADE:1,FORCA:1,INTELECTO:1,INTUICAO:1,PRESENCA:1},
+    ajustes:{talentos:0,desvantagens:0,fontes:0,poderesSacrificados:0,poderesExtras:0},
+    reputacao:0, carma:0, recursos:1,
+    vidaDano:0, detEstresse:0,
+    ocupacao:'', personalidade:'', motivacao:'', defeito:'', relacionamentos:'',
+    poderes:[], talentos:[], equipamento:[],
+    arquetiposAbertos:{},
+  };
+  render(); salvar();
+}
+
+function bindCamposTexto(){
+  const campos = [['nomeHeroi','nomeHeroi'],['nomeCivil','nomeCivil'],['papel','papel'],['fontePoder','fontePoder'],['aparencia','aparencia'],
+    ['personalidade','personalidade'],['motivacao','motivacao'],['defeito','defeito'],['relacionamentos','relacionamentos']];
+  campos.forEach(([id,chave])=>{
+    document.getElementById(id).addEventListener('input',(e)=>{ estado[chave] = e.target.value; salvar(); });
+  });
+  ['ajTalentos','ajDesvantagens','ajFontes','ajPoderesSacrificados','ajPoderesExtras'].forEach(id=>{
+    document.getElementById(id).addEventListener('change',(e)=>{
+      const map = {ajTalentos:'talentos',ajDesvantagens:'desvantagens',ajFontes:'fontes',ajPoderesSacrificados:'poderesSacrificados',ajPoderesExtras:'poderesExtras'};
+      estado.ajustes[map[id]] = Math.max(0, parseInt(e.target.value)||0);
+      render(); salvar();
+    });
+  });
+  document.getElementById('reputacao').addEventListener('change',e=>{ estado.reputacao = parseInt(e.target.value)||0; salvar(); });
+  document.getElementById('carma').addEventListener('change',e=>{ estado.carma = parseInt(e.target.value)||0; salvar(); });
+  document.getElementById('recursos').addEventListener('change',e=>{
+    estado.recursos = Math.max(1, Math.min(8, parseInt(e.target.value)||1));
+    render(); salvar();
+  });
+}
+
+function render(){
+  document.getElementById('nomeHeroi').value = estado.nomeHeroi;
+  document.getElementById('nomeCivil').value = estado.nomeCivil;
+  document.getElementById('papel').value = estado.papel;
+  document.getElementById('fontePoder').value = estado.fontePoder;
+  document.getElementById('aparencia').value = estado.aparencia;
+  document.getElementById('ocupacao').value = estado.ocupacao;
+  document.getElementById('personalidade').value = estado.personalidade;
+  document.getElementById('motivacao').value = estado.motivacao;
+  document.getElementById('defeito').value = estado.defeito;
+  document.getElementById('relacionamentos').value = estado.relacionamentos;
+  renderCategorias();
+  renderArquetipos();
+  renderAtributos();
+  renderAjustes();
+  renderDerivados();
+  renderRecursos();
+  renderTracks();
+  renderListas();
+  renderTabelaLesoes();
+}
+
+bindCamposTexto();
+montarCatalogos();
+montarListasEstaticas();
+carregar();
+</script>
+
+<script>
+  // ── Menu lateral ──────────────────────────────────────────────────────
+  function toggleSideMenu(forceState){
+    const menu = document.getElementById('side-menu');
+    const overlay = document.getElementById('side-menu-overlay');
+    const active = typeof forceState === 'boolean' ? forceState : !menu.classList.contains('open');
+    menu.classList.toggle('open', active);
+    overlay.classList.toggle('open', active);
+  }
+  window.toggleSideMenu = toggleSideMenu;
+
+  // ── Preferências (salvas no navegador) ──────────────────────────────────
+  const PREFS_KEY = 'fichaInvencivelPrefs';
+  function loadPrefs(){
+    try { return JSON.parse(localStorage.getItem(PREFS_KEY)) || {}; } catch(e){ return {}; }
+  }
+  function togglePrefsPanel(forceState){
+    const panel = document.getElementById('prefs-panel');
+    const active = typeof forceState === 'boolean' ? forceState : !panel.classList.contains('open');
+    panel.classList.toggle('open', active);
+  }
+  window.togglePrefsPanel = togglePrefsPanel;
+  function applyPrefs(){
+    const prefs = {
+      dark: document.getElementById('pref-dark').checked,
+      dyslexic: document.getElementById('pref-dyslexic').checked,
+      performance: document.getElementById('pref-performance').checked,
+    };
+    document.body.classList.toggle('dark-mode', prefs.dark);
+    document.body.classList.toggle('dyslexic-mode', prefs.dyslexic);
+    document.body.classList.toggle('performance-mode', prefs.performance);
+    localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+  }
+  window.applyPrefs = applyPrefs;
+  (function(){
+    const prefs = loadPrefs();
+    document.getElementById('pref-dark').checked = !!prefs.dark;
+    document.getElementById('pref-dyslexic').checked = !!prefs.dyslexic;
+    document.getElementById('pref-performance').checked = !!prefs.performance;
+    applyPrefs();
+    document.addEventListener('click', e => {
+      const panel = document.getElementById('prefs-panel');
+      if (panel.classList.contains('open') && !panel.contains(e.target)) panel.classList.remove('open');
+    });
+  })();
+
+  // ── Personagem 1 / 2 — salva e carrega de verdade agora (via switchCharSlotReal) ──
+  window.switchCharSlot = function(slot){
+    window.switchCharSlotReal(slot);
+  };
+
+  // ── Hub do Grupo (shell — dados reais chegam com a integração de banco) ──
+  let hubOrientationInv = 'v';
+  window.toggleHubMode = function(forceState){
+    const wrap = document.getElementById('hub-mode-wrap');
+    const active = typeof forceState === 'boolean' ? forceState : !wrap.classList.contains('hub-active');
+    wrap.classList.toggle('hub-active', active);
+    const mobileTabs = document.getElementById('mobile-hub-tabs');
+    if (active) {
+      setMobilePartyView('ficha');
+      if (mobileTabs) mobileTabs.classList.add('show');
+    } else if (mobileTabs) {
+      mobileTabs.classList.remove('show');
+    }
+  };
+  window.setMobilePartyView = function(which){
+    const wrap = document.getElementById('hub-mode-wrap');
+    wrap.classList.toggle('mobile-show-ficha', which === 'ficha');
+    wrap.classList.toggle('mobile-show-party', which === 'party');
+    document.querySelectorAll('#mobile-hub-tabs button').forEach(b => b.classList.toggle('active', b.dataset.view === which));
+  };
+
+  // Divisória arrastável
+  (function(){
+    const divider = document.getElementById('hub-divider');
+    const wrap = document.getElementById('hub-mode-wrap');
+    let dragging = false;
+    divider.addEventListener('mousedown', () => { dragging = true; });
+    window.addEventListener('mouseup', () => dragging = false);
+    window.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      const rect = wrap.getBoundingClientRect();
+      let pct = ((e.clientX - rect.left) / rect.width) * 100;
+      pct = Math.max(30, Math.min(80, pct));
+      document.getElementById('ficha-pane').style.flex = '0 0 ' + pct + '%';
+    });
+  })();
+</script>
+</body>
+</html>
