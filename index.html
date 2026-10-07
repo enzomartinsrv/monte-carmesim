@@ -190,17 +190,17 @@
   const ALL_PLAYERS = ['Lucas', 'Gabi', 'Joao', 'Karina', 'Ana'];
 
   // ── Sistemas e campanhas disponíveis ─────────────────────────────────────
-  // richPreview: true = busca classe/NEX/foto no Firebase (só Ordem Paranormal
-  // tem esses dados hoje). false = só mostra links "Ficha 1/2", sem dados
-  // (Invencível ainda não salva no banco).
+  // system: 'op' = Ordem Paranormal (busca classe/NEX/foto no Firebase).
+  // system: 'inv' = Invencível (busca nome/papel/categoria/foto no Firebase).
   const SISTEMAS_CAMPANHAS = {
     'ordem-paranormal': [
-      { id: 'dap', icon: '🎭', title: 'Campanha DAP', desc: 'Riverside · Monte Carmesim · Runas do Vazio', sheetUrl: 'ficha-monte-carmesim.html', slots: 3, richPreview: true },
+      { id: 'dap', icon: '🎭', title: 'Campanha DAP', desc: 'Riverside · Monte Carmesim · Runas do Vazio', sheetUrl: 'ficha-monte-carmesim.html', slots: 3, system: 'op' },
     ],
     'invencivel': [
-      { id: 'preco-do-amanha', icon: '🦸', title: 'O Preço do Amanhã', desc: 'Campanha de heróis', sheetUrl: 'ficha-invencivel.html', slots: 2, richPreview: false },
+      { id: 'preco-do-amanha', icon: '🦸', title: 'O Preço do Amanhã', desc: 'Campanha de heróis', sheetUrl: 'ficha-invencivel.html', slots: 2, system: 'inv' },
     ],
   };
+  const CATEGORIAS_INV = { jovem:'Jovem Novato', defensor:'Defensor Urbano', guardiao:'Guardião Global', campeao:'Campeão Cósmico' };
 
   let currentRole = null;   // 'master' | 'player'
   let currentName = null;   // nome do player logado (se role==='player')
@@ -254,6 +254,11 @@
   const isSobPath   = (player, slot) => `players/${player}/ficha${suf(slot)}/isSobrevivente`;
   const avatarPath  = (player, slot) => `players/${player}/avatar${suf(slot)}`;
 
+  const invNomePath      = (player, slot) => `invencivel/players/${player}/ficha${suf(slot)}/nomeHeroi`;
+  const invPapelPath     = (player, slot) => `invencivel/players/${player}/ficha${suf(slot)}/papel`;
+  const invCategoriaPath = (player, slot) => `invencivel/players/${player}/ficha${suf(slot)}/categoria`;
+  const invAvatarPath    = (player, slot) => `invencivel/players/${player}/avatar${suf(slot)}`;
+
   async function safeGet(path) {
     try {
       const snap = await get(ref(db, path));
@@ -267,6 +272,10 @@
     if (isSob) return `${label} · Estágio ${estagio || 1}`;
     const pct = (parseInt(nex) || 1) * 5;
     return `${label} · NEX ${pct}%`;
+  }
+  function invTag(papel, categoria) {
+    const cat = CATEGORIAS_INV[categoria] || '';
+    return [papel, cat].filter(Boolean).join(' · ');
   }
 
   async function buildPlayerCard(player) {
@@ -285,7 +294,7 @@
     for (let slot = 1; slot <= slots; slot++) {
       let nomeTrim = '', tag = '', avatar = null;
 
-      if (campanhaAtual.richPreview) {
+      if (campanhaAtual.system === 'op') {
         const [nome, classe, nex, estagio, isSob, av] = await Promise.all([
           safeGet(nomePath(player, slot)), safeGet(classePath(player, slot)),
           safeGet(nexPath(player, slot)), safeGet(estagioPath(player, slot)),
@@ -293,6 +302,14 @@
         ]);
         nomeTrim = (nome || '').trim();
         tag = classeTag(classe, nex, estagio, isSob);
+        avatar = av;
+      } else if (campanhaAtual.system === 'inv') {
+        const [nome, papel, categoria, av] = await Promise.all([
+          safeGet(invNomePath(player, slot)), safeGet(invPapelPath(player, slot)),
+          safeGet(invCategoriaPath(player, slot)), safeGet(invAvatarPath(player, slot)),
+        ]);
+        nomeTrim = (nome || '').trim();
+        tag = invTag(papel, categoria);
         avatar = av;
       }
 
