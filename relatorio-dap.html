@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monte Carmesim — Relatório de Acompanhamento</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Barlow+Condensed:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+:root{--accent1:#3e20dc;--accent3:#1f10ad;--accent4:#100895;--bone:#f2ede6;--ash:#8f8aa8;--panel:#0e0a1c;--border:#241a4a;--field:#120a2c;--fb:#29205a;--err:#e05555;--ok:#4caf50}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:radial-gradient(ellipse at top,#150c33 0%,#050208 70%);color:var(--bone);font:17px/1.5 'Barlow Condensed',sans-serif;min-height:100vh;padding:30px 16px 70px}
+.back{position:fixed;top:14px;left:14px;font:10px 'Share Tech Mono',monospace;letter-spacing:1px;color:var(--ash);border:1px solid var(--border);border-radius:3px;padding:6px 10px;text-decoration:none;background:#050208cc;z-index:5}
+.back:hover{color:var(--bone);border-color:var(--accent1)}
+header{text-align:center;margin-bottom:24px}
+.stamp{display:inline-block;font:9px 'Share Tech Mono',monospace;letter-spacing:3px;border:1px solid var(--accent4);padding:3px 10px;border-radius:2px;margin-bottom:10px;opacity:.85}
+h1{font:700 26px 'Oswald',sans-serif;letter-spacing:5px;color:var(--accent1);text-transform:uppercase;text-shadow:0 0 18px #3e20dc59}
+.sub{font:11px 'Share Tech Mono',monospace;letter-spacing:2px;color:var(--ash);margin-top:6px}
+.wrap{max-width:780px;margin:0 auto}
+.tabs{display:flex;gap:4px;margin-bottom:18px}
+.tabs button{flex:1;padding:9px 0;background:none;border:0;border-bottom:2px solid var(--border);color:var(--ash);font:12px 'Oswald',sans-serif;letter-spacing:1px;text-transform:uppercase;cursor:pointer}
+.tabs button.on{color:#fff;border-bottom-color:var(--accent1)}
+.panel{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--accent3);border-radius:6px;padding:20px 22px}
+@media(max-width:520px){.panel{padding:16px 14px}h1{font-size:20px;letter-spacing:3px}}
+.intro{font-size:15px;color:var(--ash);border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:6px}
+h2{font:700 14px 'Oswald',sans-serif;letter-spacing:2px;text-transform:uppercase;color:var(--accent1);margin:26px 0 12px}
+.q{margin-bottom:20px;padding-left:12px;border-left:2px solid var(--fb)}
+.q .t{display:block;font-weight:600;margin-bottom:8px;color:#fff}
+.q img.pic{display:block;max-width:100%;max-height:420px;margin:4px 0 10px;border:1px solid var(--fb);border-radius:4px}
+.fl{font:10px 'Share Tech Mono',monospace;color:var(--ash);margin-left:8px}
+.fl.a{color:#c9b8ff;border:1px solid var(--accent4);padding:0 5px;border-radius:2px}
+textarea,input[type=text],input[type=email],select{width:100%;background:var(--field);border:1px solid var(--fb);border-radius:4px;color:var(--bone);font:16px 'Barlow Condensed',sans-serif;padding:9px 11px;outline:none}
+textarea{min-height:88px;resize:vertical}
+textarea:focus,input:focus,select:focus{border-color:var(--accent1)}
+.opt{display:flex;gap:9px;align-items:flex-start;padding:8px 10px;border:1px solid var(--fb);border-radius:4px;margin-bottom:6px;cursor:pointer;background:var(--field)}
+.opt:has(input:checked){border-color:var(--accent1);background:#1a1140}
+.opt input{margin-top:6px;accent-color:var(--accent1)}
+.btn{background:var(--accent3);color:#fff;border:0;border-radius:4px;font:700 13px 'Oswald',sans-serif;letter-spacing:1px;text-transform:uppercase;padding:11px 18px;cursor:pointer}
+.btn:hover{background:var(--accent1)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.s{background:none;border:1px solid var(--fb);color:var(--ash);padding:7px 11px}
+.btn.s:hover{color:var(--bone);border-color:var(--accent1)}
+.btn.d{color:var(--err);border-color:#5a2a35}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.row label{font:12px 'Share Tech Mono',monospace;color:var(--ash);display:flex;gap:5px;align-items:center}
+.msg{font:11px 'Share Tech Mono',monospace;margin-top:10px;min-height:14px}
+.msg.err{color:var(--err)}.msg.ok{color:var(--ok)}
+small{display:block;font:9px 'Share Tech Mono',monospace;letter-spacing:1px;color:var(--ash);text-transform:uppercase;margin:10px 0 4px}
+.card{background:#0a0716;border:1px solid var(--border);border-radius:5px;padding:14px;margin-bottom:12px}
+details{background:#0a0716;border:1px solid var(--border);border-radius:5px;margin-bottom:10px;padding:10px 14px}
+summary{cursor:pointer;font:600 16px 'Oswald',sans-serif;color:#fff}
+summary .fl{font-size:10px}
+.ans{border-top:1px dashed var(--border);margin-top:9px;padding-top:7px;font-size:16px}
+.ans b{display:block;font:10px 'Share Tech Mono',monospace;color:var(--accent1);letter-spacing:.5px;margin-bottom:2px}
+.ans div{white-space:pre-wrap}
+.empty{color:var(--ash);font-style:italic}
+.hidden{display:none}
+.gate{text-align:center;color:var(--ash);font:11px 'Share Tech Mono',monospace;margin-top:40px;line-height:2}
+.gate a{color:var(--accent1)}
+</style>
+</head>
+<body>
+<a class="back" href="inicio.html">← Início</a>
+<header>
+  <div class="stamp">DAP · CONFIDENCIAL</div>
+  <h1>☠ Relatório de Acompanhamento</h1>
+  <p class="sub" id="sub">Três semanas após Monte Carmesim e Riverside</p>
+</header>
+<div class="wrap">
+  <div class="tabs hidden" id="tabs"></div>
+  <div id="app"><p class="gate">Carregando…</p></div>
+</div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {getAuth,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import {getDatabase,ref,get,set,update,remove,push,onValue} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const app=initializeApp({
+  apiKey:"AIzaSyCSQXdyLvqC4zT2BkSwUKk-uostVn2BmA8",
+  authDomain:"rpg-ficha-monte-carmesim.firebaseapp.com",
+  databaseURL:"https://rpg-ficha-monte-carmesim-default-rtdb.firebaseio.com",
+  projectId:"rpg-ficha-monte-carmesim",
+  storageBucket:"rpg-ficha-monte-carmesim.firebasestorage.app",
+  messagingSenderId:"909026041375",
+  appId:"1:909026041375:web:df06386967dd9181a23f2a"
+});
+const auth=getAuth(app),db=getDatabase(app);
+const BASE="dapRelatorio";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let me=null,isGM=false,tab="form",Q=[],mine=null,ALL={},ans={},char="",view="jogador",offs=[];
+const imgDraft={};
+
+const SEED=[
+["I. Adaptação à DAP","texto","Como seu personagem tem se adaptado à rotina da DAP desde os acontecimentos de Monte Carmesim e Riverside?"],
+["I. Adaptação à DAP","texto","Quais são os novos objetivos do seu personagem desde que ingressou na organização? O que o motiva a continuar nela?"],
+["I. Adaptação à DAP","texto","Durante essas três semanas, o que seu personagem tem feito dentro da DAP além dos treinamentos e das pequenas missões com sua equipe? Como tem ocupado seu tempo?"],
+["I. Adaptação à DAP","opcao","Atualmente, em qual área seu personagem tem concentrado seus treinamentos? O que o levou a escolher esse caminho?",["Investigação","Combate","Ocultismo","Desenvolvimento misto","Outra área"],{extra:1}],
+["II. Relações e vida pessoal","texto","Existe algum NPC da DAP com quem seu personagem gostaria de desenvolver uma relação mais próxima? Por quê? (As opções de NPCs serão enviadas individualmente a cada jogador.)"],
+["II. Relações e vida pessoal","texto","Caso ainda tenha familiares vivos, como seu personagem mantém contato com eles? O que contou à família para justificar seu envolvimento com a DAP e esconder a verdadeira natureza de suas atividades?"],
+["II. Relações e vida pessoal","texto","Antes dos acontecimentos das campanhas anteriores, seu personagem estudava, trabalhava ou mantinha alguma outra ocupação? Como ele se sente em relação a essa vida agora? Está tentando retomá-la, manter distância dela ou abandoná-la definitivamente?"],
+["III. As marcas do paranormal","texto","Após descobrir a existência do paranormal, seu personagem desenvolveu algum objetivo pessoal relacionado a ele? Deseja compreendê-lo, combatê-lo, encontrar respostas ou algo completamente diferente?",[],{opcional:1}],
+["III. As marcas do paranormal","texto","Como seu personagem se sente hoje quando pensa nos acontecimentos de Monte Carmesim e Riverside? Existe alguma lembrança, decisão ou acontecimento que ainda o incomoda?"],
+["III. As marcas do paranormal","texto","Atualmente, o que seu personagem mais teme perder ou enfrentar? E o que ainda lhe dá forças para continuar?"],
+["III. As marcas do paranormal","texto","Para seu personagem, a morte é uma maldição, uma libertação ou algo que não pode ser definido de maneira tão simples? O que o levou a enxergá-la dessa forma?"],
+["IV. Ocorrências e conflitos pendentes","texto","Seu personagem pretende relatar aos seus superiores o que sabe sobre o elemento de Fogo e a relação dele com Iris?",[],{anonima:1}],
+["IV. Ocorrências e conflitos pendentes","texto","Se seu personagem pudesse voltar aos acontecimentos envolvendo Elisa e tivesse a oportunidade de impedir o que aconteceu, o que faria de diferente? Como tentaria impedi-la?"],
+["IV. Ocorrências e conflitos pendentes","texto","Se seu personagem tivesse a oportunidade de impedir ou pôr fim às ações de Thalia, considerando os acontecimentos anteriores, como agiria? O que estaria disposto a fazer?"],
+["V. Reflexão pessoal","opcao","Durante essas últimas três semanas, depois de tudo o que aconteceu, qual destas coisas você mais teme descobrir sobre si mesmo? (Responda pensando no seu personagem. Não existe uma alternativa mais correta do que as outras.)",[
+"A) Que, diante de uma situação desesperadora, eu não teria forças para continuar lutando.",
+"B) Que, quando alguém que amo estivesse em perigo, meu medo falaria mais alto que minha coragem.",
+"C) Que, ao tentar fazer o que considero certo, eu acabaria julgando alguém de maneira injusta.",
+"D) Que eu me tornaria alguém incapaz de se importar com o sofrimento das outras pessoas.",
+"E) Que, depois de tantas perdas e dificuldades, eu acabaria desistindo daquilo que ainda me mantém de pé.",
+"F) Que, para conseguir o que desejo ou proteger aquilo que conquistei, eu seria capaz de abandonar meus próprios princípios.",
+"G) Que meus desejos, minhas emoções ou minha necessidade de preencher um vazio acabariam tomando decisões por mim."]]
+];
+
+function stop(){offs.forEach(f=>f());offs=[]}
+function gate(){stop();$("#tabs").classList.add("hidden");$("#app").innerHTML='<p class="gate">🔒 Faça login para acessar o relatório.<br><a href="inicio.html">Entrar</a></p>'}
+function fail(e){$("#app").innerHTML=`<p class="gate" style="color:var(--err)">Sem permissão ou erro ao ler o banco (${esc(e.code||e.message)}).<br>Confira se as regras de “dapRelatorio” foram publicadas.</p>`}
+
+onAuthStateChanged(auth,async u=>{
+  stop();
+  if(!u)return gate();
+  const snap=await get(ref(db,"users/"+u.uid)).catch(()=>null);
+  if(!snap||!snap.exists())return gate();
+  me=snap.val();isGM=me.role==="master";tab=isGM?"resp":"form";
+  offs.push(onValue(ref(db,BASE+"/perguntas"),s=>{
+    const v=s.val()||{};
+    Q=Object.entries(v).map(([id,q])=>({id,...q,opcoes:q.opcoes||[]})).sort((a,b)=>(a.ordem||0)-(b.ordem||0));
+    if(!(isGM&&tab==="edit"&&document.activeElement?.closest(".card")))render();
+  },fail));
+  if(isGM)offs.push(onValue(ref(db,BASE+"/respostas"),s=>{ALL=s.val()||{};render()},fail));
+  else offs.push(onValue(ref(db,BASE+"/respostas/"+me.name),s=>{const first=!mine;mine=s.val();if(mine&&first){ans={...mine.respostas};char=mine.personagem||""}render()},fail));
+});
+
+function render(){
+  if(!me)return;
+  const t=$("#tabs");
+  if(isGM){t.classList.remove("hidden");t.innerHTML=[["resp","Respostas"],["edit","Editar perguntas"],["form","Prévia"]].map(([k,n])=>`<button data-t="${k}" class="${tab===k?"on":""}">${n}</button>`).join("");t.onclick=e=>{const k=e.target.dataset.t;if(k){tab=k;render()}}}
+  tab==="form"?formView():tab==="edit"?editView():respView();
+}
+const flags=q=>(q.opcional?'<span class="fl">(opcional)</span>':"")+(q.anonima?'<span class="fl a">anônima entre os jogadores</span>':"");
+
+function formView(){
+  let h='<div class="panel">';
+  if(!Q.length){$("#app").innerHTML=h+`<p class="empty">${isGM?"Nenhuma pergunta ainda. Abra “Editar perguntas” para carregar o modelo.":"O mestre ainda não publicou as perguntas."}</p></div>`;return}
+  h+=`<div class="intro">Três semanas se passaram desde os últimos incidentes. Responda considerando o momento atual do seu personagem. Não existem respostas certas ou erradas; se uma pergunta não se aplicar a ele, deixe em branco. Suas respostas são vistas apenas pelo mestre.</div><small>Nome do personagem</small><input type="text" id="char" value="${esc(char)}">`;
+  let sec=null,n=0;
+  for(const q of Q){
+    if(q.secao!==sec){sec=q.secao;h+=`<h2>${esc(sec)}</h2>`}
+    n++;
+    h+=`<div class="q"><span class="t">${n}. ${esc(q.texto)}${flags(q)}</span>${q.imagem?`<img class="pic" src="${q.imagem}" alt="">`:""}`;
+    if(q.tipo==="opcao"){
+      h+=q.opcoes.map(o=>`<label class="opt"><input type="radio" name="r${q.id}" value="${esc(o)}" ${ans[q.id]===o?"checked":""}><span>${esc(o)}</span></label>`).join("");
+      if(q.extra)h+=`<textarea data-x="${q.id}" style="min-height:64px" placeholder="Explique sua escolha">${esc(ans[q.id+"_x"]||"")}</textarea>`;
+    }else h+=`<textarea data-a="${q.id}">${esc(ans[q.id]||"")}</textarea>`;
+    h+="</div>";
+  }
+  h+=`<div class="row"><button class="btn" id="send" ${isGM?"disabled":""}>${mine?"Atualizar relatório":"Enviar relatório"}</button></div><div class="msg ${mine?"ok":""}" id="fm">${isGM?"Prévia: o envio fica desativado para o mestre.":mine?"Relatório já enviado. Você pode atualizá-lo.":""}</div></div>`;
+  $("#app").innerHTML=h;
+  $("#char").oninput=e=>char=e.target.value;
+  document.querySelectorAll("[data-a]").forEach(el=>el.oninput=()=>ans[el.dataset.a]=el.value);
+  document.querySelectorAll("[data-x]").forEach(el=>el.oninput=()=>ans[el.dataset.x+"_x"]=el.value);
+  document.querySelectorAll("input[type=radio]").forEach(el=>el.onchange=()=>ans[el.name.slice(1)]=el.value);
+  $("#send").onclick=async()=>{
+    const m=$("#fm");
+    if(!char.trim()){m.className="msg err";m.textContent="Informe o nome do personagem.";return}
+    $("#send").disabled=true;
+    try{await set(ref(db,BASE+"/respostas/"+me.name),{personagem:char.trim(),respostas:ans,em:Date.now()});m.className="msg ok";m.textContent="Relatório enviado à DAP."}
+    catch(e){m.className="msg err";m.textContent="Falha ao enviar: "+(e.code||e.message)}
+    $("#send").disabled=false;
+  };
+}
+
+function respView(){
+  const names=Object.keys(ALL);
+  let h=`<div class="panel"><div class="row" style="margin:0 0 12px"><select id="vm" style="width:auto"><option value="jogador" ${view==="jogador"?"selected":""}>Por jogador</option><option value="pergunta" ${view==="pergunta"?"selected":""}>Por pergunta</option></select><span class="fl">${names.length} de 5 relatórios recebidos</span></div>`;
+  if(!names.length)h+='<p class="empty">Nenhum relatório enviado ainda.</p>';
+  const val=(r,q)=>{let v=(r.respostas||{})[q.id]||"";const x=(r.respostas||{})[q.id+"_x"];if(q.extra&&x)v+=(v?"\n":"")+x;return v?esc(v):'<span class="empty">em branco</span>'};
+  const tag=q=>q.anonima?' <span class="fl a">anônima</span>':"";
+  if(view==="jogador"){
+    for(const [pn,r] of Object.entries(ALL))h+=`<details><summary>${esc(r.personagem||"?")} <span class="fl">${esc(pn)} · ${new Date(r.em||0).toLocaleString("pt-BR")}</span></summary>${Q.map((q,i)=>`<div class="ans"><b>${i+1}. ${esc(q.texto.slice(0,80))}…${q.anonima?" (ANÔNIMA)":""}</b><div>${val(r,q)}</div></div>`).join("")}</details>`;
+  }else Q.forEach((q,i)=>{h+=`<details><summary>${i+1}. ${esc(q.texto.slice(0,90))}…${tag(q)}</summary>${Object.entries(ALL).map(([pn,r])=>`<div class="ans"><b>${esc(r.personagem||"?")} · ${esc(pn)}</b><div>${val(r,q)}</div></div>`).join("")}</details>`});
+  $("#app").innerHTML=h+"</div>";
+  $("#vm").onchange=e=>{view=e.target.value;respView()};
+}
+
+function editView(){
+  let h='<div class="panel">';
+  if(!Q.length)h+='<p class="empty">Nenhuma pergunta ainda.</p><div class="row"><button class="btn" id="seed">Carregar as 15 perguntas do modelo</button></div>';
+  Q.forEach((q,i)=>{
+    const im=imgDraft[q.id]!==undefined?imgDraft[q.id]:q.imagem;
+    h+=`<div class="card" data-id="${q.id}"><b style="font-family:Oswald">Pergunta ${i+1}</b>
+    <small>Seção</small><input type="text" data-f="secao" value="${esc(q.secao)}">
+    <small>Enunciado</small><textarea data-f="texto">${esc(q.texto)}</textarea>
+    <small>Tipo</small><select data-f="tipo"><option value="texto" ${q.tipo==="texto"?"selected":""}>Resposta escrita</option><option value="opcao" ${q.tipo==="opcao"?"selected":""}>Opções (escolha única)</option></select>
+    <small>Opções (uma por linha, só para o tipo “Opções”)</small><textarea data-f="opcoes" style="min-height:70px">${esc(q.opcoes.join("\n"))}</textarea>
+    <div class="row"><label><input type="checkbox" data-f="opcional" ${q.opcional?"checked":""}>Opcional</label><label><input type="checkbox" data-f="anonima" ${q.anonima?"checked":""}>Anônima entre jogadores</label><label><input type="checkbox" data-f="extra" ${q.extra?"checked":""}>Campo “explique” nas opções</label></div>
+    <small>Imagem (aparece abaixo do enunciado)</small>${im?`<img class="pic" src="${im}" style="max-height:130px;display:block;margin-bottom:6px;border:1px solid var(--fb)" alt="">`:""}
+    <div class="row" style="margin-top:0"><input type="file" accept="image/*" data-act="img" style="max-width:260px;font-size:13px">${im?'<button class="btn s d" data-act="noimg">Remover imagem</button>':""}</div>
+    <div class="row"><button class="btn" data-act="save">Salvar</button><button class="btn s" data-act="up" ${i?"":"disabled"}>Subir</button><button class="btn s" data-act="down" ${i<Q.length-1?"":"disabled"}>Descer</button><button class="btn s d" data-act="del">Excluir</button></div><div class="msg"></div></div>`;
+  });
+  h+='<div class="row"><button class="btn" id="add">Nova pergunta</button></div></div>';
+  $("#app").innerHTML=h;
+  const P=BASE+"/perguntas";
+  $("#seed")&&($("#seed").onclick=()=>{const o={};SEED.forEach((s,i)=>{o[push(ref(db,P)).key]={ordem:(i+1)*10,secao:s[0],tipo:s[1],texto:s[2],opcoes:s[3]||[],opcional:!!(s[4]&&s[4].opcional),anonima:!!(s[4]&&s[4].anonima),extra:!!(s[4]&&s[4].extra),imagem:""}});update(ref(db,P),o)});
+  $("#add").onclick=()=>{const l=Q[Q.length-1];set(push(ref(db,P)),{ordem:(l?l.ordem:0)+10,secao:l?l.secao:"Nova seção",tipo:"texto",texto:"Nova pergunta",opcoes:[],opcional:false,anonima:false,extra:false,imagem:""})};
+  $("#app").onchange=async e=>{
+    if(e.target.dataset.act!=="img"||!e.target.files[0])return;
+    const c=e.target.closest(".card"),url=await shrink(e.target.files[0]);
+    if(url.length>900000){c.querySelector(".msg").className="msg err";c.querySelector(".msg").textContent="Imagem grande demais mesmo reduzida. Use uma menor.";return}
+    imgDraft[c.dataset.id]=url;editView();
+  };
+  $("#app").onclick=async e=>{
+    const a=e.target.dataset.act;if(!a||a==="img")return;
+    const c=e.target.closest(".card"),id=c.dataset.id,i=Q.findIndex(x=>x.id===id),m=c.querySelector(".msg");
+    if(a==="noimg"){imgDraft[id]="";editView()}
+    if(a==="del"&&confirm("Excluir esta pergunta?"))await remove(ref(db,P+"/"+id));
+    if(a==="up"||a==="down"){const j=a==="up"?i-1:i+1;await update(ref(db,P),{[Q[i].id+"/ordem"]:Q[j].ordem,[Q[j].id+"/ordem"]:Q[i].ordem})}
+    if(a==="save"){
+      const g=f=>c.querySelector(`[data-f=${f}]`);
+      const data={secao:g("secao").value.trim(),texto:g("texto").value.trim(),tipo:g("tipo").value,opcoes:g("opcoes").value.split("\n").map(s=>s.trim()).filter(Boolean),opcional:g("opcional").checked,anonima:g("anonima").checked,extra:g("extra").checked,ordem:Q[i].ordem,imagem:imgDraft[id]!==undefined?imgDraft[id]:(Q[i].imagem||"")};
+      try{await set(ref(db,P+"/"+id),data);delete imgDraft[id];m.className="msg ok";m.textContent="Salvo."}catch(err){m.className="msg err";m.textContent="Erro: "+(err.code||err.message)}
+    }
+  };
+}
+function shrink(file){return new Promise(res=>{const img=new Image();img.onload=()=>{const s=Math.min(1,900/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=img.width*s;c.height=img.height*s;c.getContext("2d").drawImage(img,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",.78))};img.src=URL.createObjectURL(file)})}
+</script>
+</body>
+</html>
