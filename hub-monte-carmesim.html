@@ -290,10 +290,11 @@
   </div>
 </div>
 
-<div id="sistema-em-construcao" style="display:none;padding:60px 24px;text-align:center;">
-  <div style="font-size:34px;margin-bottom:14px;">🚧</div>
-  <div style="font-family:'Oswald',sans-serif;font-size:16px;color:var(--bone);margin-bottom:8px;">Painel do Invencível ainda em construção</div>
-  <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--ash);max-width:420px;margin:0 auto;line-height:1.6;">Assim que a integração com o banco de dados for feita, o controle dos heróis de "O Preço do Amanhã" aparece aqui.</div>
+<div id="hub-body-inv" style="display:none;padding:20px;">
+  <div class="sec">🦸 Heróis — O Preço do Amanhã</div>
+  <div id="inv-players-grid" class="players-grid">
+    <div style="color:var(--ash);font-size:12px;font-family:'Share Tech Mono',monospace;padding:20px;">Carregando heróis...</div>
+  </div>
 </div>
 
 <div class="hub-body" id="hub-body-op">
@@ -656,13 +657,95 @@ window._ovis = {};
 
 window.switchSistema = (sistema) => {
   const opWrap = document.getElementById('hub-body-op');
-  const placeholder = document.getElementById('sistema-em-construcao');
+  const invWrap = document.getElementById('hub-body-inv');
   const isOp = sistema === 'ordem-paranormal';
   opWrap.style.display = isOp ? 'grid' : 'none';
-  placeholder.style.display = isOp ? 'none' : 'block';
+  invWrap.style.display = isOp ? 'none' : 'block';
   document.querySelector('.hub-title p').textContent = isOp
     ? 'PAINEL DO MESTRE · ORDEM PARANORMAL RPG'
     : 'PAINEL DO MESTRE · INVENCÍVEL — O PREÇO DO AMANHÃ';
+};
+
+// ── Invencível: heróis, Vida/Determinação, visibilidade ───────────────────
+window._invPd = {};
+window._invVis = {};
+onValue(ref(db,'invencivel/players'), snap => { window._invPd = snap.val() || {}; renderInvPlayers(); });
+onValue(ref(db,'invencivel/overlay/visible'), snap => { window._invVis = snap.val() || {}; renderInvPlayers(); });
+
+const INV_PLAYERS = ['Lucas','Gabi','Joao','Karina','Ana'];
+const INV_CATS = { jovem:'Jovem Novato', defensor:'Defensor Urbano', guardiao:'Guardião Global', campeao:'Campeão Cósmico' };
+const invSuf = slot => (slot === 1 ? '' : String(slot));
+const invVidaMax = a => Math.ceil(((a?.LUTA||1)+(a?.AGILIDADE||1)+(a?.FORCA||1))/2);
+const invDetMax  = a => Math.ceil(((a?.INTELECTO||1)+(a?.INTUICAO||1)+(a?.PRESENCA||1))/2);
+
+function renderInvPlayers(){
+  const grid = document.getElementById('inv-players-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  INV_PLAYERS.forEach(name => {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `<div class="player-group-header">${name}</div>`;
+    const row = document.createElement('div');
+    row.className = 'char-row';
+    for (let slot = 1; slot <= 2; slot++) row.appendChild(mkInvCard(name, slot));
+    wrap.appendChild(row);
+    grid.appendChild(wrap);
+  });
+}
+
+function mkInvCard(name, slot){
+  const p = window._invPd[name] || {};
+  const fi = p['ficha'+invSuf(slot)] || {};
+  const avatar = p['avatar'+invSuf(slot)];
+  const nome = (fi.nomeHeroi || '').trim();
+  const d = document.createElement('div');
+  d.className = 'player-card' + (nome ? '' : ' char-empty');
+  if (!nome) {
+    d.innerHTML = `<div class="card-header"><div><div class="card-name" style="font-style:italic;color:var(--ash);">Ficha ${slot} vazia</div><div class="card-meta">${name}</div></div></div>`;
+    return d;
+  }
+  const vMax = invVidaMax(fi.atributos), dMax = invDetMax(fi.atributos);
+  const dano = fi.vidaDano || 0, estresse = fi.detEstresse || 0;
+  const vida = Math.max(0, vMax - dano), det = Math.max(0, dMax - estresse);
+  const pct = (a,b) => b > 0 ? Math.min(100, Math.round(a/b*100)) : 0;
+  const isVisible = !!window._invVis[name+'_'+slot];
+  const meta = [fi.papel, INV_CATS[fi.categoria]].filter(Boolean).join(' · ');
+  d.innerHTML = `
+    <div class="card-header">
+      <div style="display:flex;align-items:center;gap:8px;">
+        ${avatar ? `<img src="${avatar}" style="width:34px;height:34px;border-radius:4px;object-fit:cover;border:1px solid var(--border);">` : ''}
+        <div><div class="card-name">${nome}</div><div class="card-meta">${meta || '—'} · Ficha ${slot}</div></div>
+      </div>
+      <button class="act-btn" title="Mostrar/ocultar no overlay e pros players" style="${isVisible?'border-color:var(--blood);color:var(--bone);background:rgba(31,16,173,.35);':'color:var(--ash);'}" onclick="toggleInvVis('${name}',${slot})">${isVisible?'👁':'🚫'}</button>
+    </div>
+    <div class="card-pools">
+      <div class="pool-row"><div class="pool-lbl">VIDA</div><div class="pool-bar-wrap"><div class="pool-bar pv" style="width:${pct(vida,vMax)}%"></div></div><div class="pool-nums">${vida}/${vMax}</div></div>
+      <div class="pool-row"><div class="pool-lbl">DET</div><div class="pool-bar-wrap"><div class="pool-bar san" style="width:${pct(det,dMax)}%"></div></div><div class="pool-nums">${det}/${dMax}</div></div>
+    </div>
+    <div class="card-actions">
+      <button class="act-btn red"    onclick="invAdjust('${name}',${slot},'vidaDano',1)">− Vida</button>
+      <button class="act-btn green"  onclick="invAdjust('${name}',${slot},'vidaDano',-1)">+ Vida</button>
+      <button class="act-btn purple" onclick="invAdjust('${name}',${slot},'detEstresse',1)">− Det</button>
+      <button class="act-btn blue"   onclick="invAdjust('${name}',${slot},'detEstresse',-1)">+ Det</button>
+    </div>`;
+  return d;
+}
+
+// delta +1 = mais dano/estresse (perde Vida/Det); delta -1 = recupera
+window.invAdjust = (name, slot, campo, delta) => {
+  const fi = (window._invPd[name] || {})['ficha'+invSuf(slot)] || {};
+  const atual = fi[campo] || 0;
+  const max = campo === 'vidaDano' ? invVidaMax(fi.atributos) : invDetMax(fi.atributos);
+  const novo = Math.max(0, Math.min(max, atual + delta));
+  update(ref(db, 'invencivel/players/'+name+'/ficha'+invSuf(slot)), { [campo]: novo });
+  addLog(`${fi.nomeHeroi||name}: ${campo==='vidaDano'?'Vida':'Determinação'} ${delta>0?'−':'+'}1`, delta>0?'dmg':'heal');
+};
+
+window.toggleInvVis = (name, slot) => {
+  const key = name+'_'+slot;
+  const nv = !window._invVis[key];
+  update(ref(db,'invencivel/overlay/visible'), { [key]: nv });
+  addLog((nv?'👁 Mostrando ':'🚫 Ocultando ')+name+' (herói '+slot+')','alert');
 };
 
 onValue(ref(db,'players'), snap => {
