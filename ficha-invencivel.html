@@ -221,6 +221,21 @@
   }
   .pp-close { background: none; border: none; color: #fff; font-size: 15px; cursor: pointer; }
   .pp-placeholder { margin: 16px; padding: 18px 14px; border: 1px dashed var(--amarelo); border-radius: 6px; text-align: center; font-size: 12px; line-height: 1.6; color: #ffe9a0; }
+  #party-pane-list { display: flex; flex-direction: column; gap: 10px; padding: 12px; }
+  .pp-empty { font-size: 12px; line-height: 1.6; color: #ffe9a0; text-align: center; padding: 16px 8px; border: 1px dashed var(--amarelo); border-radius: 6px; }
+  .pp-card { background: rgba(255,255,255,.07); border: 2px solid #1a4a8f; border-left: 5px solid var(--amarelo); border-radius: 8px; padding: 10px 12px; }
+  .pp-top { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
+  .pp-avatar { width: 38px; height: 38px; flex-shrink: 0; border-radius: 6px; border: 2px solid var(--amarelo); background: #0b2c66; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .pp-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .pp-name { font-family: 'Bangers', cursive; font-size: 17px; letter-spacing: .5px; color: var(--amarelo); line-height: 1.1; }
+  .pp-tag { font-size: 10.5px; color: #cfe0ff; }
+  .pp-srow { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .pp-slbl { font-size: 9.5px; font-weight: 700; letter-spacing: 1px; width: 30px; flex-shrink: 0; color: #cfe0ff; }
+  .pp-bbg { flex: 1; height: 9px; background: rgba(0,0,0,.35); border-radius: 5px; overflow: hidden; }
+  .pp-bfill { height: 100%; border-radius: 5px; }
+  .pp-bfill.vida { background: linear-gradient(to right,#b3140f,#ff5a4f); }
+  .pp-bfill.det { background: linear-gradient(to right,#c9a300,#ffd400); }
+  .pp-sval { font-size: 11px; font-weight: 700; width: 44px; text-align: right; flex-shrink: 0; }
 
   @media (max-width: 700px) {
     #hub-mode-wrap.hub-active { flex-direction: column; height: calc(100vh - 30px - 48px); }
@@ -689,7 +704,7 @@
     <span>👥 Grupo</span>
     <button class="pp-close" onclick="toggleHubMode(false)">✕</button>
   </div>
-  <div class="pp-placeholder">🚧 Status dos outros heróis aparece aqui assim que a integração com o banco de dados estiver pronta.</div>
+  <div id="party-pane-list"><div class="pp-empty">Carregando heróis...</div></div>
 </div>
 
 </div><!-- /#hub-mode-wrap -->
@@ -1707,10 +1722,74 @@ carregar();
     if (active) {
       setMobilePartyView('ficha');
       if (mobileTabs) mobileTabs.classList.add('show');
-    } else if (mobileTabs) {
-      mobileTabs.classList.remove('show');
+      subscribePartyInv();
+    } else {
+      if (mobileTabs) mobileTabs.classList.remove('show');
+      unsubscribePartyInv();
     }
   };
+
+  // ── Grupo: heróis que o mestre deixou visíveis (ao vivo) ────────────────
+  let _partyUnsubs = [], _partyToken = 0;
+  const INV_CATS_PP = { jovem:'Jovem Novato', defensor:'Defensor Urbano', guardiao:'Guardião Global', campeao:'Campeão Cósmico' };
+  function escPP(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function unsubscribePartyInv(){
+    _partyToken++;
+    _partyUnsubs.forEach(u => { try { u(); } catch(e){} });
+    _partyUnsubs = [];
+  }
+  async function subscribePartyInv(){
+    unsubscribePartyInv();
+    const token = ++_partyToken;
+    const { dbMod, db } = await window._fbModules;
+    if (token !== _partyToken) return; // Hub foi fechado enquanto carregava
+    let players = {}, visible = {};
+    const rerender = () => renderPartyInv(players, visible);
+    _partyUnsubs.push(dbMod.onValue(dbMod.ref(db, 'invencivel/players'), s => { players = s.val() || {}; rerender(); }));
+    _partyUnsubs.push(dbMod.onValue(dbMod.ref(db, 'invencivel/overlay/visible'), s => { visible = s.val() || {}; rerender(); }));
+  }
+  function renderPartyInv(players, visible){
+    const list = document.getElementById('party-pane-list');
+    if (!list) return;
+    const cards = [];
+    ALLOWED_INV.forEach(name => {
+      const p = players[name];
+      if (!p) return;
+      [1, 2].forEach(slot => {
+        if (!visible[name + '_' + slot]) return;
+        if (name === window.PLAYER_NAME && slot === window.CHAR_SLOT) return; // a ficha aberta agora
+        const suf = slot === 1 ? '' : String(slot);
+        const fi = p['ficha' + suf] || {};
+        const nome = (fi.nomeHeroi || '').trim();
+        if (!nome) return;
+        const a = fi.atributos || {};
+        const vMax = Math.ceil(((a.LUTA||1) + (a.AGILIDADE||1) + (a.FORCA||1)) / 2);
+        const dMax = Math.ceil(((a.INTELECTO||1) + (a.INTUICAO||1) + (a.PRESENCA||1)) / 2);
+        const vida = Math.max(0, vMax - (fi.vidaDano || 0));
+        const det  = Math.max(0, dMax - (fi.detEstresse || 0));
+        const pct = (x, m) => m > 0 ? Math.min(100, Math.round(x / m * 100)) : 0;
+        const avatar = p['avatar' + suf];
+        const tag = [fi.papel, INV_CATS_PP[fi.categoria]].filter(Boolean).map(escPP).join(' · ');
+        cards.push(`
+          <div class="pp-card">
+            <div class="pp-top">
+              <div class="pp-avatar">${avatar ? `<img src="${escPP(avatar)}" alt="">` : '🦸'}</div>
+              <div style="flex:1;min-width:0;">
+                <div class="pp-name">${escPP(nome)}</div>
+                <div class="pp-tag">${escPP(name)}${tag ? ' · ' + tag : ''}</div>
+              </div>
+            </div>
+            <div class="pp-srow"><div class="pp-slbl">VIDA</div><div class="pp-bbg"><div class="pp-bfill vida" style="width:${pct(vida,vMax)}%"></div></div><div class="pp-sval">${vida}/${vMax}</div></div>
+            <div class="pp-srow" style="margin-bottom:0;"><div class="pp-slbl">DET</div><div class="pp-bbg"><div class="pp-bfill det" style="width:${pct(det,dMax)}%"></div></div><div class="pp-sval">${det}/${dMax}</div></div>
+          </div>`);
+      });
+    });
+    list.innerHTML = cards.length
+      ? cards.join('')
+      : '<div class="pp-empty">Nenhum outro herói visível no momento — o mestre controla quem aparece aqui.</div>';
+  }
   window.setMobilePartyView = function(which){
     const wrap = document.getElementById('hub-mode-wrap');
     wrap.classList.toggle('mobile-show-ficha', which === 'ficha');
